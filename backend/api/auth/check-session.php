@@ -1,12 +1,8 @@
 <?php
-/**
- * Check Admin Session API
- * GET /api/auth/check-session.php
- * 
- * Returns current session status
- */
-
 require_once '../../utils/cors.php';
+
+session_start();
+
 require_once '../../utils/response.php';
 require_once '../../utils/session.php';
 
@@ -26,4 +22,3 @@ if (isAdminLoggedIn()) {
         'logged_in' => false
     ], 'No active session');
 }
-?>

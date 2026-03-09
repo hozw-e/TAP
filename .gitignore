@@ -1,0 +1,12 @@
+# Dependencies
+node_modules
+
+# Production
+dist
+
+# Local
+.DS_Store
+*.local
+
+# Logs
+*.log
