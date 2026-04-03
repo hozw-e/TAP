@@ -6,7 +6,6 @@ import { studentsAPI, attendanceAPI } from '../services/api';
 import '../styles/Dashboard.css';
 
 function Dashboard() {
-  // State management
   const [stats, setStats] = useState({
     totalEnrollees: 0,
     presentCount: 0,
@@ -23,40 +22,44 @@ function Dashboard() {
   });
   const [lastCheckTimestamp, setLastCheckTimestamp] = useState(Math.floor(Date.now() / 1000));
 
-  // Load initial data
   useEffect(() => {
     loadStatistics();
     loadAttendanceLogs();
   }, []);
 
-  // Start polling for new attendance
   useEffect(() => {
     const interval = setInterval(() => {
       checkNewAttendance();
-    }, 3000); // Poll every 3 seconds
+    }, 3000);
 
     return () => clearInterval(interval);
   }, [lastCheckTimestamp]);
 
-  // Reload logs when date filter changes
   useEffect(() => {
     loadAttendanceLogs();
   }, [filterDate]);
 
-  // Load statistics
   const loadStatistics = async () => {
     try {
-      // Get total enrollees
       const studentsResponse = await studentsAPI.list();
-      if (studentsResponse.success) {
+
+      // ✅ FIX: Safely extract array — handles flat array or nested under .data.data
+      const studentsData = Array.isArray(studentsResponse?.data)
+        ? studentsResponse.data
+        : Array.isArray(studentsResponse?.data?.data)
+          ? studentsResponse.data.data
+          : [];
+
+      if (studentsResponse?.success) {
         setStats(prev => ({
           ...prev,
-          totalEnrollees: studentsResponse.data.length
+          totalEnrollees: studentsData.length
         }));
 
-        // Count newcomers (enrolled today) - if you have created_at field
         const today = new Date().toISOString().split('T')[0];
-        const newcomers = studentsResponse.data.filter(student => 
+
+        // ✅ FIX: .filter() is now safe because studentsData is guaranteed to be an array
+        const newcomers = studentsData.filter(student =>
           student.created_at && student.created_at.startsWith(today)
         );
         setStats(prev => ({
@@ -65,12 +68,20 @@ function Dashboard() {
         }));
       }
 
-      // Get present count
-      const attendanceResponse = await attendanceAPI.list({ 
-        date: new Date().toISOString().split('T')[0] 
+      const attendanceResponse = await attendanceAPI.list({
+        date: new Date().toISOString().split('T')[0]
       });
-      if (attendanceResponse.success) {
-        const present = attendanceResponse.data.filter(log => log.time_in && !log.time_out);
+
+      // ✅ FIX: Same safe extraction for attendance data
+      const attendanceData = Array.isArray(attendanceResponse?.data)
+        ? attendanceResponse.data
+        : Array.isArray(attendanceResponse?.data?.data)
+          ? attendanceResponse.data.data
+          : [];
+
+      if (attendanceResponse?.success) {
+        // ✅ FIX: .filter() is now safe
+        const present = attendanceData.filter(log => log.time_in && !log.time_out);
         setStats(prev => ({
           ...prev,
           presentCount: present.length
@@ -81,42 +92,50 @@ function Dashboard() {
     }
   };
 
-  // Load attendance logs
   const loadAttendanceLogs = async () => {
     setIsLoading(true);
     try {
       const response = await attendanceAPI.list({ date: filterDate });
-      if (response.success) {
-        setAttendanceLogs(response.data);
+
+      // ✅ FIX: Safely extract array — never set state to a non-array
+      const logsData = Array.isArray(response?.data)
+        ? response.data
+        : Array.isArray(response?.data?.data)
+          ? response.data.data
+          : [];
+
+      if (response?.success) {
+        setAttendanceLogs(logsData);
+      } else {
+        setAttendanceLogs([]);
       }
     } catch (error) {
       console.error('Error loading attendance logs:', error);
+      setAttendanceLogs([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Check for new attendance
   const checkNewAttendance = async () => {
     try {
       const response = await attendanceAPI.recent(lastCheckTimestamp);
-      if (response.success && response.data.logs && response.data.logs.length > 0) {
-        // Show notification for the most recent log
-        const latestLog = response.data.logs[0];
+
+      // ✅ FIX: Safely access nested logs array
+      const logs = Array.isArray(response?.data?.logs) ? response.data.logs : [];
+
+      if (response?.success && logs.length > 0) {
+        const latestLog = logs[0];
         setNotification({
           isOpen: true,
           studentName: latestLog.student_name,
           action: latestLog.action
         });
 
-        // Update timestamp
         setLastCheckTimestamp(response.data.timestamp);
 
-        // Refresh logs and statistics
         loadAttendanceLogs();
         loadStatistics();
-
-        // Play sound (optional)
         playNotificationSound();
       }
     } catch (error) {
@@ -124,7 +143,6 @@ function Dashboard() {
     }
   };
 
-  // Play notification sound
   const playNotificationSound = () => {
     const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE=');
     audio.play().catch(e => console.log('Could not play sound'));
@@ -172,8 +190,8 @@ function Dashboard() {
           <div className="logs-header">
             <span>Attendance Logs</span>
             <div className="filter-controls">
-              <input 
-                type="date" 
+              <input
+                type="date"
                 value={filterDate}
                 onChange={(e) => setFilterDate(e.target.value)}
               />
@@ -224,10 +242,9 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Modals and Notifications */}
-      <LogoutModal 
-        isOpen={showLogoutModal} 
-        onClose={() => setShowLogoutModal(false)} 
+      <LogoutModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
       />
 
       <Notification

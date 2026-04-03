@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import LogoutModal from '../components/LogoutModal';
+import NewRecordModal from '../components/NewRecordModal';
+import EditRecordModal from '../components/EditRecordModal';
+import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import { studentsAPI } from '../services/api';
 import '../styles/Students.css';
 
@@ -9,6 +12,10 @@ function Students() {
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showNewRecordModal, setShowNewRecordModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -16,9 +23,11 @@ function Students() {
   }, []);
 
   useEffect(() => {
-    // Filter students based on search term
-    const filtered = students.filter(student => 
-      student.student_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    // ✅ FIX: Guard students with Array.isArray before calling .filter()
+    if (!Array.isArray(students)) return;
+
+    const filtered = students.filter(student =>
+      student.student_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (student.guardian_name && student.guardian_name.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     setFilteredStudents(filtered);
@@ -28,15 +37,50 @@ function Students() {
     setIsLoading(true);
     try {
       const response = await studentsAPI.list();
-      if (response.success) {
-        setStudents(response.data);
-        setFilteredStudents(response.data);
+
+      // ✅ FIX: Safely extract array — handles flat array or nested under .data.data
+      const studentsData = Array.isArray(response?.data)
+        ? response.data
+        : Array.isArray(response?.data?.data)
+          ? response.data.data
+          : [];
+
+      if (response?.success) {
+        setStudents(studentsData);
+        setFilteredStudents(studentsData);
+      } else {
+        setStudents([]);
+        setFilteredStudents([]);
       }
     } catch (error) {
       console.error('Error loading students:', error);
+      setStudents([]);
+      setFilteredStudents([]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleNewRecordSuccess = () => {
+    loadStudents();
+  };
+
+  const handleEditClick = (student) => {
+    setSelectedStudent(student);
+    setShowEditModal(true);
+  };
+
+  const handleEditSuccess = () => {
+    loadStudents();
+  };
+
+  const handleDeleteClick = (student) => {
+    setSelectedStudent(student);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteSuccess = () => {
+    loadStudents();
   };
 
   return (
@@ -45,8 +89,7 @@ function Students() {
 
       <div className="main-content">
         <div className="page-header">
-          <h1>Students</h1>
-          <p>Manage student records and information</p>
+          <h1>Student Records</h1>
         </div>
 
         {/* Search and Add Controls */}
@@ -61,7 +104,10 @@ function Students() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <button className="add-record-btn" onClick={() => alert('New Record Modal - Coming in full version!')}>
+          <button
+            className="add-record-btn"
+            onClick={() => setShowNewRecordModal(true)}
+          >
             <i className="fas fa-plus"></i>
             New record
           </button>
@@ -90,9 +136,10 @@ function Students() {
                   <tr>
                     <th>Name</th>
                     <th>Status</th>
-                    <th>Total Hours Present</th>
                     <th>Guardian</th>
-                    <th>Guardian's Contact Number</th>
+                    <th>Guardian's Contact</th>
+                    <th>NFC ID</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -102,9 +149,33 @@ function Students() {
                       <td>
                         <span className="status-badge status-active">ACTIVE</span>
                       </td>
-                      <td>0 hrs</td>
                       <td>{student.guardian_name || '-'}</td>
                       <td>{student.guardian_cellnum || '-'}</td>
+                      <td>
+                        {student.uid ? (
+                          <span className="nfc-badge">{student.uid}</span>
+                        ) : (
+                          <span className="nfc-badge nfc-unassigned">Not assigned</span>
+                        )}
+                      </td>
+                      <td>
+                        <div className="action-buttons">
+                          <button
+                            className="action-btn action-btn-edit"
+                            onClick={() => handleEditClick(student)}
+                            title="Edit"
+                          >
+                            <i className="fas fa-edit"></i>
+                          </button>
+                          <button
+                            className="action-btn action-btn-delete"
+                            onClick={() => handleDeleteClick(student)}
+                            title="Delete"
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -114,9 +185,29 @@ function Students() {
         </div>
       </div>
 
-      <LogoutModal 
-        isOpen={showLogoutModal} 
-        onClose={() => setShowLogoutModal(false)} 
+      <LogoutModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+      />
+
+      <NewRecordModal
+        isOpen={showNewRecordModal}
+        onClose={() => setShowNewRecordModal(false)}
+        onSuccess={handleNewRecordSuccess}
+      />
+
+      <EditRecordModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onSuccess={handleEditSuccess}
+        student={selectedStudent}
+      />
+
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onSuccess={handleDeleteSuccess}
+        student={selectedStudent}
       />
     </div>
   );

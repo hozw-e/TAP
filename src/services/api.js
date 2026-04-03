@@ -46,13 +46,51 @@ export const studentsAPI = {
     const response = await api.get('/students/list.php');
     return response.data;
   },
+ 
+  // Create new student
+  create: async (studentData) => {
+    const response = await api.post('/students/create.php', studentData);
+    return response.data;
+  },
+ 
+  // Update student
+  update: async (studentId, studentData) => {
+    const response = await api.post(`/students/update.php?id=${studentId}`, studentData);
+    return response.data;
+  },
+ 
+  // Delete student
+  delete: async (studentId) => {
+    const response = await api.post(`/students/delete.php?id=${studentId}`, {});
+    return response.data;
+  },
+};
+
+/* export const studentsAPI = {
+  // Get all students
+  list: async () => {
+    const response = await api.get('/students/list.php');
+    return response.data;
+  },
 
   // Create new student
   create: async (studentData) => {
     const response = await api.post('/students/create.php', studentData);
     return response.data;
   },
-};
+
+  // Update student
+  update: async (studentId, studentData) => {
+    const response = await api.put(`/students/update.php?id=${studentId}`, studentData);
+    return response.data;
+  },
+
+  // Delete student
+  delete: async (studentId) => {
+    const response = await api.delete(`/students/delete.php?id=${studentId}`);
+    return response.data;
+  },
+}; */
 
 // ============================================
 // GUARDIANS API
@@ -64,13 +102,37 @@ export const guardiansAPI = {
     const response = await api.get('/guardians/list.php');
     return response.data;
   },
-
+ 
   // Create new guardian
   create: async (guardianData) => {
     const response = await api.post('/guardians/create.php', guardianData);
     return response.data;
   },
+ 
+  // Update guardian
+  update: async (guardianId, guardianData) => {
+    const response = await api.post(`/guardians/update.php?id=${guardianId}`, guardianData);
+    return response.data;
+  },
 };
+
+/* export const guardiansAPI = {
+  list: async () => {
+    const response = await api.get('/guardians/list.php');
+    return response.data;
+  },
+
+  create: async (guardianData) => {
+    const response = await api.post('/guardians/create.php', guardianData);
+    return response.data;
+  },
+
+  // Update guardian
+  update: async (guardianId, guardianData) => {
+    const response = await api.put(`/guardians/update.php?id=${guardianId}`, guardianData);
+    return response.data;
+  },
+}; */
 
 // ============================================
 // NFC API

@@ -1,72 +1,57 @@
 <?php
-/**
- * Admin Login API
- * POST /api/auth/login.php
- * 
- * Request Body:
- * {
- *   "username": "admin",
- *   "password": "password123"
- * }
- */
-
 require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
-require_once '../../utils/session.php';
-
-// Only allow POST requests
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    sendError('Method not allowed', 405);
-}
-
+ 
+// Start session
+session_start();
+ 
 // Get JSON input
-$input = json_decode(file_get_contents('php://input'), true);
-
-// Validate required fields
-$missingFields = validateRequiredFields($input, ['username', 'password']);
-if ($missingFields) {
-    sendError('Missing required fields: ' . implode(', ', $missingFields), 400);
+$data = json_decode(file_get_contents('php://input'), true);
+ 
+// Validate input
+if (empty($data['username']) || empty($data['password'])) {
+    sendErrorResponse('Username and password are required');
 }
-
-$username = trim($input['username']);
-$password = $input['password'];
-
-// Get database connection
-$conn = getDBConnection();
-if (!$conn) {
-    sendError('Database connection failed', 500);
-}
-
+ 
+$username = $data['username'];
+$password = $data['password'];
+ 
 try {
-    // Query admin by username
-    $stmt = $conn->prepare("SELECT admin_id, admin_name, username, password FROM admins WHERE username = :username");
-    $stmt->execute(['username' => $username]);
+    $conn = getDBConnection();
+    
+    if (!$conn) {
+        sendErrorResponse('Database connection failed');
+    }
+    
+    // Get admin by username
+    $stmt = $conn->prepare("SELECT * FROM admins WHERE username = :username");
+    $stmt->execute([':username' => $username]);
     $admin = $stmt->fetch();
     
     if (!$admin) {
-        sendError('Invalid username or password', 401);
+        sendErrorResponse('Invalid username or password');
     }
     
-    // Verify password
-    // NOTE: For production, use password_hash() when creating admin and password_verify() here
-    // For now, we'll do plain text comparison (CHANGE THIS LATER!)
+    // Verify password (plain text comparison for now)
     if ($password !== $admin['password']) {
-        sendError('Invalid username or password', 401);
+        sendErrorResponse('Invalid username or password');
     }
     
     // Set session
-    setAdminSession($admin['admin_id'], $admin['username'], $admin['admin_name']);
+    $_SESSION['admin_logged_in'] = true;
+    $_SESSION['admin_id'] = $admin['admin_id'];
+    $_SESSION['admin_name'] = $admin['admin_name'];
+    $_SESSION['username'] = $admin['username'];
     
-    // Return success with admin info
-    sendSuccess([
+    sendSuccessResponse('Login successful', [
         'admin_id' => $admin['admin_id'],
         'admin_name' => $admin['admin_name'],
         'username' => $admin['username']
-    ], 'Login successful');
+    ]);
     
 } catch (PDOException $e) {
-    error_log("Login Error: " . $e->getMessage());
-    sendError('Login failed', 500);
+    error_log("Login error: " . $e->getMessage());
+    sendErrorResponse('Login failed');
 }
 ?>

@@ -1,24 +1,22 @@
 <?php
 require_once '../../utils/cors.php';
+require_once '../../utils/response.php';
 
+// Start session
 session_start();
 
-require_once '../../utils/response.php';
-require_once '../../utils/session.php';
+$isLoggedIn = isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
 
-// Only allow GET requests
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    sendError('Method not allowed', 405);
-}
-
-if (isAdminLoggedIn()) {
-    sendSuccess([
+if ($isLoggedIn) {
+    sendSuccessResponse('Session active', [
         'logged_in' => true,
-        'admin_id' => getCurrentAdminId(),
-        'admin_username' => getCurrentAdminUsername()
-    ], 'Admin is logged in');
+        'admin_id' => $_SESSION['admin_id'] ?? null,
+        'admin_name' => $_SESSION['admin_name'] ?? null,
+        'username' => $_SESSION['username'] ?? null
+    ]);
 } else {
-    sendSuccess([
+    sendSuccessResponse('No active session', [
         'logged_in' => false
-    ], 'No active session');
+    ]);
 }
+?>

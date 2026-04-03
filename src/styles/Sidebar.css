@@ -57,8 +57,8 @@
 .logout-btn {
   margin-top: auto;
   padding: 12px 20px;
-  background: rgba(231, 76, 60, 0.1);
-  color: #e74c3c;
+  background: rgba(196, 196, 196, 0.205);
+  color: rgb(255, 255, 255);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -68,6 +68,6 @@
 }
 
 .logout-btn:hover {
-  background: #e74c3c;
-  color: white;
+  background: rgb(218, 53, 35);
+  color: rgb(255, 255, 255);
 }

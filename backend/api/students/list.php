@@ -16,13 +16,13 @@ requireAdminAuth();
 
 // Only allow GET requests
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    sendError('Method not allowed', 405);
+    sendErrorResponse('Method not allowed', 405);
 }
 
 // Get database connection
 $conn = getDBConnection();
 if (!$conn) {
-    sendError('Database connection failed', 500);
+    sendErrorResponse('Database connection failed', 500);
 }
 
 try {
@@ -39,10 +39,10 @@ try {
     ");
     $students = $stmt->fetchAll();
     
-    sendSuccess($students, 'Students retrieved successfully');
+    sendSuccessResponse('Students retrieved successfully', $students);
     
 } catch (PDOException $e) {
     error_log("List Students Error: " . $e->getMessage());
-    sendError('Failed to retrieve students', 500);
+    sendErrorResponse('Failed to retrieve students', 500);
 }
 ?>

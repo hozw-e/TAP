@@ -20,7 +20,7 @@ requireAdminAuth();
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    sendError('Method not allowed', 405);
+    sendErrorResponse('Method not allowed', 405);
 }
 
 // Get JSON input
@@ -29,7 +29,7 @@ $input = json_decode(file_get_contents('php://input'), true);
 // Validate required fields
 $missingFields = validateRequiredFields($input, ['student_id', 'uid']);
 if ($missingFields) {
-    sendError('Missing required fields: ' . implode(', ', $missingFields), 400);
+    sendErrorResponse('Missing required fields: ' . implode(', ', $missingFields), 400);
 }
 
 $studentId = intval($input['student_id']);
@@ -38,7 +38,7 @@ $uid = trim($input['uid']);
 // Get database connection
 $conn = getDBConnection();
 if (!$conn) {
-    sendError('Database connection failed', 500);
+    sendErrorResponse('Database connection failed', 500);
 }
 
 try {
@@ -48,14 +48,14 @@ try {
     $student = $stmt->fetch();
     
     if (!$student) {
-        sendError('Student not found', 404);
+        sendErrorResponse('Student not found', 404);
     }
     
     // Check if UID already exists
     $stmt = $conn->prepare("SELECT student_id FROM nfc_tags WHERE uid = :uid");
     $stmt->execute(['uid' => $uid]);
     if ($stmt->fetch()) {
-        sendError('This NFC tag is already assigned to another student', 409);
+        sendErrorResponse('This NFC tag is already assigned to another student', 409);
     }
     
     // Check if student already has an NFC tag
@@ -81,14 +81,14 @@ try {
         $message = 'NFC tag assigned successfully';
     }
     
-    sendSuccess([
-        'student_id' => $studentId,
-        'student_name' => $student['student_name'],
-        'uid' => $uid
-    ], $message);
+    sendSuccessResponse($message, [
+    'student_id' => $studentId,
+    'student_name' => $student['student_name'],
+    'uid' => $uid
+    ]);
     
 } catch (PDOException $e) {
     error_log("Assign NFC Error: " . $e->getMessage());
-    sendError('Failed to assign NFC tag', 500);
+    sendErrorResponse('Failed to assign NFC tag', 500);
 }
 ?>

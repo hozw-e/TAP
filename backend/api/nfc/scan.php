@@ -20,7 +20,7 @@ require_once '../../utils/session.php';
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    sendError('Method not allowed', 405);
+    sendErrorResponse('Method not allowed', 405);
 }
 
 // Get JSON input
@@ -29,20 +29,20 @@ $input = json_decode(file_get_contents('php://input'), true);
 // Validate required fields
 $missingFields = validateRequiredFields($input, ['uid']);
 if ($missingFields) {
-    sendError('Missing required fields: uid', 400);
+    sendErrorResponse('Missing required fields: uid', 400);
 }
 
 $uid = trim($input['uid']);
 
 // CRITICAL: Check if admin is logged in
 if (!isAdminLoggedIn()) {
-    sendError('Cannot log attendance: No admin session active. Admin must be logged in.', 403);
+    sendErrorResponse('Cannot log attendance: No admin session active. Admin must be logged in.', 403);
 }
 
 // Get database connection
 $conn = getDBConnection();
 if (!$conn) {
-    sendError('Database connection failed', 500);
+    sendErrorResponse('Database connection failed', 500);
 }
 
 try {
@@ -63,7 +63,7 @@ try {
     $student = $stmt->fetch();
     
     if (!$student) {
-        sendError('NFC tag not recognized. Please register this tag first.', 404);
+        sendErrorResponse('NFC tag not recognized. Please register this tag first.', 404);
     }
     
     // Get today's date
@@ -116,7 +116,7 @@ try {
         
     } else {
         // Already timed in and out - don't allow more scans today
-        sendError('Student has already completed attendance for today (Time In: ' . 
+        sendErrorResponse('Student has already completed attendance for today (Time In: ' . 
                   $existingLog['time_in'] . ', Time Out: ' . $existingLog['time_out'] . ')', 409);
     }
     
@@ -125,7 +125,7 @@ try {
     $smsSent = sendSMS($student['guardian_cellnum'], $smsMessage, $conn, $student['guardian_id'], $student['student_id']);
     
     // Prepare response for ESP32/Arduino (for LED display)
-    sendSuccess([
+    sendSuccessResponse("Attendance logged: {$action}",[
         'student_id' => $student['student_id'],
         'student_name' => $student['student_name'],
         'action' => $action,
@@ -133,11 +133,11 @@ try {
         'date' => $today,
         'sms_sent' => $smsSent,
         'display_message' => "{$student['student_name']}\n{$action}\n{$time}"
-    ], "Attendance logged: {$action}");
+    ]);
     
 } catch (PDOException $e) {
     error_log("NFC Scan Error: " . $e->getMessage());
-    sendError('Failed to process attendance', 500);
+    sendErrorResponse('Failed to process attendance', 500);
 }
 
 /**
