@@ -20,13 +20,13 @@ requireAdminAuth();
 
 // Only allow GET requests
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    sendError('Method not allowed', 405);
+    sendErrorResponse('Method not allowed', 405);
 }
 
 // Get database connection
 $conn = getDBConnection();
 if (!$conn) {
-    sendError('Database connection failed', 500);
+    sendErrorResponse('Database connection failed', 500);
 }
 
 try {
@@ -71,10 +71,10 @@ try {
     $stmt->execute($params);
     $logs = $stmt->fetchAll();
     
-    sendSuccess($logs, 'Attendance logs retrieved successfully');
+    sendSuccessResponse('Attendance logs retrieved successfully', $logs);
     
 } catch (PDOException $e) {
     error_log("List Attendance Error: " . $e->getMessage());
-    sendError('Failed to retrieve attendance logs', 500);
+    sendErrorResponse('Failed to retrieve attendance logs', 500);
 }
 ?>

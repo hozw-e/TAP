@@ -20,13 +20,13 @@ requireAdminAuth();
 
 // Only allow GET requests
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    sendError('Method not allowed', 405);
+    sendErrorResponse('Method not allowed', 405);
 }
 
 // Get database connection
 $conn = getDBConnection();
 if (!$conn) {
-    sendError('Database connection failed', 500);
+    sendErrorResponse('Database connection failed', 500);
 }
 
 try {
@@ -67,14 +67,14 @@ try {
     $stmt->execute(['since_timestamp' => $sinceTimestamp]);
     $recentLogs = $stmt->fetchAll();
     
-    sendSuccess([
+    sendSuccessResponse('Recent attendance retrieved successfully', [
         'logs' => $recentLogs,
         'count' => count($recentLogs),
         'timestamp' => time()
-    ], 'Recent attendance retrieved successfully');
+    ]);
     
 } catch (PDOException $e) {
     error_log("Recent Attendance Error: " . $e->getMessage());
-    sendError('Failed to retrieve recent attendance', 500);
+    sendErrorResponse('Failed to retrieve recent attendance', 500);
 }
 ?>

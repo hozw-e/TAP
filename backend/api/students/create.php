@@ -22,7 +22,7 @@ requireAdminAuth();
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    sendError('Method not allowed', 405);
+    sendErrorResponse('Method not allowed', 405);
 }
 
 // Get JSON input
@@ -31,7 +31,7 @@ $input = json_decode(file_get_contents('php://input'), true);
 // Validate required fields
 $missingFields = validateRequiredFields($input, ['guardian_id', 'student_name', 'address']);
 if ($missingFields) {
-    sendError('Missing required fields: ' . implode(', ', $missingFields), 400);
+    sendErrorResponse('Missing required fields: ' . implode(', ', $missingFields), 400);
 }
 
 $guardianId = intval($input['guardian_id']);
@@ -42,7 +42,7 @@ $studentCellnum = isset($input['student_cellnum']) ? trim($input['student_cellnu
 // Get database connection
 $conn = getDBConnection();
 if (!$conn) {
-    sendError('Database connection failed', 500);
+    sendErrorResponse('Database connection failed', 500);
 }
 
 try {
@@ -50,7 +50,7 @@ try {
     $stmt = $conn->prepare("SELECT guardian_id FROM guardians WHERE guardian_id = :id");
     $stmt->execute(['id' => $guardianId]);
     if (!$stmt->fetch()) {
-        sendError('Guardian not found', 404);
+        sendErrorResponse('Guardian not found', 404);
     }
     
     // Insert student
@@ -68,16 +68,16 @@ try {
     
     $studentId = $conn->lastInsertId();
     
-    sendSuccess([
-        'student_id' => $studentId,
-        'guardian_id' => $guardianId,
-        'student_name' => $studentName,
-        'address' => $address,
-        'student_cellnum' => $studentCellnum
-    ], 'Student created successfully', 201);
+    sendSuccessResponse('Student created successfully', [
+    'student_id' => $studentId,
+    'guardian_id' => $guardianId,
+    'student_name' => $studentName,
+    'address' => $address,
+    'student_cellnum' => $studentCellnum
+    ]);
     
 } catch (PDOException $e) {
     error_log("Create Student Error: " . $e->getMessage());
-    sendError('Failed to create student', 500);
+    sendErrorResponse('Failed to create student', 500);
 }
 ?>
