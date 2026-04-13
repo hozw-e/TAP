@@ -7,8 +7,11 @@
  * {
  *   "guardian_id": 1,
  *   "student_name": "Jane Doe",
- *   "address": "123 Main St",
- *   "student_cellnum": "+639987654321"
+ *   "student_birthdate": "2010-05-15",
+ *   "student_address": "123 Main St",
+ *   "student_cellnum": "+639987654321",
+ *   "student_course": "Mathematics",
+ *   "course_duration": "6 months"
  * }
  */
 
@@ -29,15 +32,26 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $input = json_decode(file_get_contents('php://input'), true);
 
 // Validate required fields
-$missingFields = validateRequiredFields($input, ['guardian_id', 'student_name', 'address']);
+$missingFields = validateRequiredFields($input, ['guardian_id', 'student_name', 'student_address']);
 if ($missingFields) {
     sendErrorResponse('Missing required fields: ' . implode(', ', $missingFields), 400);
 }
 
 $guardianId = intval($input['guardian_id']);
 $studentName = trim($input['student_name']);
-$address = trim($input['address']);
+$studentAddress = trim($input['student_address']);
+$studentBirthdate = isset($input['student_birthdate']) ? trim($input['student_birthdate']) : null;
 $studentCellnum = isset($input['student_cellnum']) ? trim($input['student_cellnum']) : null;
+$studentCourse = isset($input['student_course']) ? trim($input['student_course']) : null;
+$courseDuration = isset($input['course_duration']) ? trim($input['course_duration']) : null;
+
+// Calculate age from birthdate
+$age = null;
+if ($studentBirthdate) {
+    $birthDate = new DateTime($studentBirthdate);
+    $today = new DateTime();
+    $age = $today->diff($birthDate)->y;
+}
 
 // Get database connection
 $conn = getDBConnection();
@@ -53,27 +67,53 @@ try {
         sendErrorResponse('Guardian not found', 404);
     }
     
-    // Insert student
+    // Insert student with new fields
     $stmt = $conn->prepare("
-        INSERT INTO students (guardian_id, student_name, address, student_cellnum) 
-        VALUES (:guardian_id, :name, :address, :cellnum)
+        INSERT INTO students (
+            guardian_id, 
+            student_name, 
+            student_birthdate, 
+            age, 
+            student_address, 
+            student_cellnum, 
+            student_course, 
+            course_duration
+        ) 
+        VALUES (
+            :guardian_id, 
+            :name, 
+            :birthdate, 
+            :age, 
+            :address, 
+            :cellnum, 
+            :course, 
+            :duration
+        )
     ");
     
     $stmt->execute([
         'guardian_id' => $guardianId,
         'name' => $studentName,
-        'address' => $address,
-        'cellnum' => $studentCellnum
+        'birthdate' => $studentBirthdate,
+        'age' => $age,
+        'address' => $studentAddress,
+        'cellnum' => $studentCellnum,
+        'course' => $studentCourse,
+        'duration' => $courseDuration
     ]);
     
     $studentId = $conn->lastInsertId();
     
     sendSuccessResponse('Student created successfully', [
-    'student_id' => $studentId,
-    'guardian_id' => $guardianId,
-    'student_name' => $studentName,
-    'address' => $address,
-    'student_cellnum' => $studentCellnum
+        'student_id' => $studentId,
+        'guardian_id' => $guardianId,
+        'student_name' => $studentName,
+        'student_birthdate' => $studentBirthdate,
+        'age' => $age,
+        'student_address' => $studentAddress,
+        'student_cellnum' => $studentCellnum,
+        'student_course' => $studentCourse,
+        'course_duration' => $courseDuration
     ]);
     
 } catch (PDOException $e) {

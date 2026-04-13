@@ -4,6 +4,7 @@ import LogoutModal from '../components/LogoutModal';
 import NewRecordModal from '../components/NewRecordModal';
 import EditRecordModal from '../components/EditRecordModal';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
+import Notification from '../components/Notification';
 import { studentsAPI } from '../services/api';
 import '../styles/Students.css';
 
@@ -17,13 +18,19 @@ function Students() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Notification state
+  const [notification, setNotification] = useState({
+    isOpen: false,
+    message: '',
+    type: 'success'
+  });
 
   useEffect(() => {
     loadStudents();
   }, []);
 
   useEffect(() => {
-    // ✅ FIX: Guard students with Array.isArray before calling .filter()
     if (!Array.isArray(students)) return;
 
     const filtered = students.filter(student =>
@@ -38,7 +45,6 @@ function Students() {
     try {
       const response = await studentsAPI.list();
 
-      // ✅ FIX: Safely extract array — handles flat array or nested under .data.data
       const studentsData = Array.isArray(response?.data)
         ? response.data
         : Array.isArray(response?.data?.data)
@@ -61,8 +67,23 @@ function Students() {
     }
   };
 
-  const handleNewRecordSuccess = () => {
+  const showNotification = (action) => {
+    const messages = {
+      added: 'New record added successfully!',
+      updated: 'Record updated successfully!',
+      deleted: 'Record deleted successfully!'
+    };
+
+    setNotification({
+      isOpen: true,
+      message: messages[action] || 'Action completed successfully!',
+      type: 'success'
+    });
+  };
+
+  const handleNewRecordSuccess = (action) => {
     loadStudents();
+    showNotification(action);
   };
 
   const handleEditClick = (student) => {
@@ -70,8 +91,9 @@ function Students() {
     setShowEditModal(true);
   };
 
-  const handleEditSuccess = () => {
+  const handleEditSuccess = (action) => {
     loadStudents();
+    showNotification(action);
   };
 
   const handleDeleteClick = (student) => {
@@ -79,8 +101,9 @@ function Students() {
     setShowDeleteModal(true);
   };
 
-  const handleDeleteSuccess = () => {
+  const handleDeleteSuccess = (action) => {
     loadStudents();
+    showNotification(action);
   };
 
   return (
@@ -92,7 +115,6 @@ function Students() {
           <h1>Student Records</h1>
         </div>
 
-        {/* Search and Add Controls */}
         <div className="controls-section">
           <div className="search-container">
             <i className="fas fa-search search-icon"></i>
@@ -113,7 +135,6 @@ function Students() {
           </button>
         </div>
 
-        {/* Students Table */}
         <div className="students-section">
           <div className="students-header">Students</div>
           <div className="students-body">
@@ -152,8 +173,8 @@ function Students() {
                       <td>{student.guardian_name || '-'}</td>
                       <td>{student.guardian_cellnum || '-'}</td>
                       <td>
-                        {student.uid ? (
-                          <span className="nfc-badge">{student.uid}</span>
+                        {student.nfc_uid || student.uid ? (
+                          <span className="nfc-badge">{student.nfc_uid || student.uid}</span>
                         ) : (
                           <span className="nfc-badge nfc-unassigned">Not assigned</span>
                         )}
@@ -208,6 +229,13 @@ function Students() {
         onClose={() => setShowDeleteModal(false)}
         onSuccess={handleDeleteSuccess}
         student={selectedStudent}
+      />
+
+      <Notification
+        isOpen={notification.isOpen}
+        onClose={() => setNotification({ ...notification, isOpen: false })}
+        message={notification.message}
+        type={notification.type}
       />
     </div>
   );

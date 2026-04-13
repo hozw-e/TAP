@@ -33,12 +33,14 @@ try {
     $stmt = $conn->prepare("
         UPDATE guardians 
         SET guardian_name = :guardian_name,
+            guardian_address = :guardian_address,
             guardian_cellnum = :guardian_cellnum
         WHERE guardian_id = :guardian_id
     ");
     
     $stmt->execute([
         ':guardian_name' => $data['guardian_name'],
+        ':guardian_address' => $data['guardian_address'] ?? null,
         ':guardian_cellnum' => $data['guardian_cellnum'] ?? null,
         ':guardian_id' => $guardianId
     ]);

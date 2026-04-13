@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { studentsAPI } from '../services/api';
-import '../styles/DeleteModal.css';
+import ConfirmModal from './ConfirmModal';
 
 function DeleteConfirmModal({ isOpen, onClose, onSuccess, student }) {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -17,7 +17,7 @@ function DeleteConfirmModal({ isOpen, onClose, onSuccess, student }) {
         throw new Error(response.message || 'Failed to delete student');
       }
 
-      onSuccess();
+      onSuccess('deleted'); // Pass action type
       onClose();
     } catch (err) {
       console.error('Error deleting student:', err);
@@ -30,52 +30,14 @@ function DeleteConfirmModal({ isOpen, onClose, onSuccess, student }) {
   if (!isOpen || !student) return null;
 
   return (
-    <div className="modal-overlay show" onClick={onClose}>
-      <div className="delete-modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="delete-icon">
-          <i className="fas fa-exclamation-triangle"></i>
-        </div>
-        
-        <h2 className="delete-modal-title">Delete Student Record?</h2>
-        
-        <p className="delete-modal-message">
-          Are you sure you want to delete <strong>{student.student_name}</strong>?
-          This action cannot be undone.
-        </p>
-
-        {error && (
-          <div className="error-message">
-            <i className="fas fa-exclamation-circle"></i>
-            {error}
-          </div>
-        )}
-
-        <div className="delete-modal-buttons">
-          <button
-            className="btn btn-cancel"
-            onClick={onClose}
-            disabled={isDeleting}
-          >
-            Cancel
-          </button>
-          <button
-            className="btn btn-delete"
-            onClick={handleDelete}
-            disabled={isDeleting}
-          >
-            {isDeleting ? (
-              <>
-                <span className="spinner-small"></span> Deleting...
-              </>
-            ) : (
-              <>
-                <i className="fas fa-trash"></i> Delete
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-    </div>
+    <ConfirmModal
+      isOpen={isOpen}
+      onClose={onClose}
+      onConfirm={handleDelete}
+      title="Continue deleting record?"
+      message={error || "This action can't be undone."}
+      isLoading={isDeleting}
+    />
   );
 }
 
