@@ -1,24 +1,16 @@
 <?php
 /**
- * Assign NFC Tag to Student API
+ * Assign NFC Tag to Student
  * POST /api/nfc/assign.php
  * 
- * Request Body:
- * {
- *   "student_id": 1,
- *   "uid": "A1B2C3D4"
- * }
+ * Body: { "student_id": 1, "uid": "5C112949" }
  */
 
 require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
-require_once '../../utils/session.php';
 
-// Check admin authentication
-requireAdminAuth();
-
-// Only allow POST requests
+// Only allow POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendErrorResponse('Method not allowed', 405);
 }
@@ -26,69 +18,78 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // Get JSON input
 $input = json_decode(file_get_contents('php://input'), true);
 
-// Validate required fields
-$missingFields = validateRequiredFields($input, ['student_id', 'uid']);
-if ($missingFields) {
-    sendErrorResponse('Missing required fields: ' . implode(', ', $missingFields), 400);
+error_log("NFC Assign received: " . json_encode($input));
+
+// Validate inputs
+if (!isset($input['student_id']) || !isset($input['uid'])) {
+    sendErrorResponse('student_id and uid are required', 400);
 }
 
-$studentId = intval($input['student_id']);
-$uid = trim($input['uid']);
+$studentId = (int)$input['student_id'];
+$uid = strtoupper(trim($input['uid']));
 
-// Get database connection
-$conn = getDBConnection();
-if (!$conn) {
-    sendErrorResponse('Database connection failed', 500);
-}
+error_log("Assigning NFC: student_id=$studentId, uid=$uid");
 
 try {
-    // Verify student exists
-    $stmt = $conn->prepare("SELECT student_id, student_name FROM students WHERE student_id = :id");
-    $stmt->execute(['id' => $studentId]);
-    $student = $stmt->fetch();
+    $conn = getDBConnection();
     
-    if (!$student) {
-        sendErrorResponse('Student not found', 404);
+    if (!$conn) {
+        sendErrorResponse('Database connection failed', 500);
     }
     
-    // Check if UID already exists
-    $stmt = $conn->prepare("SELECT student_id FROM nfc_tags WHERE uid = :uid");
-    $stmt->execute(['uid' => $uid]);
-    if ($stmt->fetch()) {
-        sendErrorResponse('This NFC tag is already assigned to another student', 409);
-    }
-    
-    // Check if student already has an NFC tag
-    $stmt = $conn->prepare("SELECT nfctag_id FROM nfc_tags WHERE student_id = :student_id");
-    $stmt->execute(['student_id' => $studentId]);
-    $existing = $stmt->fetch();
+    // Check if UID already exists in nfc_tags
+    $stmt = $conn->prepare("SELECT nfctag_id, student_id FROM nfc_tags WHERE uid = :uid");
+    $stmt->execute([':uid' => $uid]);
+    $existing = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if ($existing) {
-        // Update existing tag
-        $stmt = $conn->prepare("UPDATE nfc_tags SET uid = :uid WHERE student_id = :student_id");
+        // UID exists - update student_id
+        error_log("NFC tag exists (nfctag_id={$existing['nfctag_id']}), updating student_id to $studentId");
+        
+        $stmt = $conn->prepare("
+            UPDATE nfc_tags 
+            SET student_id = :student_id, assigned_at = NOW() 
+            WHERE uid = :uid
+        ");
         $stmt->execute([
-            'uid' => $uid,
-            'student_id' => $studentId
+            ':student_id' => $studentId,
+            ':uid' => $uid
         ]);
-        $message = 'NFC tag updated successfully';
+        
+        $message = 'NFC tag reassigned to student';
     } else {
-        // Insert new tag
-        $stmt = $conn->prepare("INSERT INTO nfc_tags (student_id, uid) VALUES (:student_id, :uid)");
+        // UID doesn't exist - create new
+        error_log("NFC tag doesn't exist, creating new entry");
+        
+        $stmt = $conn->prepare("
+            INSERT INTO nfc_tags (student_id, uid, assigned_at) 
+            VALUES (:student_id, :uid, NOW())
+        ");
         $stmt->execute([
-            'student_id' => $studentId,
-            'uid' => $uid
+            ':student_id' => $studentId,
+            ':uid' => $uid
         ]);
-        $message = 'NFC tag assigned successfully';
+        
+        $message = 'NFC tag assigned to student';
+        error_log("NFC tag created successfully");
+    }
+    
+    // Mark temp scan as consumed
+    try {
+        $stmt = $conn->prepare("UPDATE temp_nfc_scans SET consumed = TRUE WHERE uid = :uid");
+        $stmt->execute([':uid' => $uid]);
+        error_log("Temp scan marked as consumed");
+    } catch (Exception $e) {
+        error_log("Temp scan update failed (this is OK): " . $e->getMessage());
     }
     
     sendSuccessResponse($message, [
-    'student_id' => $studentId,
-    'student_name' => $student['student_name'],
-    'uid' => $uid
+        'student_id' => $studentId,
+        'uid' => $uid
     ]);
     
 } catch (PDOException $e) {
     error_log("Assign NFC Error: " . $e->getMessage());
-    sendErrorResponse('Failed to assign NFC tag', 500);
+    sendErrorResponse('Failed to assign NFC tag: ' . $e->getMessage(), 500);
 }
 ?>

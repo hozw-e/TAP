@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { studentsAPI, guardiansAPI } from '../services/api';
 import ConfirmModal from './ConfirmModal';
+import { useNFCScanner } from '../hooks/useNFCScanner';
 import '../styles/NewRecordModal.css';
+import axios from 'axios';
 
 function NewRecordModal({ isOpen, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -21,6 +23,17 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showConfirm, setShowConfirm] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+
+  // NFC Scanner Hook
+  const { isPolling } = useNFCScanner(isScanning, (uid, unassigned) => {
+    // NFC card scanned!
+    setFormData(prev => ({
+      ...prev,
+      nfcId: uid
+    }));
+    setIsScanning(false); // Stop scanning after successful scan
+  });
 
   useEffect(() => {
     if (isOpen) {
@@ -39,6 +52,7 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
       });
       setError('');
       setShowConfirm(false);
+      setIsScanning(false);
     }
   }, [isOpen]);
 
@@ -66,11 +80,14 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
     }
   };
 
+  const handleScanNFC = () => {
+    setIsScanning(!isScanning);
+  };
+
   const handleFormSubmit = (e) => {
     e.preventDefault();
     setError('');
 
-    // Validate
     if (!formData.studentName.trim()) {
       setError('Student name is required');
       return;
@@ -88,54 +105,68 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
       return;
     }
 
-    // Show confirmation modal
     setShowConfirm(true);
   };
 
   const handleConfirmSave = async () => {
-    setIsLoading(true);
+  setIsLoading(true);
 
-    try {
-      const guardianResponse = await guardiansAPI.create({
-        guardian_name: formData.guardianName,
-        guardian_address: formData.guardianAddress || null,
-        guardian_cellnum: formData.guardianContact,
-      });
+  try {
+    const guardianResponse = await guardiansAPI.create({
+      guardian_name: formData.guardianName,
+      guardian_address: formData.guardianAddress || null,
+      guardian_cellnum: formData.guardianContact,
+    });
 
-      if (!guardianResponse.success) {
-        throw new Error(guardianResponse.message || 'Failed to create guardian');
-      }
-
-      const guardianId = guardianResponse?.data?.guardian_id;
-      if (!guardianId) {
-        throw new Error('Guardian was created but ID was not returned.');
-      }
-
-      const studentResponse = await studentsAPI.create({
-        guardian_id: guardianId,
-        student_name: formData.studentName,
-        student_birthdate: formData.birthdate || null,
-        student_address: formData.completeAddress,
-        student_cellnum: formData.contactNumber || null,
-        student_course: formData.course || null,
-        course_duration: formData.duration || null,
-      });
-
-      if (!studentResponse.success) {
-        throw new Error(studentResponse.message || 'Failed to create student');
-      }
-
-      setShowConfirm(false);
-      onSuccess('added'); // Pass action type
-      onClose();
-    } catch (err) {
-      console.error('Error creating record:', err);
-      setError(err.message || 'Failed to create record. Please try again.');
-      setShowConfirm(false);
-    } finally {
-      setIsLoading(false);
+    if (!guardianResponse.success) {
+      throw new Error(guardianResponse.message || 'Failed to create guardian');
     }
-  };
+
+    const guardianId = guardianResponse?.data?.guardian_id;
+    if (!guardianId) {
+      throw new Error('Guardian was created but ID was not returned.');
+    }
+
+    const studentResponse = await studentsAPI.create({
+      guardian_id: guardianId,
+      student_name: formData.studentName,
+      student_birthdate: formData.birthdate || null,
+      student_address: formData.completeAddress,
+      student_cellnum: formData.contactNumber || null,
+      student_course: formData.course || null,
+      course_duration: formData.duration || null,
+    });
+
+    if (!studentResponse.success) {
+      throw new Error(studentResponse.message || 'Failed to create student');
+    }
+
+    // If NFC ID was scanned, assign it to the student
+    if (formData.nfcId) {
+      const studentId = studentResponse.data.student_id;
+      try {
+        await axios.post('http://localhost/apdc/backend/api/nfc/assign.php', {
+          student_id: studentId,
+          uid: formData.nfcId
+        });
+        console.log('NFC tag assigned successfully');
+      } catch (nfcError) {
+        console.error('Failed to assign NFC tag:', nfcError);
+        // Don't fail the whole operation if NFC assignment fails
+      }
+    }
+
+    setShowConfirm(false);
+    onSuccess('added');
+    onClose();
+  } catch (err) {  // ✅ THIS IS CORRECT - catch is part of the outer try block
+    console.error('Error creating record:', err);
+    setError(err.message || 'Failed to create record. Please try again.');
+    setShowConfirm(false);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   if (!isOpen) return null;
 
@@ -256,14 +287,26 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
                     <div className="nfc-input-wrapper">
                       <input
                         type="text"
+                        name="nfcId"
                         className="form-input"
-                        placeholder="Scan NFC card..."
-                        disabled
+                        value={formData.nfcId}
+                        placeholder={isPolling ? "Waiting for NFC scan..." : "Scan NFC card..."}
+                        readOnly
                       />
-                      <button type="button" className="scan-nfc-btn" disabled>
-                        <i className="fas fa-wifi"></i> Scan NFC
+                      <button 
+                        type="button" 
+                        className={`scan-nfc-btn ${isPolling ? 'scanning' : ''}`}
+                        onClick={handleScanNFC}
+                      >
+                        <i className="fas fa-wifi"></i> 
+                        {isPolling ? 'Stop Scan' : 'Scan NFC'}
                       </button>
                     </div>
+                    {isPolling && (
+                      <small className="form-hint scanning-hint">
+                        <i className="fas fa-spinner fa-spin"></i> Listening for NFC card...
+                      </small>
+                    )}
                   </div>
                 </div>
               </div>

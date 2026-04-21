@@ -1,209 +1,162 @@
 import { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import LogoutModal from '../components/LogoutModal';
-import Notification from '../components/Notification';
-import { studentsAPI, attendanceAPI } from '../services/api';
+import axios from 'axios';
 import '../styles/Dashboard.css';
+
+// CACHE BREAKER VERSION 2.0
+const API_STATS_URL = 'http://localhost/apdc/backend/api/dashboard/stats.php';
+const API_LOGS_URL = 'http://localhost/apdc/backend/api/dashboard/logs.php';
 
 function Dashboard() {
   const [stats, setStats] = useState({
-    totalEnrollees: 0,
-    presentCount: 0,
-    newcomersCount: 0
+    totalStudents: 0,
+    presentToday: 0,
+    enrolledToday: 0
   });
   const [attendanceLogs, setAttendanceLogs] = useState([]);
-  const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [notification, setNotification] = useState({
-    isOpen: false,
-    studentName: '',
-    action: ''
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
   });
-  const [lastCheckTimestamp, setLastCheckTimestamp] = useState(Math.floor(Date.now() / 1000));
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadStatistics();
-    loadAttendanceLogs();
-  }, []);
+    loadDashboardData();
+  }, [selectedDate]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      checkNewAttendance();
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [lastCheckTimestamp]);
-
-  useEffect(() => {
-    loadAttendanceLogs();
-  }, [filterDate]);
-
-  const loadStatistics = async () => {
-    try {
-      const studentsResponse = await studentsAPI.list();
-
-      // ✅ FIX: Safely extract array — handles flat array or nested under .data.data
-      const studentsData = Array.isArray(studentsResponse?.data)
-        ? studentsResponse.data
-        : Array.isArray(studentsResponse?.data?.data)
-          ? studentsResponse.data.data
-          : [];
-
-      if (studentsResponse?.success) {
-        setStats(prev => ({
-          ...prev,
-          totalEnrollees: studentsData.length
-        }));
-
-        const today = new Date().toISOString().split('T')[0];
-
-        // ✅ FIX: .filter() is now safe because studentsData is guaranteed to be an array
-        const newcomers = studentsData.filter(student =>
-          student.created_at && student.created_at.startsWith(today)
-        );
-        setStats(prev => ({
-          ...prev,
-          newcomersCount: newcomers.length
-        }));
-      }
-
-      const attendanceResponse = await attendanceAPI.list({
-        date: new Date().toISOString().split('T')[0]
-      });
-
-      // ✅ FIX: Same safe extraction for attendance data
-      const attendanceData = Array.isArray(attendanceResponse?.data)
-        ? attendanceResponse.data
-        : Array.isArray(attendanceResponse?.data?.data)
-          ? attendanceResponse.data.data
-          : [];
-
-      if (attendanceResponse?.success) {
-        // ✅ FIX: .filter() is now safe
-        const present = attendanceData.filter(log => log.time_in && !log.time_out);
-        setStats(prev => ({
-          ...prev,
-          presentCount: present.length
-        }));
-      }
-    } catch (error) {
-      console.error('Error loading statistics:', error);
-    }
-  };
-
-  const loadAttendanceLogs = async () => {
+  const loadDashboardData = async () => {
     setIsLoading(true);
+    
     try {
-      const response = await attendanceAPI.list({ date: filterDate });
+      console.log('[DASHBOARD V2] Loading stats from:', API_STATS_URL);
+      const statsResponse = await axios.get(API_STATS_URL);
+      console.log('[DASHBOARD V2] Stats response:', statsResponse.data);
+      
+      if (statsResponse.data && statsResponse.data.success) {
+        setStats(statsResponse.data.data);
+      }
 
-      // ✅ FIX: Safely extract array — never set state to a non-array
-      const logsData = Array.isArray(response?.data)
-        ? response.data
-        : Array.isArray(response?.data?.data)
-          ? response.data.data
-          : [];
-
-      if (response?.success) {
-        setAttendanceLogs(logsData);
+      console.log('[DASHBOARD V2] Loading logs from:', API_LOGS_URL, 'with date:', selectedDate);
+      const logsResponse = await axios({
+        method: 'GET',
+        url: API_LOGS_URL,
+        params: { date: selectedDate }
+      });
+      console.log('[DASHBOARD V2] Logs response:', logsResponse.data);
+      
+      if (logsResponse.data && logsResponse.data.success) {
+        setAttendanceLogs(Array.isArray(logsResponse.data.data) ? logsResponse.data.data : []);
       } else {
         setAttendanceLogs([]);
       }
     } catch (error) {
-      console.error('Error loading attendance logs:', error);
+      console.error('[DASHBOARD V2] Error:', error);
       setAttendanceLogs([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const checkNewAttendance = async () => {
+  const handleRefresh = () => {
+    console.log('[DASHBOARD V2] Refresh clicked');
+    loadDashboardData();
+  };
+
+  const handleDateChange = (e) => {
+    console.log('[DASHBOARD V2] Date changed to:', e.target.value);
+    setSelectedDate(e.target.value);
+  };
+
+  const formatTime = (timeStr) => {
+    if (!timeStr) return '---';
     try {
-      const response = await attendanceAPI.recent(lastCheckTimestamp);
-
-      // ✅ FIX: Safely access nested logs array
-      const logs = Array.isArray(response?.data?.logs) ? response.data.logs : [];
-
-      if (response?.success && logs.length > 0) {
-        const latestLog = logs[0];
-        setNotification({
-          isOpen: true,
-          studentName: latestLog.student_name,
-          action: latestLog.action
-        });
-
-        setLastCheckTimestamp(response.data.timestamp);
-
-        loadAttendanceLogs();
-        loadStatistics();
-        playNotificationSound();
-      }
-    } catch (error) {
-      console.error('Error checking new attendance:', error);
+      // timeStr is "HH:MM:SS" from DB — parse manually to avoid timezone issues
+      const [hoursStr, minutesStr] = timeStr.split(':');
+      const hours = parseInt(hoursStr, 10);
+      const minutes = parseInt(minutesStr, 10);
+      if (isNaN(hours) || isNaN(minutes)) return '---';
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const hour12 = hours % 12 || 12;
+      const minuteStr = String(minutes).padStart(2, '0');
+      return `${hour12}:${minuteStr} ${ampm}`;
+    } catch (e) {
+      return '---';
     }
   };
 
-  const playNotificationSound = () => {
-    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE=');
-    audio.play().catch(e => console.log('Could not play sound'));
+  const calculateDuration = (timeIn, timeOut) => {
+    if (!timeIn || !timeOut) return '---';
+    try {
+      // Parse "HH:MM:SS" manually into total seconds
+      const toSeconds = (t) => {
+        const [h, m, s] = t.split(':').map(Number);
+        return h * 3600 + m * 60 + (s || 0);
+      };
+      const diffSecs = toSeconds(timeOut) - toSeconds(timeIn);
+      if (diffSecs < 0) return '---';
+      const hours = Math.floor(diffSecs / 3600);
+      const minutes = Math.floor((diffSecs % 3600) / 60);
+      return `${hours} hrs ${minutes} mins`;
+    } catch (e) {
+      return '---';
+    }
+  };
+
+  const getSMSStatus = (log) => {
+    return (log.sms_sent === true || log.sms_sent === 1) ? 'SENT' : 'FAILED TO SEND';
+  };
+
+  const getStatus = (log) => {
+    return (log.time_out && log.time_out !== null) ? 'LEFT' : 'PRESENT';
   };
 
   return (
     <div className="dashboard-layout">
       <Sidebar onLogoutClick={() => setShowLogoutModal(true)} />
-
       <div className="main-content">
         <div className="page-header">
           <h1>Dashboard</h1>
-          <p>Welcome back, Admin!</p>
+          <p className="page-subtitle">Welcome back, Admin!</p>
         </div>
-
-        {/* Stats Cards */}
-        <div className="stats-container">
+        <div className="stats-grid">
           <div className="stat-card">
             <div className="stat-card-header">Enrollees</div>
             <div className="stat-card-body">
-              <div className="stat-number">{stats.totalEnrollees}</div>
-              <div className="stat-label">Total Students</div>
+              <div className="stat-card-value">{stats.totalStudents}</div>
+              <div className="stat-card-label">Total Students</div>
             </div>
           </div>
-
           <div className="stat-card">
             <div className="stat-card-header">Present</div>
             <div className="stat-card-body">
-              <div className="stat-number">{stats.presentCount}</div>
-              <div className="stat-label">Currently In Facility</div>
+              <div className="stat-card-value">{stats.presentToday}</div>
+              <div className="stat-card-label">Currently In Facility</div>
             </div>
           </div>
-
           <div className="stat-card">
             <div className="stat-card-header">Newcomers</div>
             <div className="stat-card-body">
-              <div className="stat-number">{stats.newcomersCount}</div>
-              <div className="stat-label">Enrolled Today</div>
+              <div className="stat-card-value">{stats.enrolledToday}</div>
+              <div className="stat-card-label">Enrolled Today</div>
             </div>
           </div>
         </div>
-
-        {/* Attendance Logs */}
         <div className="logs-section">
           <div className="logs-header">
             <span>Attendance Logs</span>
-            <div className="filter-controls">
-              <input
-                type="date"
-                value={filterDate}
-                onChange={(e) => setFilterDate(e.target.value)}
-              />
-              <button className="refresh-btn" onClick={loadAttendanceLogs}>
-                <i className="fas fa-sync"></i> Refresh
+            <div className="logs-controls">
+              <input type="date" className="date-picker" value={selectedDate} onChange={handleDateChange} />
+              <button className="refresh-btn" onClick={handleRefresh}>
+                <i className="fas fa-sync-alt"></i>
+                Refresh
               </button>
             </div>
           </div>
-
           <div className="logs-body">
             {isLoading ? (
-              <div className="loading-spinner">
+              <div className="empty-state">
                 <div className="spinner"></div>
                 <p>Loading attendance logs...</p>
               </div>
@@ -216,21 +169,29 @@ function Dashboard() {
               <table className="logs-table">
                 <thead>
                   <tr>
-                    <th>Student Name</th>
+                    <th>Name</th>
                     <th>Time In</th>
                     <th>Time Out</th>
+                    <th>Duration</th>
+                    <th>SMS Notification</th>
                     <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {attendanceLogs.map((log, index) => (
-                    <tr key={index}>
-                      <td>{log.student_name}</td>
-                      <td>{log.time_in || '-'}</td>
-                      <td>{log.time_out || '-'}</td>
+                  {attendanceLogs.map((log) => (
+                    <tr key={log.attendance_id}>
+                      <td>{log.student_name || 'Unknown'}</td>
+                      <td>{formatTime(log.time_in)}</td>
+                      <td>{formatTime(log.time_out)}</td>
+                      <td>{calculateDuration(log.time_in, log.time_out)}</td>
                       <td>
-                        <span className={`status-badge ${log.time_out ? 'status-out' : 'status-in'}`}>
-                          {log.time_out ? 'OUT' : 'IN'}
+                        <span className={`sms-badge ${getSMSStatus(log) === 'SENT' ? 'sms-sent' : 'sms-failed'}`}>
+                          {getSMSStatus(log)}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`status-badge ${getStatus(log) === 'PRESENT' ? 'status-present' : 'status-left'}`}>
+                          {getStatus(log)}
                         </span>
                       </td>
                     </tr>
@@ -241,18 +202,7 @@ function Dashboard() {
           </div>
         </div>
       </div>
-
-      <LogoutModal
-        isOpen={showLogoutModal}
-        onClose={() => setShowLogoutModal(false)}
-      />
-
-      <Notification
-        isOpen={notification.isOpen}
-        studentName={notification.studentName}
-        action={notification.action}
-        onClose={() => setNotification({ ...notification, isOpen: false })}
-      />
+      <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
     </div>
   );
 }

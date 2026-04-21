@@ -66,31 +66,6 @@ export const studentsAPI = {
   },
 };
 
-/* export const studentsAPI = {
-  // Get all students
-  list: async () => {
-    const response = await api.get('/students/list.php');
-    return response.data;
-  },
-
-  // Create new student
-  create: async (studentData) => {
-    const response = await api.post('/students/create.php', studentData);
-    return response.data;
-  },
-
-  // Update student
-  update: async (studentId, studentData) => {
-    const response = await api.put(`/students/update.php?id=${studentId}`, studentData);
-    return response.data;
-  },
-
-  // Delete student
-  delete: async (studentId) => {
-    const response = await api.delete(`/students/delete.php?id=${studentId}`);
-    return response.data;
-  },
-}; */
 
 // ============================================
 // GUARDIANS API
@@ -116,23 +91,6 @@ export const guardiansAPI = {
   },
 };
 
-/* export const guardiansAPI = {
-  list: async () => {
-    const response = await api.get('/guardians/list.php');
-    return response.data;
-  },
-
-  create: async (guardianData) => {
-    const response = await api.post('/guardians/create.php', guardianData);
-    return response.data;
-  },
-
-  // Update guardian
-  update: async (guardianId, guardianData) => {
-    const response = await api.put(`/guardians/update.php?id=${guardianId}`, guardianData);
-    return response.data;
-  },
-}; */
 
 // ============================================
 // NFC API
@@ -140,12 +98,27 @@ export const guardiansAPI = {
 
 export const nfcAPI = {
   // Assign NFC tag to student
-  assign: async (studentId, uid) => {
-    const response = await api.post('/nfc/assign.php', { student_id: studentId, uid });
+  // Called by EditRecordModal after a scan is detected
+  assign: async ({ student_id, uid }) => {
+    const response = await api.post('/nfc/assign.php', { student_id, uid });
     return response.data;
   },
 
-  // Handle NFC scan (from hardware)
+  // Poll for the latest unconsumed scan from temp_nfc_scans
+  // Called by useNFCScanner every 500ms while scanning is active
+  getLastScan: async () => {
+    const response = await api.get('/nfc/get-last-scan.php');
+    return response.data;
+  },
+
+  // Mark all unconsumed scans as consumed after frontend reads them
+  // Called by useNFCScanner immediately after a UID is picked up
+  clearScan: async () => {
+    const response = await api.post('/nfc/clear-scan.php');
+    return response.data;
+  },
+
+  // Handle NFC scan (from ESP32 hardware)
   scan: async (uid) => {
     const response = await api.post('/nfc/scan.php', { uid });
     return response.data;
@@ -198,5 +171,29 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const dashboardAPI = {
+  // Get dashboard stats
+  getStats: async () => {
+    try {
+      const response = await api.get('/dashboard/stats.php');
+      return response.data;
+    } catch (error) {
+      console.error('Dashboard stats error:', error);
+      return { success: false, data: { totalStudents: 0, presentToday: 0, enrolledToday: 0 } };
+    }
+  },
+ 
+  // Get attendance logs for a specific date
+  getAttendanceLogs: async (date) => {
+    try {
+      const response = await api.get(`/dashboard/logs.php?date=${date}`);
+      return response.data;
+    } catch (error) {
+      console.error('Attendance logs error:', error);
+      return { success: false, data: [] };
+    }
+  },
+};
 
 export default api;

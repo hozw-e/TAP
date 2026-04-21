@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { studentsAPI, guardiansAPI } from '../services/api';
+import { studentsAPI, guardiansAPI, nfcAPI } from '../services/api';
 import ConfirmModal from './ConfirmModal';
+import { useNFCScanner } from '../hooks/useNFCScanner';
 import '../styles/NewRecordModal.css';
 
 function EditRecordModal({ isOpen, onClose, onSuccess, student }) {
@@ -12,6 +13,7 @@ function EditRecordModal({ isOpen, onClose, onSuccess, student }) {
     contactNumber: '',
     course: '',
     duration: '',
+    nfcId: '',
     guardianName: '',
     guardianAddress: '',
     guardianCellnum: '',
@@ -20,24 +22,61 @@ function EditRecordModal({ isOpen, onClose, onSuccess, student }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showConfirm, setShowConfirm] = useState(false);
+  const [nfcScanning, setNfcScanning] = useState(false);
+
+  // Called by useNFCScanner when a UID is detected
+  const handleNFCScan = async (uid) => {
+    setNfcScanning(false); // Stop polling after successful scan
+
+    try {
+      const response = await nfcAPI.assign({
+        student_id: student.student_id,
+        uid,
+      });
+
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to assign NFC tag');
+      }
+
+      setFormData(prev => ({ ...prev, nfcId: uid }));
+    } catch (err) {
+      setError(err.message || 'Failed to assign NFC tag. Please try again.');
+    }
+  };
+
+  const { isPolling } = useNFCScanner(nfcScanning, handleNFCScan);
+
+  const handleScanNFC = () => {
+    setNfcScanning(prev => !prev);
+  };
 
   useEffect(() => {
     if (isOpen && student) {
-      const ageValue = student.age !== null && student.age !== undefined 
-        ? String(student.age) 
-        : '';
-      
+      // Recalculate age from birthdate so it's always accurate on load
+      let ageValue = '';
+      if (student.student_birthdate) {
+        const today = new Date();
+        const birthDate = new Date(student.student_birthdate);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+        ageValue = age >= 0 ? String(age) : '';
+      }
+
       setFormData({
-        studentName: student.student_name || '',
-        birthdate: student.student_birthdate || '',
-        age: ageValue,
-        completeAddress: student.student_address || '',
-        contactNumber: student.student_cellnum || '',
-        course: student.student_course || '',
-        duration: student.course_duration || '',
-        guardianName: student.guardian_name || '',
-        guardianAddress: student.guardian_address || '',
-        guardianCellnum: student.guardian_cellnum || '',
+        studentName:     student.student_name      || '',
+        birthdate:       student.student_birthdate || '',
+        age:             ageValue,
+        completeAddress: student.student_address   || '',
+        contactNumber:   student.student_cellnum   || '',
+        course:          student.student_course    || '',
+        duration:        student.course_duration   || '',
+        nfcId:           student.nfc_uid           || '',
+        guardianName:    student.guardian_name     || '',
+        guardianAddress: student.guardian_address  || '',
+        guardianCellnum: student.guardian_cellnum  || '',
       });
       setError('');
       setShowConfirm(false);
@@ -246,14 +285,26 @@ function EditRecordModal({ isOpen, onClose, onSuccess, student }) {
                     <div className="nfc-input-wrapper">
                       <input
                         type="text"
+                        name="nfcId"
                         className="form-input"
-                        value={student.nfc_uid || 'Not assigned'}
-                        disabled
+                        value={formData.nfcId}
+                        placeholder={isPolling ? "Waiting for NFC scan..." : "Scan NFC card..."}
+                        readOnly
                       />
-                      <button type="button" className="scan-nfc-btn" disabled>
-                        <i className="fas fa-wifi"></i> Scan NFC
+                      <button 
+                        type="button" 
+                        className={`scan-nfc-btn ${isPolling ? 'scanning' : ''}`}
+                        onClick={handleScanNFC}
+                      >
+                        <i className="fas fa-wifi"></i> 
+                        {isPolling ? 'Stop Scan' : 'Scan NFC'}
                       </button>
                     </div>
+                    {isPolling && (
+                      <small className="form-hint scanning-hint">
+                        <i className="fas fa-spinner fa-spin"></i> Listening for NFC card...
+                      </small>
+                    )}
                   </div>
                 </div>
               </div>

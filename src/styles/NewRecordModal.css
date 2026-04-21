@@ -256,3 +256,37 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* Scan NFC Button States */
+.scan-nfc-btn.scanning {
+  background: #27ae60;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Scanning Hint */
+.scanning-hint {
+  display: block;
+  margin-top: 8px;
+  color: #27ae60;
+  font-weight: 600;
+  animation: pulse 1.5s infinite;
+}
+
+.scanning-hint i {
+  margin-right: 5px;
+}
+
+/* Make NFC input field editable when typing */
+.nfc-input-wrapper .form-input[readonly] {
+  background: #f8f9fa;
+  cursor: default;
+}

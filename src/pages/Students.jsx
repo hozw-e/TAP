@@ -67,6 +67,12 @@ function Students() {
     }
   };
 
+  // Calculate total hours (placeholder - you can implement actual logic)
+  const calculateTotalHours = (student) => {
+    // TODO: Calculate from attendance_logs
+    return '0 hours';
+  };
+
   const showNotification = (action) => {
     const messages = {
       added: 'New record added successfully!',
@@ -109,12 +115,10 @@ function Students() {
   return (
     <div className="students-layout">
       <Sidebar onLogoutClick={() => setShowLogoutModal(true)} />
-
       <div className="main-content">
         <div className="page-header">
           <h1>Student Records</h1>
         </div>
-
         <div className="controls-section">
           <div className="search-container">
             <i className="fas fa-search search-icon"></i>
@@ -126,15 +130,11 @@ function Students() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <button
-            className="add-record-btn"
-            onClick={() => setShowNewRecordModal(true)}
-          >
+          <button className="add-record-btn" onClick={() => setShowNewRecordModal(true)}>
             <i className="fas fa-plus"></i>
             New record
           </button>
         </div>
-
         <div className="students-section">
           <div className="students-header">Students</div>
           <div className="students-body">
@@ -155,44 +155,30 @@ function Students() {
               <table className="students-table">
                 <thead>
                   <tr>
-                    <th>Name</th>
-                    <th>Status</th>
+                    <th>Student Name</th>
+                    <th>Course</th>
+                    <th>Duration</th>
+                    <th>Total Hours</th>
                     <th>Guardian</th>
-                    <th>Guardian's Contact</th>
-                    <th>NFC ID</th>
-                    <th>Actions</th>
+                    <th>Contact Number</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredStudents.map((student) => (
                     <tr key={student.student_id}>
                       <td>{student.student_name}</td>
-                      <td>
-                        <span className="status-badge status-active">ACTIVE</span>
-                      </td>
+                      <td>{student.student_course || '-'}</td>
+                      <td>{student.course_duration || '-'}</td>
+                      <td>{calculateTotalHours(student)}</td>
                       <td>{student.guardian_name || '-'}</td>
                       <td>{student.guardian_cellnum || '-'}</td>
                       <td>
-                        {student.nfc_uid || student.uid ? (
-                          <span className="nfc-badge">{student.nfc_uid || student.uid}</span>
-                        ) : (
-                          <span className="nfc-badge nfc-unassigned">Not assigned</span>
-                        )}
-                      </td>
-                      <td>
                         <div className="action-buttons">
-                          <button
-                            className="action-btn action-btn-edit"
-                            onClick={() => handleEditClick(student)}
-                            title="Edit"
-                          >
+                          <button className="action-btn action-btn-edit" onClick={() => handleEditClick(student)} title="Edit">
                             <i className="fas fa-edit"></i>
                           </button>
-                          <button
-                            className="action-btn action-btn-delete"
-                            onClick={() => handleDeleteClick(student)}
-                            title="Delete"
-                          >
+                          <button className="action-btn action-btn-delete" onClick={() => handleDeleteClick(student)} title="Delete">
                             <i className="fas fa-trash"></i>
                           </button>
                         </div>
@@ -205,38 +191,11 @@ function Students() {
           </div>
         </div>
       </div>
-
-      <LogoutModal
-        isOpen={showLogoutModal}
-        onClose={() => setShowLogoutModal(false)}
-      />
-
-      <NewRecordModal
-        isOpen={showNewRecordModal}
-        onClose={() => setShowNewRecordModal(false)}
-        onSuccess={handleNewRecordSuccess}
-      />
-
-      <EditRecordModal
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        onSuccess={handleEditSuccess}
-        student={selectedStudent}
-      />
-
-      <DeleteConfirmModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onSuccess={handleDeleteSuccess}
-        student={selectedStudent}
-      />
-
-      <Notification
-        isOpen={notification.isOpen}
-        onClose={() => setNotification({ ...notification, isOpen: false })}
-        message={notification.message}
-        type={notification.type}
-      />
+      <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
+      <NewRecordModal isOpen={showNewRecordModal} onClose={() => setShowNewRecordModal(false)} onSuccess={handleNewRecordSuccess} />
+      <EditRecordModal isOpen={showEditModal} onClose={() => setShowEditModal(false)} onSuccess={handleEditSuccess} student={selectedStudent} />
+      <DeleteConfirmModal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} onSuccess={handleDeleteSuccess} student={selectedStudent} />
+      <Notification isOpen={notification.isOpen} onClose={() => setNotification({ ...notification, isOpen: false })} message={notification.message} type={notification.type} />
     </div>
   );
 }

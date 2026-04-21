@@ -16,7 +16,7 @@ requireAdminAuth();
 
 // Only allow GET requests
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    sendErrorResponse('Method not allowed', 405);
+    sendErrorResponse('Method not allowed', 405);   
 }
 
 // Get database connection
