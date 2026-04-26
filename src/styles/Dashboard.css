@@ -261,3 +261,20 @@
     grid-template-columns: 1fr;
   }
 }
+
+.export-btn {
+  background-color: #e53935;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.export-btn:hover {
+  background-color: #c62828;
+}

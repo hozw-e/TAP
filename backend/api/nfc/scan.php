@@ -59,9 +59,11 @@ try {
         SELECT 
             n.nfctag_id,
             n.student_id,
-            s.student_name
+            s.student_name,
+            g.guardian_cellnum
         FROM nfc_tags n
         LEFT JOIN students s ON n.student_id = s.student_id
+        LEFT JOIN guardians g ON s.guardian_id = g.guardian_id
         WHERE n.uid = :uid
     ");
     
@@ -69,9 +71,44 @@ try {
     $nfcTag = $stmt->fetch();
     
     if ($nfcTag && $nfcTag['student_id']) {
-        $studentId = $nfcTag['student_id'];
-        $today = date('Y-m-d');
-        $now = date('H:i:s');
+        $studentId        = $nfcTag['student_id'];
+        $studentName      = $nfcTag['student_name'];
+        $guardianCellnum  = $nfcTag['guardian_cellnum'];
+        $today            = date('Y-m-d');
+        $now              = date('H:i:s');
+        $displayTime      = date('h:i A'); // e.g. "02:30 PM"
+
+        // -----------------------------------------------
+        // SMS helper — sends via iProg SMS API
+        // -----------------------------------------------
+        $sendSMS = function(string $rawNumber, string $message) {
+            $apiToken = '67fc73769b9ced49cfa661c6382c5bfa0d7e5449'; // 🔑 Replace with your actual token
+
+            // Convert 09XXXXXXXXX → 639XXXXXXXXX
+            $number = $rawNumber;
+            if (substr($number, 0, 2) === '09') {
+                $number = '63' . substr($number, 1);
+            }
+
+            $payload = json_encode([
+                'api_token'    => $apiToken,
+                'phone_number' => $number,
+                'message'      => $message,
+            ]);
+
+            $ch = curl_init('https://www.iprogsms.com/api/v1/sms_messages?api_token=' . urlencode($apiToken) . '&message=' . urlencode($message) . '&phone_number=' . urlencode($number));
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            $result = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            error_log("SMS to $number — HTTP $httpCode: $result");
+            return $httpCode === 200;
+        };
 
         // Check if student already has an open attendance record today
         $stmt = $conn->prepare("
@@ -85,6 +122,8 @@ try {
         $stmt->execute([':student_id' => $studentId, ':date' => $today]);
         $openRecord = $stmt->fetch(PDO::FETCH_ASSOC);
 
+        $smsSent = false;
+
         if ($openRecord) {
             // Student is checking OUT — fill in time_out
             $stmt = $conn->prepare("
@@ -97,8 +136,25 @@ try {
                 ':attendance_id' => $openRecord['attendance_id'],
             ]);
 
-            $action = 'check_out';
-            $actionMessage = 'Checked out: ' . $nfcTag['student_name'];
+            $action        = 'check_out';
+            $actionMessage = 'Checked out: ' . $studentName;
+
+            // Send check-out SMS to guardian
+            if ($guardianCellnum) {
+                $smsMessage = "Your child $studentName has checked out at $displayTime. - A+ Solutions Dev't Center";
+                $smsSent = $sendSMS($guardianCellnum, $smsMessage);
+
+                // Update sms_sent in attendance record
+                $stmt = $conn->prepare("
+                    UPDATE attendance_logs
+                    SET sms_sent = :sms_sent
+                    WHERE attendance_id = :attendance_id
+                ");
+                $stmt->execute([
+                    ':sms_sent'      => $smsSent ? 1 : 0,
+                    ':attendance_id' => $openRecord['attendance_id'],
+                ]);
+            }
         } else {
             // Student is checking IN — create new record
             $stmt = $conn->prepare("
@@ -111,18 +167,37 @@ try {
                 ':time_in'    => $now,
             ]);
 
-            $action = 'check_in';
-            $actionMessage = 'Checked in: ' . $nfcTag['student_name'];
+            $action        = 'check_in';
+            $actionMessage = 'Checked in: ' . $studentName;
+
+            // Send check-in SMS to guardian
+            if ($guardianCellnum) {
+                $smsMessage = "Your child $studentName has checked in at $displayTime. - A+ Solutions Dev't Center";
+                $smsSent = $sendSMS($guardianCellnum, $smsMessage);
+
+                // Update sms_sent in attendance record
+                $lastInsertId = $conn->lastInsertId();
+                $stmt = $conn->prepare("
+                    UPDATE attendance_logs
+                    SET sms_sent = :sms_sent
+                    WHERE attendance_id = :attendance_id
+                ");
+                $stmt->execute([
+                    ':sms_sent'      => $smsSent ? 1 : 0,
+                    ':attendance_id' => $lastInsertId,
+                ]);
+            }
         }
 
-        error_log("Attendance recorded: $actionMessage");
+        error_log("Attendance recorded: $actionMessage | SMS sent: " . ($smsSent ? 'yes' : 'no'));
 
         sendSuccessResponse('NFC tag scanned (assigned)', [
             'status'       => 'assigned',
             'action'       => $action,
             'uid'          => $uid,
             'student_id'   => $studentId,
-            'student_name' => $nfcTag['student_name'],
+            'student_name' => $studentName,
+            'sms_sent'     => $smsSent,
             'message'      => $actionMessage,
         ]);
     } else {

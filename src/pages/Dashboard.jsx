@@ -7,6 +7,7 @@ import '../styles/Dashboard.css';
 // CACHE BREAKER VERSION 2.0
 const API_STATS_URL = 'http://localhost/apdc/backend/api/dashboard/stats.php';
 const API_LOGS_URL = 'http://localhost/apdc/backend/api/dashboard/logs.php';
+const API_EXPORT_URL = 'http://localhost/apdc/backend/api/dashboard/export.php';
 
 function Dashboard() {
   const [stats, setStats] = useState({
@@ -67,6 +68,10 @@ function Dashboard() {
   const handleDateChange = (e) => {
     console.log('[DASHBOARD V2] Date changed to:', e.target.value);
     setSelectedDate(e.target.value);
+  };
+
+  const handleExport = () => {
+    window.open(`${API_EXPORT_URL}?date=${selectedDate}`, '_blank');
   };
 
   const formatTime = (timeStr) => {
@@ -200,6 +205,11 @@ function Dashboard() {
               </table>
             )}
           </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+          <button className="export-btn" onClick={handleExport}>
+            <i className="fas fa-file-pdf"></i> Export PDF
+          </button>
         </div>
       </div>
       <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
