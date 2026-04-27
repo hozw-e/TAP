@@ -1,21 +1,27 @@
-FROM php:8.2-apache
+FROM php:8.2-fpm-alpine
 
-# Fix MPM conflict by removing conflicting configs and explicitly setting prefork
-RUN rm -f /etc/apache2/mods-enabled/mpm_event.conf \
-          /etc/apache2/mods-enabled/mpm_event.load \
-          /etc/apache2/mods-enabled/mpm_worker.conf \
-          /etc/apache2/mods-enabled/mpm_worker.load \
-    && ln -sf /etc/apache2/mods-available/mpm_prefork.conf /etc/apache2/mods-enabled/mpm_prefork.conf \
-    && ln -sf /etc/apache2/mods-available/mpm_prefork.load /etc/apache2/mods-enabled/mpm_prefork.load \
-    && a2enmod rewrite
+# Install nginx and required packages
+RUN apk add --no-cache nginx
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo pdo_mysql
 
-# Copy backend files to Apache web root
+# Create nginx run directory
+RUN mkdir -p /run/nginx
+
+# Copy nginx config
+COPY docker/nginx.conf /etc/nginx/nginx.conf
+
+# Copy backend files
 COPY . /var/www/html/
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html
 
+# Copy and set start script
+COPY docker/start.sh /start.sh
+RUN chmod +x /start.sh
+
 EXPOSE 80
+
+CMD ["/start.sh"]
