@@ -5,9 +5,10 @@ import axios from 'axios';
 import '../styles/Dashboard.css';
 
 // CACHE BREAKER VERSION 2.0
-const API_STATS_URL = 'http://localhost/apdc/backend/api/dashboard/stats.php';
-const API_LOGS_URL = 'http://localhost/apdc/backend/api/dashboard/logs.php';
-const API_EXPORT_URL = 'http://localhost/apdc/backend/api/dashboard/export.php';
+const BASE = import.meta.env.VITE_API_BASE_URL;
+const API_STATS_URL = `${BASE}/dashboard/stats.php`;
+const API_LOGS_URL = `${BASE}/dashboard/logs.php`;
+const API_EXPORT_URL = `${BASE}/dashboard/export.php`;
 
 function Dashboard() {
   const [stats, setStats] = useState({

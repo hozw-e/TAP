@@ -10,3 +10,10 @@ dist
 
 # Logs
 *.log
+
+# Environment variables
+.env
+.env.local
+
+# Database credentials
+backend/config/database.php
