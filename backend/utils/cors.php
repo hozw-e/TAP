@@ -1,5 +1,16 @@
 <?php
-header("Access-Control-Allow-Origin: http://localhost:3000");
+$allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://scintillating-transformation-production-8977.up.railway.app',
+];
+
+$origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
+
+if (in_array($origin, $allowedOrigins)) {
+    header("Access-Control-Allow-Origin: $origin");
+} 
+
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Headers: Content-Type");
 header("Access-Control-Allow-Methods: GET, POST, PUT, OPTIONS");
