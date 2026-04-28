@@ -194,7 +194,7 @@
 .gear {
   position: fixed;
   bottom: -120px;
-  opacity: 0.18;
+  opacity: 0.80;
   pointer-events: none;
   animation: floatUp linear infinite;
   z-index: 0;
@@ -216,10 +216,10 @@
     opacity: 0;
   }
   10% {
-    opacity: 0.18;
+    opacity: 0.80;
   }
   90% {
-    opacity: 0.18;
+    opacity: 0.80;
   }
   100% {
     transform: translateY(-110vh) rotate(360deg);
