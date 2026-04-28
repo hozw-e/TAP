@@ -278,3 +278,60 @@
 .export-btn:hover {
   background-color: #c62828;
 }
+
+.export-modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 28px;
+  width: 420px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.export-modal-title {
+  color: #e53935;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.export-modal-subtitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.export-date-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.export-date-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.export-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-export {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.btn-export:hover {
+  background-color: #388e3c;
+}

@@ -4,7 +4,6 @@ import LogoutModal from '../components/LogoutModal';
 import axios from 'axios';
 import '../styles/Dashboard.css';
 
-// CACHE BREAKER VERSION 2.0
 const BASE = import.meta.env.VITE_API_BASE_URL;
 const API_STATS_URL = `${BASE}/dashboard/stats.php`;
 const API_LOGS_URL = `${BASE}/dashboard/logs.php`;
@@ -24,30 +23,29 @@ function Dashboard() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Export modal state
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportDateFrom, setExportDateFrom] = useState(() => new Date().toISOString().split('T')[0]);
+  const [exportDateTo, setExportDateTo] = useState(() => new Date().toISOString().split('T')[0]);
+
   useEffect(() => {
     loadDashboardData();
   }, [selectedDate]);
 
   const loadDashboardData = async () => {
     setIsLoading(true);
-    
     try {
-      console.log('[DASHBOARD V2] Loading stats from:', API_STATS_URL);
       const statsResponse = await axios.get(API_STATS_URL);
-      console.log('[DASHBOARD V2] Stats response:', statsResponse.data);
-      
       if (statsResponse.data && statsResponse.data.success) {
         setStats(statsResponse.data.data);
       }
 
-      console.log('[DASHBOARD V2] Loading logs from:', API_LOGS_URL, 'with date:', selectedDate);
       const logsResponse = await axios({
         method: 'GET',
         url: API_LOGS_URL,
         params: { date: selectedDate }
       });
-      console.log('[DASHBOARD V2] Logs response:', logsResponse.data);
-      
+
       if (logsResponse.data && logsResponse.data.success) {
         setAttendanceLogs(Array.isArray(logsResponse.data.data) ? logsResponse.data.data : []);
       } else {
@@ -61,24 +59,19 @@ function Dashboard() {
     }
   };
 
-  const handleRefresh = () => {
-    console.log('[DASHBOARD V2] Refresh clicked');
-    loadDashboardData();
-  };
+  const handleRefresh = () => loadDashboardData();
 
-  const handleDateChange = (e) => {
-    console.log('[DASHBOARD V2] Date changed to:', e.target.value);
-    setSelectedDate(e.target.value);
-  };
+  const handleDateChange = (e) => setSelectedDate(e.target.value);
 
-  const handleExport = () => {
-    window.open(`${API_EXPORT_URL}?date=${selectedDate}`, '_blank');
+  const handleExportConfirm = () => {
+    if (!exportDateFrom || !exportDateTo) return;
+    window.open(`${API_EXPORT_URL}?date_from=${exportDateFrom}&date_to=${exportDateTo}`, '_blank');
+    setShowExportModal(false);
   };
 
   const formatTime = (timeStr) => {
     if (!timeStr) return '---';
     try {
-      // timeStr is "HH:MM:SS" from DB — parse manually to avoid timezone issues
       const [hoursStr, minutesStr] = timeStr.split(':');
       const hours = parseInt(hoursStr, 10);
       const minutes = parseInt(minutesStr, 10);
@@ -95,7 +88,6 @@ function Dashboard() {
   const calculateDuration = (timeIn, timeOut) => {
     if (!timeIn || !timeOut) return '---';
     try {
-      // Parse "HH:MM:SS" manually into total seconds
       const toSeconds = (t) => {
         const [h, m, s] = t.split(':').map(Number);
         return h * 3600 + m * 60 + (s || 0);
@@ -208,11 +200,50 @@ function Dashboard() {
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
-          <button className="export-btn" onClick={handleExport}>
+          <button className="export-btn" onClick={() => setShowExportModal(true)}>
             <i className="fas fa-file-pdf"></i> Export PDF
           </button>
         </div>
       </div>
+
+      {/* Export PDF Modal */}
+      {showExportModal && (
+        <div className="modal-overlay show" onClick={() => setShowExportModal(false)}>
+          <div className="export-modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2 className="export-modal-title">Export PDF</h2>
+            <p className="export-modal-subtitle">Date Range</p>
+            <div className="export-date-row">
+              <div className="export-date-group">
+                <label>From:</label>
+                <input
+                  type="date"
+                  className="date-picker"
+                  value={exportDateFrom}
+                  onChange={(e) => setExportDateFrom(e.target.value)}
+                />
+              </div>
+              <div className="export-date-group">
+                <label>To:</label>
+                <input
+                  type="date"
+                  className="date-picker"
+                  value={exportDateTo}
+                  onChange={(e) => setExportDateTo(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="export-modal-footer">
+              <button className="btn btn-cancel" onClick={() => setShowExportModal(false)}>
+                Cancel
+              </button>
+              <button className="btn btn-export" onClick={handleExportConfirm}>
+                Export
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
     </div>
   );
