@@ -174,6 +174,5 @@ $filename = 'attendance_' . $dateFrom . '_to_' . $dateTo . '.pdf';
 header('Content-Type: application/pdf');
 header('Content-Disposition: attachment; filename="' . $filename . '"');
 header('Cache-Control: no-cache');
-error_log("Logo path: " . $logoPath . " exists: " . (file_exists($logoPath) ? 'yes' : 'no'));
 $pdf->Output('D', $filename);
 ?>
