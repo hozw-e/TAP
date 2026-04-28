@@ -124,7 +124,7 @@ class AttendancePDF extends FPDF {
 // ── Resolve logo path ──────────────────────────────────────────────────────────
 // export.php is at: backend/api/dashboard/export.php
 // logo.png is at:   public/logo.png  (sibling of backend/)
-$logoPath = dirname(__DIR__, 3) . '/public/logo.png';
+$logoPath = dirname(__DIR__, 2) . '/public/logo.png';
 
 $pdf = new AttendancePDF('P', 'mm', 'Letter');
 $pdf->dateFrom = formatDisplayDate($dateFrom);
@@ -174,5 +174,6 @@ $filename = 'attendance_' . $dateFrom . '_to_' . $dateTo . '.pdf';
 header('Content-Type: application/pdf');
 header('Content-Disposition: attachment; filename="' . $filename . '"');
 header('Cache-Control: no-cache');
+error_log("Logo path: " . $logoPath . " exists: " . (file_exists($logoPath) ? 'yes' : 'no'));
 $pdf->Output('D', $filename);
 ?>
