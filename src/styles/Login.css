@@ -202,13 +202,13 @@
 
 /* Each gear: different size, horizontal position, speed, delay */
 .gear-1 { width: 80px;  left: 5%;   animation-duration: 14s; animation-delay: 0s;   }
-.gear-2 { width: 120px; left: 15%;  animation-duration: 18s; animation-delay: 3s;   }
+.gear-2 { width: 200px; left: 15%;  animation-duration: 18s; animation-delay: 3s;   }
 .gear-3 { width: 60px;  left: 28%;  animation-duration: 12s; animation-delay: 1s;   }
 .gear-4 { width: 100px; left: 42%;  animation-duration: 16s; animation-delay: 5s;   }
 .gear-5 { width: 140px; left: 55%;  animation-duration: 20s; animation-delay: 2s;   }
-.gear-6 { width: 70px;  left: 68%;  animation-duration: 13s; animation-delay: 7s;   }
+.gear-6 { width: 120px;  left: 68%;  animation-duration: 13s; animation-delay: 7s;   }
 .gear-7 { width: 110px; left: 78%;  animation-duration: 17s; animation-delay: 4s;   }
-.gear-8 { width: 90px;  left: 90%;  animation-duration: 15s; animation-delay: 6s;   }
+.gear-8 { width: 250px;  left: 90%;  animation-duration: 15s; animation-delay: 6s;   }
 
 @keyframes floatUp {
   0% {
