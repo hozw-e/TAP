@@ -126,6 +126,18 @@ export const nfcAPI = {
 };
 
 // ============================================
+// VISITORS API
+// ============================================
+
+export const visitorsAPI = {
+  // Check in a visitor by name
+  checkin: async (name) => {
+    const response = await api.post('/visitors/checkin.php', { name });
+    return response.data;
+  },
+};
+
+// ============================================
 // ATTENDANCE API
 // ============================================
 

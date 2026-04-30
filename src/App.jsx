@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Students from './pages/Students';
+import VisitorPage from './pages/VisitorPage';
 import { authAPI } from './services/api';
 
 function App() {
@@ -85,6 +86,9 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Visitor Page - public, no auth required */}
+        <Route path="/visitor" element={<VisitorPage />} />
 
         {/* Catch all - redirect to login */}
         <Route path="*" element={<Navigate to="/" replace />} />

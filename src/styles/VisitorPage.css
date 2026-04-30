@@ -1,0 +1,232 @@
+.visitor-page {
+  min-height: 100vh;
+  background: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.visitor-logo {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  object-fit: contain;
+  border: 2px solid #eee;
+}
+
+.visitor-back-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #2c3e50;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.visitor-back-btn:hover {
+  background: #1a252f;
+}
+
+.visitor-content {
+  text-align: center;
+  padding: 20px;
+  width: 100%;
+  max-width: 700px;
+}
+
+.visitor-title {
+  font-size: 52px;
+  font-weight: 800;
+  color: #111;
+  margin-bottom: 12px;
+}
+
+.visitor-subtitle {
+  font-size: 18px;
+  color: #555;
+  margin-bottom: 36px;
+}
+
+.visitor-form {
+  display: flex;
+  align-items: center;
+  background: #e8e8e8;
+  border-radius: 12px;
+  padding: 6px 6px 6px 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.visitor-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  outline: none;
+  color: #333;
+  padding: 10px 0;
+}
+
+.visitor-input::placeholder {
+  color: #aaa;
+}
+
+.visitor-submit-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: #2c3e50;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.visitor-submit-btn:hover:not(:disabled) {
+  background: #1a252f;
+}
+
+.visitor-submit-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Welcome / Farewell Modal ─────────────────────────────────── */
+.visitor-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+}
+
+.visitor-modal {
+  background: #f0894a;
+  border-radius: 16px;
+  padding: 50px 60px;
+  text-align: center;
+  max-width: 560px;
+  width: 90%;
+  animation: popIn 0.3s ease;
+}
+
+.visitor-modal h2 {
+  color: white;
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.visitor-modal p {
+  color: white;
+  font-size: 16px;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+@keyframes popIn {
+  from { transform: scale(0.85); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+/* ── Admin Login Modal ────────────────────────────────────────── */
+.admin-login-modal {
+  background: #2c3e50;
+  border-radius: 16px;
+  padding: 36px;
+  width: 100%;
+  max-width: 380px;
+  animation: popIn 0.3s ease;
+}
+
+.admin-login-modal h2 {
+  color: white;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.admin-form-group {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.admin-form-group input {
+  width: 100%;
+  padding: 14px 44px 14px 14px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  background: white;
+  color: #333;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.admin-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+  font-size: 15px;
+}
+
+.admin-icon.toggle {
+  cursor: pointer;
+}
+
+.admin-login-btn {
+  width: 100%;
+  padding: 14px;
+  background: #3498db;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.2s;
+}
+
+.admin-login-btn:hover:not(:disabled) {
+  background: #2980b9;
+}
+
+.admin-login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-error {
+  background: #e74c3c;
+  color: white;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  text-align: center;
+}

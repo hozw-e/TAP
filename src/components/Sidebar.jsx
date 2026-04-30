@@ -31,6 +31,14 @@ function Sidebar({ onLogoutClick }) {
         <i className="fas fa-users"></i>
       </div>
 
+      <div 
+        className={`nav-icon ${isActive('/visitor') ? 'active' : ''}`}
+        title="Visitor Login"
+        onClick={() => navigate('/visitor')}
+      >
+        <i className="fas fa-door-open"></i>
+      </div>
+
       {/* Logout Button */}
       <button className="logout-btn" onClick={onLogoutClick}>
         <i className="fas fa-sign-out-alt"></i> Logout
