@@ -2,19 +2,14 @@
 /**
  * Attendance Logs API
  * GET /api/dashboard/logs.php?date=2026-04-19
+ *
+ * Returns students attendance + visitor check-ins merged and sorted by time
  */
 
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
 
 require_once '../../config/database.php';
+require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
@@ -29,31 +24,47 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
 
 try {
     $conn = getDBConnection();
-
     if (!$conn) {
         sendErrorResponse('Database connection failed', 500);
     }
 
     $stmt = $conn->prepare("
-        SELECT 
+        SELECT
             a.attendance_id,
-            a.student_id,
-            a.date,
+            s.student_name  AS student_name,
             a.time_in,
             a.time_out,
-            s.student_name,
-            0 as sms_sent
+            a.sms_sent,
+            'student'       AS row_type
         FROM attendance_logs a
         LEFT JOIN students s ON a.student_id = s.student_id
         WHERE a.date = :date
-        ORDER BY a.time_in DESC
+
+        UNION ALL
+
+        SELECT
+            v.visit_id      AS attendance_id,
+            v.name          AS student_name,
+            v.time_in,
+            NULL            AS time_out,
+            NULL            AS sms_sent,
+            'visitor'       AS row_type
+        FROM visitors v
+        WHERE v.date_of_visit = :date2
+
+        ORDER BY time_in ASC
     ");
 
-    $stmt->execute([':date' => $date]);
+    $stmt->execute([':date' => $date, ':date2' => $date]);
     $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Convert sms_sent to boolean for student rows
     foreach ($logs as &$log) {
-        $log['sms_sent'] = (bool)$log['sms_sent'];
+        if ($log['row_type'] === 'student') {
+            $log['sms_sent'] = (bool)$log['sms_sent'];
+        } else {
+            $log['sms_sent'] = null;
+        }
     }
 
     sendSuccessResponse('Attendance logs retrieved successfully', $logs);
@@ -61,8 +72,5 @@ try {
 } catch (PDOException $e) {
     error_log("Dashboard Logs Error: " . $e->getMessage());
     sendErrorResponse('Failed to retrieve attendance logs: ' . $e->getMessage(), 500);
-} catch (Exception $e) {
-    error_log("Dashboard Logs Error: " . $e->getMessage());
-    sendErrorResponse('Server error: ' . $e->getMessage(), 500);
 }
 ?>

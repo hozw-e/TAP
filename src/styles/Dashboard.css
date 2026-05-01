@@ -335,3 +335,13 @@
 .btn-export:hover {
   background-color: #388e3c;
 }
+
+.sms-na {
+  background-color: #95a5a6;
+  color: white;
+}
+
+.status-visitor {
+  background-color: #2980b9;
+  color: white;
+}

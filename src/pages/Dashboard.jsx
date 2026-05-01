@@ -103,10 +103,12 @@ function Dashboard() {
   };
 
   const getSMSStatus = (log) => {
+    if (log.row_type === 'visitor') return 'N/A';
     return (log.sms_sent === true || log.sms_sent === 1) ? 'SENT' : 'FAILED TO SEND';
   };
 
   const getStatus = (log) => {
+    if (log.row_type === 'visitor') return 'VISITOR';
     return (log.time_out && log.time_out !== null) ? 'LEFT' : 'PRESENT';
   };
 
@@ -177,18 +179,26 @@ function Dashboard() {
                 </thead>
                 <tbody>
                   {attendanceLogs.map((log) => (
-                    <tr key={log.attendance_id}>
+                    <tr key={`${log.row_type}-${log.attendance_id}`}>
                       <td>{log.student_name || 'Unknown'}</td>
                       <td>{formatTime(log.time_in)}</td>
-                      <td>{formatTime(log.time_out)}</td>
-                      <td>{calculateDuration(log.time_in, log.time_out)}</td>
+                      <td>{log.row_type === 'visitor' ? 'N/A' : formatTime(log.time_out)}</td>
+                      <td>{log.row_type === 'visitor' ? 'N/A' : calculateDuration(log.time_in, log.time_out)}</td>
                       <td>
-                        <span className={`sms-badge ${getSMSStatus(log) === 'SENT' ? 'sms-sent' : 'sms-failed'}`}>
+                        <span className={`sms-badge ${
+                          log.row_type === 'visitor'
+                            ? 'sms-na'
+                            : getSMSStatus(log) === 'SENT' ? 'sms-sent' : 'sms-failed'
+                        }`}>
                           {getSMSStatus(log)}
                         </span>
                       </td>
                       <td>
-                        <span className={`status-badge ${getStatus(log) === 'PRESENT' ? 'status-present' : 'status-left'}`}>
+                        <span className={`status-badge ${
+                          log.row_type === 'visitor'
+                            ? 'status-visitor'
+                            : getStatus(log) === 'PRESENT' ? 'status-present' : 'status-left'
+                        }`}>
                           {getStatus(log)}
                         </span>
                       </td>
