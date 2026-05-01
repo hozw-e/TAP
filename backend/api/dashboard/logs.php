@@ -31,11 +31,11 @@ try {
     $stmt = $conn->prepare("
         SELECT
             a.attendance_id,
-            s.student_name  AS student_name,
+            s.student_name                              AS student_name,
             a.time_in,
             a.time_out,
             a.sms_sent,
-            'student'       AS row_type
+            CONVERT('student' USING utf8mb4)            AS row_type
         FROM attendance_logs a
         LEFT JOIN students s ON a.student_id = s.student_id
         WHERE a.date = :date
@@ -43,12 +43,12 @@ try {
         UNION ALL
 
         SELECT
-            v.visit_id      AS attendance_id,
-            v.name          AS student_name,
+            v.visit_id                                  AS attendance_id,
+            CONVERT(v.name USING utf8mb4)               AS student_name,
             v.time_in,
-            NULL            AS time_out,
-            NULL            AS sms_sent,
-            'visitor'       AS row_type
+            NULL                                        AS time_out,
+            NULL                                        AS sms_sent,
+            CONVERT('visitor' USING utf8mb4)            AS row_type
         FROM visitors v
         WHERE v.date_of_visit = :date2
 

@@ -22,6 +22,7 @@ if (!$conn) {
     exit('Database connection failed.');
 }
 
+// ── Student attendance query ──────────────────────────────────────────────────
 $stmt = $conn->prepare("
     SELECT
         s.student_name,
@@ -41,7 +42,20 @@ $stmt = $conn->prepare("
     ORDER BY s.student_name ASC
 ");
 $stmt->execute([':date_from' => $dateFrom, ':date_to' => $dateTo]);
-$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$studentRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// ── Visitor logs query ────────────────────────────────────────────────────────
+$stmt2 = $conn->prepare("
+    SELECT
+        name,
+        date_of_visit,
+        time_in
+    FROM visitors
+    WHERE date_of_visit BETWEEN :date_from AND :date_to
+    ORDER BY date_of_visit ASC, time_in ASC
+");
+$stmt2->execute([':date_from' => $dateFrom, ':date_to' => $dateTo]);
+$visitorRows = $stmt2->fetchAll(PDO::FETCH_ASSOC);
 
 function secondsToHHMM(int $seconds): string {
     $h = floor($seconds / 3600);
@@ -53,6 +67,15 @@ function formatDisplayDate(string $date): string {
     return date('m/d/Y', strtotime($date));
 }
 
+function formatTimeDisplay(string $time): string {
+    $parts = explode(':', $time);
+    $h = (int)$parts[0];
+    $m = (int)$parts[1];
+    $ampm = $h >= 12 ? 'PM' : 'AM';
+    $h12  = $h % 12 ?: 12;
+    return sprintf('%d:%02d %s', $h12, $m, $ampm);
+}
+
 require_once '../../lib/fpdf.php';
 
 class AttendancePDF extends FPDF {
@@ -61,56 +84,33 @@ class AttendancePDF extends FPDF {
     public string $logoPath = '';
 
     function Header() {
-        // ── Logo (top-left, 224x224px source → ~22mm rendered) ──────────────
         if ($this->logoPath && file_exists($this->logoPath)) {
             $this->Image($this->logoPath, 14, 8, 22, 22);
         }
 
-        // ── Company name (blue, bold, 20pt) ──────────────────────────────────
         $this->SetXY(38, 8);
         $this->SetFont('Arial', 'B', 20);
-        $this->SetTextColor(0, 112, 192); // #0070C0
+        $this->SetTextColor(0, 112, 192);
         $this->Cell(0, 10, 'A+ Solution Development Center Corp.', 0, 1, 'L');
 
-        // ── Address (bold, 10pt, black) ───────────────────────────────────────
         $this->SetX(38);
         $this->SetFont('Arial', 'B', 10);
         $this->SetTextColor(0, 0, 0);
         $this->Cell(0, 6, '35A National Highway, Lower Kalaklan, Olongapo City, Philippines 2200', 0, 1, 'L');
 
-        // ── Contact (bold, 10pt) ──────────────────────────────────────────────
         $this->SetX(38);
         $this->Cell(0, 6, '0917 832 6822 | (047) 232 2449 | infoapsteamph@gmail.com', 0, 1, 'L');
 
         $this->Ln(8);
 
-        // ── "Attendance Report" title (bold, 16pt, centered) ─────────────────
         $this->SetFont('Arial', 'B', 16);
         $this->SetTextColor(0, 0, 0);
         $this->Cell(0, 8, 'Attendance Report', 0, 1, 'C');
 
-        // ── Date range (bold, 11pt, centered) ────────────────────────────────
         $this->SetFont('Arial', 'B', 11);
         $this->Cell(0, 6, 'From ' . $this->dateFrom . '   To ' . $this->dateTo, 0, 1, 'C');
 
         $this->Ln(4);
-
-        // ── Table header row — navy #153D63 ───────────────────────────────────
-        // Column widths mirror the docx: 4531 / 1701 / 1418 / 1280 DXA
-        // Total DXA = 8930 ≈ 181mm content width → scale to mm:
-        //   Name:    4531/8930 * 181 ≈ 91.8 → 92mm
-        //   Course:  1701/8930 * 181 ≈ 34.5 → 35mm
-        //   Sessions:1418/8930 * 181 ≈ 28.7 → 29mm
-        //   Hours:   1280/8930 * 181 ≈ 25.9 → 25mm  (total 181mm)
-        $this->SetFillColor(21, 61, 99);   // #153D63
-        $this->SetTextColor(255, 255, 255);
-        $this->SetFont('Arial', '', 10);
-        $this->Cell(92, 8, 'Name',        1, 0, 'C', true);
-        $this->Cell(35, 8, 'Course',      1, 0, 'C', true);
-        $this->Cell(29, 8, 'Sessions',    1, 0, 'C', true);
-        $this->Cell(25, 8, 'Total Hours', 1, 1, 'C', true);
-
-        $this->SetTextColor(0, 0, 0);
     }
 
     function Footer() {
@@ -119,11 +119,40 @@ class AttendancePDF extends FPDF {
         $this->SetTextColor(150, 150, 150);
         $this->Cell(0, 10, 'Page ' . $this->PageNo(), 0, 0, 'C');
     }
+
+    // Reusable section title
+    function SectionTitle(string $title) {
+        $this->SetFont('Arial', 'B', 12);
+        $this->SetTextColor(0, 0, 0);
+        $this->Cell(0, 8, $title, 0, 1, 'L');
+        $this->Ln(1);
+    }
+
+    // Student table header
+    function StudentTableHeader() {
+        $this->SetFillColor(21, 61, 99);
+        $this->SetTextColor(255, 255, 255);
+        $this->SetFont('Arial', 'B', 10);
+        $this->Cell(92, 8, 'Name',        1, 0, 'C', true);
+        $this->Cell(35, 8, 'Course',      1, 0, 'C', true);
+        $this->Cell(29, 8, 'Sessions',    1, 0, 'C', true);
+        $this->Cell(25, 8, 'Total Hours', 1, 1, 'C', true);
+        $this->SetTextColor(0, 0, 0);
+    }
+
+    // Visitor table header
+    function VisitorTableHeader() {
+        $this->SetFillColor(21, 61, 99);
+        $this->SetTextColor(255, 255, 255);
+        $this->SetFont('Arial', 'B', 10);
+        $this->Cell(10,  8, '#',             1, 0, 'C', true);
+        $this->Cell(80,  8, 'Name',          1, 0, 'C', true);
+        $this->Cell(46,  8, 'Date of Visit', 1, 0, 'C', true);
+        $this->Cell(45,  8, 'Time In',       1, 1, 'C', true);
+        $this->SetTextColor(0, 0, 0);
+    }
 }
 
-// ── Resolve logo path ──────────────────────────────────────────────────────────
-// export.php is at: backend/api/dashboard/export.php
-// logo.png is at:   public/logo.png  (sibling of backend/)
 $logoPath = dirname(__DIR__, 2) . '/public/logo.png';
 
 $pdf = new AttendancePDF('P', 'mm', 'Letter');
@@ -135,12 +164,18 @@ $pdf->SetAutoPageBreak(true, 18);
 $pdf->AddPage();
 $pdf->SetFont('Arial', '', 10);
 
-if (empty($rows)) {
+// ── SECTION 1: Student Attendance ────────────────────────────────────────────
+$pdf->SectionTitle('Student Attendance');
+$pdf->StudentTableHeader();
+
+if (empty($studentRows)) {
+    $pdf->SetFillColor(255, 255, 255);
     $pdf->SetTextColor(150, 150, 150);
-    $pdf->Cell(0, 12, 'No attendance records found for this date range.', 0, 1, 'C');
+    $pdf->Cell(181, 8, 'No student attendance records found for this date range.', 1, 1, 'C');
+    $pdf->SetTextColor(0, 0, 0);
 } else {
     $fill = false;
-    foreach ($rows as $row) {
+    foreach ($studentRows as $row) {
         $name       = $row['student_name']   ?? '---';
         $course     = $row['student_course'] ?? '---';
         $sessions   = (int)$row['sessions'];
@@ -158,16 +193,56 @@ if (empty($rows)) {
     }
 
     // Totals row
-    $totalSessions = array_sum(array_column($rows, 'sessions'));
-    $totalSecs     = (int)array_sum(array_column($rows, 'total_seconds'));
+    $totalSessions = array_sum(array_column($studentRows, 'sessions'));
+    $totalSecs     = (int)array_sum(array_column($studentRows, 'total_seconds'));
 
     $pdf->SetFont('Arial', 'B', 10);
     $pdf->SetFillColor(21, 61, 99);
     $pdf->SetTextColor(255, 255, 255);
-    $pdf->Cell(92, 8, 'TOTAL',                    1, 0, 'L', true);
-    $pdf->Cell(35, 8, '',                         1, 0, 'C', true);
-    $pdf->Cell(29, 8, $totalSessions,             1, 0, 'C', true);
-    $pdf->Cell(25, 8, secondsToHHMM($totalSecs),  1, 1, 'C', true);
+    $pdf->Cell(92, 8, 'TOTAL',                   1, 0, 'L', true);
+    $pdf->Cell(35, 8, '',                        1, 0, 'C', true);
+    $pdf->Cell(29, 8, $totalSessions,            1, 0, 'C', true);
+    $pdf->Cell(25, 8, secondsToHHMM($totalSecs), 1, 1, 'C', true);
+}
+
+// ── SECTION 2: Visitor Logs ───────────────────────────────────────────────────
+$pdf->Ln(8);
+$pdf->SectionTitle('Visitor Logs');
+$pdf->VisitorTableHeader();
+
+if (empty($visitorRows)) {
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->SetTextColor(150, 150, 150);
+    $pdf->Cell(181, 8, 'No visitor logs recorded.', 1, 1, 'C');
+    $pdf->SetTextColor(0, 0, 0);
+} else {
+    $fill = false;
+    foreach ($visitorRows as $i => $row) {
+        $num     = $i + 1;
+        $name    = $row['name']          ?? '---';
+        $date    = formatDisplayDate($row['date_of_visit']);
+        $timeIn  = formatTimeDisplay($row['time_in']);
+
+        $bgR = $fill ? 235 : 255;
+        $pdf->SetFillColor($bgR, $bgR, $bgR);
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->SetFont('Arial', '', 10);
+        $pdf->Cell(10,  8, $num,    1, 0, 'C', $fill);
+        $pdf->Cell(80,  8, $name,   1, 0, 'L', $fill);
+        $pdf->Cell(46,  8, $date,   1, 0, 'C', $fill);
+        $pdf->Cell(45,  8, $timeIn, 1, 1, 'C', $fill);
+
+        $fill = !$fill;
+    }
+
+    // Visitor total row
+    $pdf->SetFont('Arial', 'B', 10);
+    $pdf->SetFillColor(21, 61, 99);
+    $pdf->SetTextColor(255, 255, 255);
+    $pdf->Cell(10,  8, '',                          1, 0, 'C', true);
+    $pdf->Cell(80,  8, 'TOTAL VISITORS',            1, 0, 'L', true);
+    $pdf->Cell(46,  8, count($visitorRows),         1, 0, 'C', true);
+    $pdf->Cell(45,  8, '',                          1, 1, 'C', true);
 }
 
 $filename = 'attendance_' . $dateFrom . '_to_' . $dateTo . '.pdf';

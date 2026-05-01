@@ -150,7 +150,9 @@
 }
 
 .logs-table thead {
-  background: #f8f9fa;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .logs-table th {
@@ -163,10 +165,7 @@
 }
 
 .logs-table thead th {
-  position: sticky;
-  top: 0;
   background: #f8f9fa;
-  z-index: 1;
 }
 
 .logs-table td {
