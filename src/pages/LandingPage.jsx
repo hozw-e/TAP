@@ -9,7 +9,7 @@ function LandingPage() {
       <div className="landing-left">
         <div className="landing-text">
           <div className="landing-title-line">
-            <span className="landing-title-dark">A+ Solution</span>
+            <span className="landing-title-dark">A+ Solution</span><br></br>
             <span className="landing-title-orange">Development Center</span>
           </div>
           <p className="landing-description">

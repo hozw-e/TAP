@@ -2,7 +2,7 @@
 $allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:5173',
-    'https://scintillating-transformation-production-8977.up.railway.app',
+    'https://apsolutionstap.up.railway.app',
 ];
 
 $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
