@@ -56,6 +56,10 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    console.log('FormData updated:', formData); // Debugging log
+  }, [formData]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 

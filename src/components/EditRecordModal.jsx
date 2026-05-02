@@ -83,6 +83,10 @@ function EditRecordModal({ isOpen, onClose, onSuccess, student }) {
     }
   }, [isOpen, student]);
 
+  useEffect(() => {
+    console.log('FormData updated:', formData); // Debugging log
+  }, [formData]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
