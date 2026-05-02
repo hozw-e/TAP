@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import LogoutModal from '../components/LogoutModal';
+import Notification from '../components/Notification';
 import axios from 'axios';
 import '../styles/Dashboard.css';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const BASE = import.meta.env.VITE_API_BASE_URL;
 const API_STATS_URL = `${BASE}/dashboard/stats.php`;
@@ -16,13 +17,15 @@ const COURSES = [
 ];
 
 function Dashboard() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [stats, setStats] = useState({ totalStudents: 0, presentToday: 0, enrolledToday: 0 });
   const [attendanceLogs, setAttendanceLogs] = useState([]);
   const [filteredLogs, setFilteredLogs] = useState([]);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [showLoginSuccessModal, setShowLoginSuccessModal] = useState(false);
+  const [showLoginSuccessToast, setShowLoginSuccessToast] = useState(false);
 
   // Date range filter
   const todayStr = () => new Date().toISOString().split('T')[0];
@@ -142,9 +145,10 @@ function Dashboard() {
 
   useEffect(() => {
     if (location.state?.justLoggedIn) {
-      setShowLoginSuccessModal(true);
+      setShowLoginSuccessToast(true);
+      navigate(location.pathname, { replace: true, state: {} });
     }
-  }, [location.state]);
+  }, [location.pathname, location.state, navigate]);
 
   return (
     <div className="dashboard-layout">
@@ -292,15 +296,12 @@ function Dashboard() {
 
       <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
 
-      {showLoginSuccessModal && (
-        <div className="login-success-modal-overlay">
-          <div className="login-success-modal">
-            <h2>Login Successful</h2>
-            <p>Welcome to the Admin Dashboard!</p>
-            <button onClick={() => setShowLoginSuccessModal(false)}>Close</button>
-          </div>
-        </div>
-      )}
+      <Notification
+        isOpen={showLoginSuccessToast}
+        onClose={() => setShowLoginSuccessToast(false)}
+        message="Login successful. Welcome to the Admin Dashboard!"
+        type="success"
+      />
     </div>
   );
 }

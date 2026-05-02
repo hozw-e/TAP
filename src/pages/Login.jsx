@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
+import Notification from '../components/Notification';
 import '../styles/Login.css';
 
 const PRIVACY_POLICY = `PRIVACY POLICY
@@ -158,7 +159,17 @@ function Login({ setIsAuthenticated }) {
   const [agreed, setAgreed] = useState(false);
   const [showPPModal, setShowPPModal] = useState(false);
   const [showTCModal, setShowTCModal] = useState(false);
+  const [showLogoutToast, setShowLogoutToast] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const shouldShowLogoutToast = sessionStorage.getItem('showLoggedOutToast') === 'true';
+
+    if (shouldShowLogoutToast) {
+      setShowLogoutToast(true);
+      sessionStorage.removeItem('showLoggedOutToast');
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -194,6 +205,12 @@ function Login({ setIsAuthenticated }) {
 
   return (
     <>
+      <Notification
+        isOpen={showLogoutToast}
+        onClose={() => setShowLogoutToast(false)}
+        message="Logged out successfully. See you next time!"
+        type="success"
+      />
       <div className="login-page">
         {/* Floating animated gears */}
         {[...Array(8)].map((_, i) => (

@@ -1,39 +1,31 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
-import Notification from './Notification';
 import '../styles/Modal.css';
 
 function LogoutModal({ isOpen, onClose }) {
   const navigate = useNavigate();
-  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleLogout = async () => {
     try {
       await authAPI.logout();
       onClose();
-      setShowSuccess(true);
+      sessionStorage.setItem('showLoggedOutToast', 'true');
       setTimeout(() => {
-        navigate('/');
+        navigate('/login');
         window.location.reload();
       }, 1500);
     } catch (error) {
       console.error('Logout error:', error);
-      navigate('/');
+      sessionStorage.setItem('showLoggedOutToast', 'true');
+      navigate('/login');
       window.location.reload();
     }
   };
 
-  if (!isOpen && !showSuccess) return null;
+  if (!isOpen) return null;
 
   return (
     <>
-      <Notification
-        isOpen={showSuccess}
-        onClose={() => setShowSuccess(false)}
-        message="Logged out successfully. See you next time!"
-        type="success"
-      />
       {isOpen && (
         <div className="modal-overlay show" onClick={onClose}>
           <div className="logout-modal-content" onClick={(e) => e.stopPropagation()}>
