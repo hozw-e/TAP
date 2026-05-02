@@ -31,9 +31,11 @@ function VisitorPage() {
     }
   }, [modal.show]);
 
-  // Start NFC polling on mount
+  // Start NFC polling on mount — clear stale scans first to prevent ghost logs
   useEffect(() => {
-    startPolling();
+    nfcAPI.clearScan().finally(() => {
+      startPolling();
+    });
     return () => stopPolling();
   }, []);
 

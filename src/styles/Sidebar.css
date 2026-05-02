@@ -12,8 +12,8 @@
 }
 
 .logo-circle {
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   background: white;
   border-radius: 50%;
   display: flex;
@@ -21,7 +21,7 @@
   align-items: center;
   overflow: hidden;
   padding: 0;
-  margin-bottom: 30px;
+  margin-bottom: 40px;
 }
 
 .logo-circle img {
@@ -43,7 +43,7 @@
   color: rgba(255, 255, 255, 0.75);
   font-size: 13px;
   font-weight: 500;
-  margin: 4px 0;
+  margin: 6px 0;
 }
 
 .nav-item i {
