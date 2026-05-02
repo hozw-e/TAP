@@ -14,35 +14,42 @@ function Sidebar({ onLogoutClick }) {
         <img src="/logo.png" alt="A+ Solutions" onError={(e) => e.target.style.display = 'none'} />
       </div>
 
-      {/* Navigation Icons */}
-      <div 
-        className={`nav-icon ${isActive('/dashboard') ? 'active' : ''}`}
-        title="Dashboard"
+      {/* Navigation Items */}
+      <div
+        className={`nav-item ${isActive('/dashboard') ? 'active' : ''}`}
         onClick={() => navigate('/dashboard')}
       >
         <i className="fas fa-th-large"></i>
+        <span>Dashboard</span>
       </div>
 
-      <div 
-        className={`nav-icon ${isActive('/students') ? 'active' : ''}`}
-        title="Students"
+      <div
+        className={`nav-item ${isActive('/students') ? 'active' : ''}`}
         onClick={() => navigate('/students')}
       >
         <i className="fas fa-users"></i>
+        <span>Student Record</span>
       </div>
 
-      <div 
-        className={`nav-icon ${isActive('/visitor') ? 'active' : ''}`}
-        title="Visitor Login"
+      <div
+        className={`nav-item ${isActive('/visitor') ? 'active' : ''}`}
         onClick={() => navigate('/visitor')}
       >
         <i className="fas fa-door-open"></i>
+        <span>Visitor's Login</span>
       </div>
 
-      {/* Logout Button */}
-      <button className="logout-btn" onClick={onLogoutClick}>
-        <i className="fas fa-sign-out-alt"></i> Logout
-      </button>
+      {/* Bottom section */}
+      <div className="sidebar-bottom">
+        <hr className="sidebar-divider" />
+        <button className="help-btn" onClick={() => {}}>
+          <i className="fas fa-question-circle"></i>
+          <span>Help</span>
+        </button>
+        <button className="logout-btn" onClick={onLogoutClick}>
+          <i className="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
     </div>
   );
 }

@@ -6,100 +6,126 @@ import '../styles/Dashboard.css';
 
 const BASE = import.meta.env.VITE_API_BASE_URL;
 const API_STATS_URL = `${BASE}/dashboard/stats.php`;
-const API_LOGS_URL = `${BASE}/dashboard/logs.php`;
+const API_LOGS_URL  = `${BASE}/dashboard/logs.php`;
 const API_EXPORT_URL = `${BASE}/dashboard/export.php`;
 
+const COURSES = [
+  'Basic Coding', 'Research', 'EV3', 'Rover 2',
+  'AI Steam', 'Arduino', 'IoT', 'Python Programming', 'Robotics'
+];
+
 function Dashboard() {
-  const [stats, setStats] = useState({
-    totalStudents: 0,
-    presentToday: 0,
-    enrolledToday: 0
-  });
+  const [stats, setStats] = useState({ totalStudents: 0, presentToday: 0, enrolledToday: 0 });
   const [attendanceLogs, setAttendanceLogs] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(() => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  });
+  const [filteredLogs, setFilteredLogs] = useState([]);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Export modal state
-  const [showExportModal, setShowExportModal] = useState(false);
-  const [exportDateFrom, setExportDateFrom] = useState(() => new Date().toISOString().split('T')[0]);
-  const [exportDateTo, setExportDateTo] = useState(() => new Date().toISOString().split('T')[0]);
+  // Date range filter
+  const todayStr = () => new Date().toISOString().split('T')[0];
+  const [dateFrom, setDateFrom] = useState(todayStr());
+  const [dateTo, setDateTo]     = useState(todayStr());
+
+  // Type & course filters
+  const [filterType, setFilterType]     = useState('All');
+  const [filterCourse, setFilterCourse] = useState('All');
+
+  // Live clock
+  const [clock, setClock] = useState('');
 
   useEffect(() => {
+    const tick = () => {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const h12 = hours % 12 || 12;
+      const date = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      setClock(`${h12}:${minutes} ${ampm} | ${date}`);
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Load on mount
+  useEffect(() => {
     loadDashboardData();
-  }, [selectedDate]);
+  }, []);
+
+  // Apply filters whenever logs or filter state changes
+  useEffect(() => {
+    applyFilters(attendanceLogs);
+  }, [attendanceLogs, filterType, filterCourse]);
 
   const loadDashboardData = async () => {
     setIsLoading(true);
     try {
       const statsResponse = await axios.get(API_STATS_URL);
-      if (statsResponse.data && statsResponse.data.success) {
-        setStats(statsResponse.data.data);
-      }
+      if (statsResponse.data?.success) setStats(statsResponse.data.data);
 
-      const logsResponse = await axios({
-        method: 'GET',
-        url: API_LOGS_URL,
-        params: { date: selectedDate }
+      const logsResponse = await axios.get(API_LOGS_URL, {
+        params: { date_from: dateFrom, date_to: dateTo }
       });
 
-      if (logsResponse.data && logsResponse.data.success) {
-        setAttendanceLogs(Array.isArray(logsResponse.data.data) ? logsResponse.data.data : []);
-      } else {
-        setAttendanceLogs([]);
-      }
+      const logs = logsResponse.data?.success && Array.isArray(logsResponse.data.data)
+        ? logsResponse.data.data : [];
+      setAttendanceLogs(logs);
     } catch (error) {
-      console.error('[DASHBOARD V2] Error:', error);
+      console.error('Dashboard error:', error);
       setAttendanceLogs([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleRefresh = () => loadDashboardData();
+  const applyFilters = (logs) => {
+    let result = [...logs];
 
-  const handleDateChange = (e) => setSelectedDate(e.target.value);
+    if (filterType === 'Student') {
+      result = result.filter(l => l.row_type === 'student');
+    } else if (filterType === 'Visitor') {
+      result = result.filter(l => l.row_type === 'visitor');
+    }
 
-  const handleExportConfirm = () => {
-    if (!exportDateFrom || !exportDateTo) return;
-    window.open(`${API_EXPORT_URL}?date_from=${exportDateFrom}&date_to=${exportDateTo}`, '_blank');
-    setShowExportModal(false);
+    if (filterCourse !== 'All' && filterType !== 'Visitor') {
+      result = result.filter(l => l.student_course === filterCourse);
+    }
+
+    setFilteredLogs(result);
+  };
+
+  const handleFilter = () => loadDashboardData();
+
+  const handleExport = () => {
+    const params = new URLSearchParams({
+      date_from: dateFrom,
+      date_to: dateTo,
+      type: filterType,
+      course: filterCourse,
+    });
+    window.open(`${API_EXPORT_URL}?${params.toString()}`, '_blank');
   };
 
   const formatTime = (timeStr) => {
     if (!timeStr) return '---';
     try {
-      const [hoursStr, minutesStr] = timeStr.split(':');
-      const hours = parseInt(hoursStr, 10);
-      const minutes = parseInt(minutesStr, 10);
-      if (isNaN(hours) || isNaN(minutes)) return '---';
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      const hour12 = hours % 12 || 12;
-      const minuteStr = String(minutes).padStart(2, '0');
-      return `${hour12}:${minuteStr} ${ampm}`;
-    } catch (e) {
-      return '---';
-    }
+      const [h, m] = timeStr.split(':').map(Number);
+      if (isNaN(h) || isNaN(m)) return '---';
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`;
+    } catch { return '---'; }
   };
 
   const calculateDuration = (timeIn, timeOut) => {
     if (!timeIn || !timeOut) return '---';
     try {
-      const toSeconds = (t) => {
-        const [h, m, s] = t.split(':').map(Number);
-        return h * 3600 + m * 60 + (s || 0);
-      };
-      const diffSecs = toSeconds(timeOut) - toSeconds(timeIn);
-      if (diffSecs < 0) return '---';
-      const hours = Math.floor(diffSecs / 3600);
-      const minutes = Math.floor((diffSecs % 3600) / 60);
-      return `${hours} hrs ${minutes} mins`;
-    } catch (e) {
-      return '---';
-    }
+      const toSec = t => { const [h,m,s] = t.split(':').map(Number); return h*3600+m*60+(s||0); };
+      const diff = toSec(timeOut) - toSec(timeIn);
+      if (diff < 0) return '---';
+      return `${Math.floor(diff/3600)} hrs ${Math.floor((diff%3600)/60)} mins`;
+    } catch { return '---'; }
   };
 
   const getSMSStatus = (log) => {
@@ -109,58 +135,81 @@ function Dashboard() {
 
   const getStatus = (log) => {
     if (log.row_type === 'visitor') return 'VISITOR';
-    return (log.time_out && log.time_out !== null) ? 'LEFT' : 'PRESENT';
+    return log.time_out ? 'LEFT' : 'PRESENT';
   };
 
   return (
     <div className="dashboard-layout">
       <Sidebar onLogoutClick={() => setShowLogoutModal(true)} />
       <div className="main-content">
+
+        {/* Header */}
         <div className="page-header">
-          <h1>Dashboard</h1>
-          <p className="page-subtitle">Welcome back, Admin!</p>
+          <div>
+            <h1>Dashboard</h1>
+            <p className="page-subtitle">Welcome back, Admin!</p>
+          </div>
+          <div className="live-clock">{clock}</div>
         </div>
+
+        {/* Stats */}
         <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-card-header">Enrollees</div>
-            <div className="stat-card-body">
-              <div className="stat-card-value">{stats.totalStudents}</div>
-              <div className="stat-card-label">Total Students</div>
+          {[
+            { label: 'Enrollees', value: stats.totalStudents, sub: 'Total Students' },
+            { label: 'Present', value: stats.presentToday, sub: 'Currently In Facility' },
+            { label: 'Newcomers', value: stats.enrolledToday, sub: 'Enrolled Today' },
+          ].map((s) => (
+            <div className="stat-card" key={s.label}>
+              <div className="stat-card-header">{s.label}</div>
+              <div className="stat-card-body">
+                <div className="stat-card-value">{s.value}</div>
+                <div className="stat-card-label">{s.sub}</div>
+              </div>
             </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-card-header">Present</div>
-            <div className="stat-card-body">
-              <div className="stat-card-value">{stats.presentToday}</div>
-              <div className="stat-card-label">Currently In Facility</div>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-card-header">Newcomers</div>
-            <div className="stat-card-body">
-              <div className="stat-card-value">{stats.enrolledToday}</div>
-              <div className="stat-card-label">Enrolled Today</div>
-            </div>
-          </div>
+          ))}
         </div>
+
+        {/* Attendance Logs */}
         <div className="logs-section">
           <div className="logs-header">
             <span>Attendance Logs</span>
             <div className="logs-controls">
-              <input type="date" className="date-picker" value={selectedDate} onChange={handleDateChange} />
-              <button className="refresh-btn" onClick={handleRefresh}>
-                <i className="fas fa-sync-alt"></i>
-                Refresh
+              <label className="filter-label">From</label>
+              <input type="date" className="date-picker" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+              <label className="filter-label">To</label>
+              <input type="date" className="date-picker" value={dateTo} onChange={e => setDateTo(e.target.value)} />
+
+              {/* Type filter */}
+              <select className="filter-select" value={filterType} onChange={e => setFilterType(e.target.value)}>
+                <option value="All">All Types</option>
+                <option value="Student">Student</option>
+                <option value="Visitor">Visitor</option>
+              </select>
+
+              {/* Course filter */}
+              <select
+                className="filter-select"
+                value={filterCourse}
+                onChange={e => setFilterCourse(e.target.value)}
+                disabled={filterType === 'Visitor'}
+              >
+                <option value="All">All Courses</option>
+                {COURSES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+
+              <button className="refresh-btn" onClick={handleFilter}>
+                <i className="fas fa-search"></i>
               </button>
             </div>
           </div>
+
           <div className="logs-body">
             {isLoading ? (
               <div className="empty-state">
                 <div className="spinner"></div>
                 <p>Loading attendance logs...</p>
               </div>
-            ) : attendanceLogs.length === 0 ? (
+            ) : filteredLogs.length === 0 ? (
               <div className="empty-state">
                 <i className="fas fa-clipboard-list"></i>
                 <p>No attendance logs for this date</p>
@@ -178,27 +227,19 @@ function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {attendanceLogs.map((log) => (
+                  {filteredLogs.map((log) => (
                     <tr key={`${log.row_type}-${log.attendance_id}`}>
                       <td>{log.student_name || 'Unknown'}</td>
                       <td>{formatTime(log.time_in)}</td>
                       <td>{log.row_type === 'visitor' ? 'N/A' : formatTime(log.time_out)}</td>
                       <td>{log.row_type === 'visitor' ? 'N/A' : calculateDuration(log.time_in, log.time_out)}</td>
                       <td>
-                        <span className={`sms-badge ${
-                          log.row_type === 'visitor'
-                            ? 'sms-na'
-                            : getSMSStatus(log) === 'SENT' ? 'sms-sent' : 'sms-failed'
-                        }`}>
+                        <span className={`sms-badge ${log.row_type === 'visitor' ? 'sms-na' : getSMSStatus(log) === 'SENT' ? 'sms-sent' : 'sms-failed'}`}>
                           {getSMSStatus(log)}
                         </span>
                       </td>
                       <td>
-                        <span className={`status-badge ${
-                          log.row_type === 'visitor'
-                            ? 'status-visitor'
-                            : getStatus(log) === 'PRESENT' ? 'status-present' : 'status-left'
-                        }`}>
+                        <span className={`status-badge ${log.row_type === 'visitor' ? 'status-visitor' : getStatus(log) === 'PRESENT' ? 'status-present' : 'status-left'}`}>
                           {getStatus(log)}
                         </span>
                       </td>
@@ -209,46 +250,33 @@ function Dashboard() {
             )}
           </div>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
-          <button className="export-btn" onClick={() => setShowExportModal(true)}>
+
+        {/* Bottom row */}
+        <div className="bottom-row">
+          <button className="export-btn" onClick={handleExport}>
             <i className="fas fa-file-pdf"></i> Export PDF
           </button>
         </div>
+
       </div>
 
-      {/* Export PDF Modal */}
-      {showExportModal && (
-        <div className="modal-overlay show" onClick={() => setShowExportModal(false)}>
-          <div className="export-modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2 className="export-modal-title">Export PDF</h2>
-            <p className="export-modal-subtitle">Date Range</p>
-            <div className="export-date-row">
-              <div className="export-date-group">
-                <label>From:</label>
-                <input
-                  type="date"
-                  className="date-picker"
-                  value={exportDateFrom}
-                  onChange={(e) => setExportDateFrom(e.target.value)}
-                />
-              </div>
-              <div className="export-date-group">
-                <label>To:</label>
-                <input
-                  type="date"
-                  className="date-picker"
-                  value={exportDateTo}
-                  onChange={(e) => setExportDateTo(e.target.value)}
-                />
-              </div>
+      {/* Floating Help Button */}
+      <button className="help-float-btn" onClick={() => setShowHelpModal(true)}>
+        <i className="fas fa-question"></i>
+      </button>
+
+      {/* Help Modal */}
+      {showHelpModal && (
+        <div className="modal-overlay show" onClick={() => setShowHelpModal(false)}>
+          <div className="help-modal-content" onClick={e => e.stopPropagation()}>
+            <div className="help-modal-header">
+              <h2>Help</h2>
+              <button className="modal-close-btn" onClick={() => setShowHelpModal(false)}>
+                <i className="fas fa-times"></i>
+              </button>
             </div>
-            <div className="export-modal-footer">
-              <button className="btn btn-cancel" onClick={() => setShowExportModal(false)}>
-                Cancel
-              </button>
-              <button className="btn btn-export" onClick={handleExportConfirm}>
-                Export
-              </button>
+            <div className="help-modal-body">
+              <p>Help content coming soon.</p>
             </div>
           </div>
         </div>
