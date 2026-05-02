@@ -277,15 +277,15 @@ function Login({ setIsAuthenticated }) {
       {showPPModal && (
         <div className="pp-modal-overlay" onClick={() => setShowPPModal(false)}>
           <div className="pp-modal-content" onClick={e => e.stopPropagation()}>
-            <div className="pp-modal-body">
+            <div className="pp-modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
               {PRIVACY_POLICY.split('\n').map((line, i) => (
                 <p key={i} className={line.startsWith('PRIVACY POLICY') || line.startsWith('TERMS') ? 'pp-section-main' : line.match(/^\d+\./) ? 'pp-section-title' : 'pp-section-text'}>
                   {line || <br />}
                 </p>
               ))}
-            </div>
-            <div className="pp-modal-footer">
-              <button className="pp-understand-btn" onClick={() => setShowPPModal(false)}>I understand</button>
+              <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                <button className="pp-understand-btn" onClick={() => setShowPPModal(false)}>I understand</button>
+              </div>
             </div>
           </div>
         </div>
@@ -295,15 +295,15 @@ function Login({ setIsAuthenticated }) {
       {showTCModal && (
         <div className="pp-modal-overlay" onClick={() => setShowTCModal(false)}>
           <div className="pp-modal-content" onClick={e => e.stopPropagation()}>
-            <div className="pp-modal-body">
+            <div className="pp-modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
               {TERMS_AND_CONDITIONS.split('\n').map((line, i) => (
                 <p key={i} className={line.startsWith('TERMS') ? 'pp-section-main' : line.match(/^\d+\./) ? 'pp-section-title' : 'pp-section-text'}>
                   {line || <br />}
                 </p>
               ))}
-            </div>
-            <div className="pp-modal-footer">
-              <button className="pp-understand-btn" onClick={() => setShowTCModal(false)}>I understand</button>
+              <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                <button className="pp-understand-btn" onClick={() => setShowTCModal(false)}>I understand</button>
+              </div>
             </div>
           </div>
         </div>
