@@ -105,20 +105,22 @@ class AttendancePDF extends FPDF {
     public string $filterInfo = '';
 
     function Header() {
+        // Company header block (logo + text) aligned on the upper-left
         if ($this->logoPath && file_exists($this->logoPath)) {
-            $this->Image($this->logoPath, 14, 8, 22, 22);
+            $this->Image($this->logoPath, 14, 8, 28, 28);
         }
-        $this->SetXY(38, 8);
+        $this->SetXY(48, 10);
         $this->SetFont('Arial', 'B', 20);
         $this->SetTextColor(0, 112, 192);
         $this->Cell(0, 10, 'A+ Solution Development Center Corp.', 0, 1, 'L');
-        $this->SetX(38);
-        $this->SetFont('Arial', 'B', 9);
+        $this->SetX(48);
+        $this->SetFont('Arial', 'B', 8.5);
         $this->SetTextColor(0, 0, 0);
-        $this->Cell(0, 5, '35A National Highway, Lower Kalaklan, Olongapo City, Philippines 2200', 0, 1, 'L');
-        $this->SetX(38);
-        $this->Cell(0, 5, '0917 832 6822 | (047) 232 2449 | infoapsteamph@gmail.com', 0, 1, 'L');
-        $this->Ln(6);
+        $this->Cell(0, 4.5, '35A National Highway, Lower Kalaklan, Olongapo City, Philippines 2200', 0, 1, 'L');
+        $this->SetX(48);
+        $this->Cell(0, 4.5, '0917 832 6822 | (047) 232 2449 | infoapsteamph@gmail.com', 0, 1, 'L');
+        $this->Ln(7);
+
         $this->SetFont('Arial', 'B', 14);
         $this->Cell(0, 8, 'Attendance Report', 0, 1, 'C');
         $this->SetFont('Arial', 'B', 10);
@@ -160,14 +162,17 @@ if ($filterType !== 'All') $filterParts[] = "Type: $filterType";
 if ($filterCourse !== 'All') $filterParts[] = "Course: $filterCourse";
 $filterInfo = !empty($filterParts) ? 'Filter: ' . implode(' | ', $filterParts) : '';
 
-$pdf = new AttendancePDF('L', 'mm', 'Letter');
+$pageOrientation = 'P';
+$pageSize = 'A4';
+
+$pdf = new AttendancePDF($pageOrientation, 'mm', $pageSize);
 $pdf->dateFrom   = formatDisplayDate($dateFrom);
 $pdf->dateTo     = formatDisplayDate($dateTo);
 $pdf->logoPath   = $logoPath;
 $pdf->filterInfo = $filterInfo;
 $pdf->SetMargins(14, 14, 14);
 $pdf->SetAutoPageBreak(true, 18);
-$pdf->AddPage();
+$pdf->AddPage($pageOrientation, $pageSize);
 $pdf->SetFont('Arial', '', 9);
 
 if (empty($logs)) {
@@ -202,9 +207,11 @@ if (empty($logs)) {
     $pdf->Cell(21, 8, '',                    1, 1, 'C', true);
 }
 
-$filename = 'attendance_' . $dateFrom . '_to_' . $dateTo . '.pdf';
+$filename = 'attendance_a4_portrait_' . $dateFrom . '_to_' . $dateTo . '.pdf';
 header('Content-Type: application/pdf');
 header('Content-Disposition: attachment; filename="' . $filename . '"');
-header('Cache-Control: no-cache');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
 $pdf->Output('D', $filename);
 ?>

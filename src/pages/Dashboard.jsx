@@ -109,6 +109,7 @@ function Dashboard() {
       date_to: dateTo,
       type: filterType,
       course: filterCourse,
+      _t: String(Date.now()),
     });
     window.open(`${API_EXPORT_URL}?${params.toString()}`, '_blank');
   };
