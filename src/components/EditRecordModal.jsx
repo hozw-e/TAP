@@ -94,6 +94,7 @@ function EditRecordModal({ isOpen, onClose, onSuccess, student }) {
       if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
         age--;
       }
+      console.log('Birthdate:', value, 'Age:', age); // Debugging log
       setFormData(prev => ({
         ...prev,
         birthdate: value,

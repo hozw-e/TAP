@@ -58,7 +58,7 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     if (name === 'birthdate' && value) {
       const today = new Date();
       const birthDate = new Date(value);
@@ -67,6 +67,7 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
       if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
         age--;
       }
+      console.log('Birthdate:', value, 'Age:', age); // Debugging log
       setFormData(prev => ({
         ...prev,
         birthdate: value,
