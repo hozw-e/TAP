@@ -3,6 +3,7 @@ import Sidebar from '../components/Sidebar';
 import LogoutModal from '../components/LogoutModal';
 import axios from 'axios';
 import '../styles/Dashboard.css';
+import { useLocation } from 'react-router-dom';
 
 const BASE = import.meta.env.VITE_API_BASE_URL;
 const API_STATS_URL = `${BASE}/dashboard/stats.php`;
@@ -21,6 +22,7 @@ function Dashboard() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showLoginSuccessModal, setShowLoginSuccessModal] = useState(false);
 
   // Date range filter
   const todayStr = () => new Date().toISOString().split('T')[0];
@@ -137,6 +139,12 @@ function Dashboard() {
     if (log.row_type === 'visitor') return 'VISITOR';
     return log.time_out ? 'LEFT' : 'PRESENT';
   };
+
+  useEffect(() => {
+    if (location.state?.justLoggedIn) {
+      setShowLoginSuccessModal(true);
+    }
+  }, [location.state]);
 
   return (
     <div className="dashboard-layout">
@@ -283,6 +291,16 @@ function Dashboard() {
       )}
 
       <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
+
+      {showLoginSuccessModal && (
+        <div className="login-success-modal-overlay">
+          <div className="login-success-modal">
+            <h2>Login Successful</h2>
+            <p>Welcome to the Admin Dashboard!</p>
+            <button onClick={() => setShowLoginSuccessModal(false)}>Close</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
