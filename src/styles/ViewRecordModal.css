@@ -1,0 +1,276 @@
+.view-record-page-content {
+  width: 100%;
+}
+
+.view-record-modal-content {
+  background: #f6f7fb;
+  width: min(1080px, 96vw);
+  max-height: 92vh;
+  overflow: auto;
+  border-radius: 12px;
+  box-shadow: 0 14px 45px rgba(0, 0, 0, 0.25);
+  padding: 18px 20px 22px;
+}
+
+.view-record-page-content .view-record-layout {
+  grid-template-columns: 280px 1fr;
+}
+
+.view-record-topbar {
+  margin-bottom: 12px;
+}
+
+.view-back-btn {
+  border: none;
+  background: #273b63;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 14px;
+  padding: 9px 16px;
+  cursor: pointer;
+}
+
+.view-record-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+}
+
+.view-left-panel,
+.view-main-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.view-profile-card,
+.view-logs-card,
+.view-main-panel {
+  background: #fff;
+  border: 1px solid #e4e7ee;
+  border-radius: 10px;
+}
+
+.view-profile-card {
+  padding: 16px;
+}
+
+.view-profile-card h2 {
+  margin: 0;
+  font-size: 29px;
+  line-height: 1.1;
+  color: #243a5a;
+}
+
+.view-meta {
+  margin: 8px 0 14px;
+  font-size: 12px;
+  color: #8693a5;
+}
+
+.view-profile-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid #edf0f5;
+}
+
+.view-profile-stats .label {
+  display: block;
+  font-size: 11px;
+  color: #8c95a3;
+}
+
+.view-profile-stats strong {
+  color: #2f4057;
+  font-size: 13px;
+}
+
+.view-profile-stats .status.active {
+  color: #1f9e5d;
+}
+
+.view-profile-stats .status.inactive {
+  color: #d84f4f;
+}
+
+.view-profile-stats .status.no-recent-logs {
+  color: #8b95a4;
+}
+
+.view-logs-card {
+  padding: 14px;
+}
+
+.view-card-title {
+  font-weight: 700;
+  color: #263752;
+  margin-bottom: 12px;
+}
+
+.view-log-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.view-log-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f3f9;
+  font-size: 13px;
+}
+
+.view-log-list li:last-child {
+  border-bottom: none;
+}
+
+.log-badge {
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+}
+
+.log-badge.present {
+  background: #dcf7e9;
+  color: #188a55;
+}
+
+.log-badge.completed {
+  background: #edf2fa;
+  color: #44546d;
+}
+
+.log-badge.absent {
+  background: #ffe5e5;
+  color: #c83d3d;
+}
+
+.empty-log {
+  margin: 0;
+  color: #8f99a8;
+  font-size: 13px;
+}
+
+.view-main-panel {
+  padding: 14px 16px 16px;
+}
+
+.view-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.view-panel-header h3,
+.view-guardian-section h3 {
+  margin: 0;
+  color: #253854;
+}
+
+.view-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.view-action-btn {
+  border: 1px solid #d6dce8;
+  background: #fff;
+  color: #3a4c66;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.view-action-btn.edit {
+  background: #314b78;
+  border-color: #314b78;
+  color: #fff;
+}
+
+.view-action-btn.cancel {
+  background: #f7f8fb;
+  border-color: #d6dce8;
+  color: #5c6f8c;
+}
+
+.view-action-btn.export:hover,
+.view-action-btn.edit:hover,
+.view-action-btn.cancel:hover {
+  filter: brightness(0.95);
+}
+
+.view-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e7ebf3;
+  border-radius: 8px;
+  background: #fcfdff;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-item label {
+  font-size: 12px;
+  color: #71819a;
+  margin-bottom: 5px;
+}
+
+.info-item input {
+  width: 100%;
+  border: 1px solid #d6dce8;
+  border-radius: 4px;
+  background: #fff;
+  font-size: 13px;
+  color: #2f3f58;
+  padding: 8px 10px;
+}
+
+.edit-record-page .info-item input {
+  background: #edf2f8;
+}
+
+.edit-record-page .info-item input:read-only {
+  opacity: 0.85;
+  cursor: not-allowed;
+}
+
+.view-guardian-section {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.view-info-grid.guardian {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 980px) {
+  .view-record-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .view-panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .view-info-grid,
+  .view-info-grid.guardian {
+    grid-template-columns: 1fr;
+  }
+}

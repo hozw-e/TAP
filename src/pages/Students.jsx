@@ -1,20 +1,20 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import LogoutModal from '../components/LogoutModal';
 import NewRecordModal from '../components/NewRecordModal';
-import EditRecordModal from '../components/EditRecordModal';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import Notification from '../components/Notification';
 import { studentsAPI } from '../services/api';
 import '../styles/Students.css';
 
 function Students() {
+  const navigate = useNavigate();
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showNewRecordModal, setShowNewRecordModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -93,13 +93,11 @@ function Students() {
   };
 
   const handleEditClick = (student) => {
-    setSelectedStudent(student);
-    setShowEditModal(true);
+    navigate('/students/edit', { state: { student } });
   };
 
-  const handleEditSuccess = (action) => {
-    loadStudents();
-    showNotification(action);
+  const handleViewClick = (student) => {
+    navigate(`/students/${student.student_id}`, { state: { student } });
   };
 
   const handleDeleteClick = (student) => {
@@ -175,6 +173,9 @@ function Students() {
                       <td>{student.guardian_cellnum || '-'}</td>
                       <td>
                         <div className="action-buttons">
+                          <button className="action-btn action-btn-view" onClick={() => handleViewClick(student)} title="View Record">
+                            <i className="fas fa-eye"></i>
+                          </button>
                           <button className="action-btn action-btn-edit" onClick={() => handleEditClick(student)} title="Edit">
                             <i className="fas fa-edit"></i>
                           </button>
@@ -193,7 +194,6 @@ function Students() {
       </div>
       <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
       <NewRecordModal isOpen={showNewRecordModal} onClose={() => setShowNewRecordModal(false)} onSuccess={handleNewRecordSuccess} />
-      <EditRecordModal isOpen={showEditModal} onClose={() => setShowEditModal(false)} onSuccess={handleEditSuccess} student={selectedStudent} />
       <DeleteConfirmModal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} onSuccess={handleDeleteSuccess} student={selectedStudent} />
       <Notification isOpen={notification.isOpen} onClose={() => setNotification({ ...notification, isOpen: false })} message={notification.message} type={notification.type} />
     </div>

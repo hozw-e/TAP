@@ -159,7 +159,6 @@ function Dashboard() {
         <div className="page-header">
           <div>
             <h1>Dashboard</h1>
-            <p className="page-subtitle">Welcome back, Admin!</p>
           </div>
           <div className="live-clock">{clock}</div>
         </div>

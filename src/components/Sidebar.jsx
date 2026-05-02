@@ -6,6 +6,7 @@ function Sidebar({ onLogoutClick }) {
   const location = useLocation();
 
   const isActive = (path) => location.pathname === path;
+  const isStudentRoute = location.pathname.startsWith('/students');
 
   return (
     <div className="sidebar">
@@ -24,7 +25,7 @@ function Sidebar({ onLogoutClick }) {
       </div>
 
       <div
-        className={`nav-item ${isActive('/students') ? 'active' : ''}`}
+        className={`nav-item ${isStudentRoute ? 'active' : ''}`}
         onClick={() => navigate('/students')}
       >
         <i className="fas fa-users"></i>

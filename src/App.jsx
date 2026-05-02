@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Students from './pages/Students';
+import ViewRecord from './pages/ViewRecord';
+import EditRecord from './pages/EditRecord';
 import VisitorPage from './pages/VisitorPage';
 import LandingPage from './pages/LandingPage';
 import { authAPI } from './services/api';
@@ -94,6 +96,33 @@ function App() {
           element={
             <ProtectedRoute>
               <Students />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/students/:studentId"
+          element={
+            <ProtectedRoute>
+              <ViewRecord />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/students/:studentId/edit"
+          element={
+            <ProtectedRoute>
+              <EditRecord />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/students/edit"
+          element={
+            <ProtectedRoute>
+              <EditRecord />
             </ProtectedRoute>
           }
         />

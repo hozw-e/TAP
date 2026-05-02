@@ -211,6 +211,17 @@
   color: white;
 }
 
+.action-btn-view {
+  background: #7f8c8d;
+  color: white;
+}
+
+.action-btn-view:hover {
+  background: #616a6b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(127, 140, 141, 0.3);
+}
+
 .action-btn-edit:hover {
   background: #2980b9;
   transform: translateY(-2px);
