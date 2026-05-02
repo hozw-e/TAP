@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Students from './pages/Students';
 import VisitorPage from './pages/VisitorPage';
+import LandingPage from './pages/LandingPage';
 import { authAPI } from './services/api';
 
 function App() {
@@ -52,19 +53,29 @@ function App() {
 
   // Protected Route Component
   const ProtectedRoute = ({ children }) => {
-    return isAuthenticated ? children : <Navigate to="/" replace />;
+    return isAuthenticated ? children : <Navigate to="/login" replace />;
   };
 
   return (
     <Router>
       <Routes>
-        {/* Login Route - redirect to dashboard if already logged in */}
+        {/* Landing Page */}
         <Route
           path="/"
           element={
-            isAuthenticated ?
-              <Navigate to="/dashboard" replace /> :
-              <Login setIsAuthenticated={setIsAuthenticated} />
+            isAuthenticated
+              ? <Navigate to="/dashboard" replace />
+              : <LandingPage />
+          }
+        />
+
+        {/* Admin Login */}
+        <Route
+          path="/login"
+          element={
+            isAuthenticated
+              ? <Navigate to="/dashboard" replace />
+              : <Login setIsAuthenticated={setIsAuthenticated} />
           }
         />
 
