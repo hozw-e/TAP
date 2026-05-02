@@ -8,10 +8,10 @@ function LandingPage() {
     <div className="landing-page">
       <div className="landing-left">
         <div className="landing-text">
-          <h1>
-            <span className="landing-title-dark">A+ Solution</span><br />
+          <div className="landing-title-line">
+            <span className="landing-title-dark">A+ Solution</span>
             <span className="landing-title-orange">Development Center</span>
-          </h1>
+          </div>
           <p className="landing-description">
             Championing innovation and leadership, we spearhead
             the advancement of robotics education in our region,
