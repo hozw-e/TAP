@@ -127,7 +127,7 @@ function VisitorPage() {
       {/* Main content */}
       <div className="visitor-content">
         <h1 className="visitor-title">Welcome to A+ Center!</h1>
-        <p className="visitor-subtitle">Please tap your NFC <strong>or</strong> enter your name to login</p>
+        <p className="visitor-subtitle">Please tap your <strong>NFC</strong> or enter your name to login</p>
 
         <form className="visitor-form" onSubmit={handleVisitorSubmit}>
           <input
@@ -142,19 +142,34 @@ function VisitorPage() {
             <i className="fas fa-arrow-right"></i>
           </button>
         </form>
+
+        {/* NFC Reader Status */}
+        <div className="nfc-status">
+          <i className="fas fa-wifi"></i>
+          <span>NFC Reader is Active</span>
+        </div>
       </div>
 
       {/* Welcome / Farewell Modal */}
       {modal.show && (
         <div className="visitor-modal-overlay">
           <div className="visitor-modal">
+            <div className="visitor-modal-icon">
+              <i className={`fas ${modal.type === 'welcome' ? 'fa-check-circle' : 'fa-sign-out-alt'}`}></i>
+              <p>{modal.type === 'welcome' ? 'Tap-in successful' : 'Tap-out successful. Have a great day!'}</p>
+            </div>
             <h2>
-              {modal.type === 'welcome' ? `Hello, ${modal.name}!` : `Goodbye, ${modal.name}!`}
+              {modal.type === 'welcome' ? `Welcome, ${modal.name}!` : `Goodbye, ${modal.name}!`}
             </h2>
-            <p>
-              {modal.type === 'welcome'
-                ? "You've successfully logged in.\nGoodluck on your adventure!"
-                : "You've successfully logged out.\nWe hope you enjoyed your stay!"}
+            <p className="visitor-modal-timestamp">
+              {new Date().toLocaleString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
             </p>
           </div>
         </div>
@@ -196,6 +211,11 @@ function VisitorPage() {
           </div>
         </div>
       )}
+
+      {/* Footer */}
+      <footer className="visitor-footer">
+        <p>© 2026 A+ Solution Development Center. All rights reserved.</p>
+      </footer>
     </div>
   );
 }

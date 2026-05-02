@@ -122,32 +122,47 @@
 }
 
 .visitor-modal {
-  background: #f0894a;
+  background: #ffffff;
   border-radius: 16px;
   padding: 50px 60px;
   text-align: center;
   max-width: 560px;
   width: 90%;
   animation: popIn 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.visitor-modal-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.visitor-modal-icon i {
+  font-size: 48px;
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.visitor-modal-icon p {
+  font-size: 18px;
+  font-weight: 600;
+  color: #555;
+  margin: 0;
 }
 
 .visitor-modal h2 {
-  color: white;
-  font-size: 32px;
-  font-weight: 700;
-  margin-bottom: 14px;
+  color: #2c3e50;
+  font-size: 36px;
+  font-weight: 800;
+  margin-bottom: 8px;
 }
 
-.visitor-modal p {
-  color: white;
+.visitor-modal-timestamp {
   font-size: 16px;
-  line-height: 1.6;
-  white-space: pre-line;
-}
-
-@keyframes popIn {
-  from { transform: scale(0.85); opacity: 0; }
-  to   { transform: scale(1);    opacity: 1; }
+  color: #888;
+  margin-top: 8px;
 }
 
 /* ── Admin Login Modal ────────────────────────────────────────── */
@@ -229,4 +244,30 @@
   font-size: 13px;
   margin-bottom: 16px;
   text-align: center;
+}
+
+/* NFC Reader Status */
+.nfc-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  font-size: 16px;
+  color: #555;
+}
+
+.nfc-status i {
+  margin-right: 8px;
+  font-size: 20px;
+  color: #2c3e50;
+}
+
+/* Footer */
+.visitor-footer {
+  position: absolute;
+  bottom: 10px;
+  width: 100%;
+  text-align: center;
+  font-size: 14px;
+  color: #aaa;
 }
