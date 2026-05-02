@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
+import Notification from '../components/Notification';
 import '../styles/Login.css';
 
 function Login({ setIsAuthenticated }) {
@@ -9,6 +10,7 @@ function Login({ setIsAuthenticated }) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -27,7 +29,8 @@ function Login({ setIsAuthenticated }) {
       
       if (response.success) {
         setIsAuthenticated(true);
-        navigate('/dashboard');
+        setShowSuccess(true);
+        setTimeout(() => navigate('/dashboard'), 1500);
       } else {
         setError(response.message || 'Invalid username or password');
       }
@@ -41,6 +44,12 @@ function Login({ setIsAuthenticated }) {
 
   return (
     <div className="login-page">
+      <Notification
+        isOpen={showSuccess}
+        onClose={() => setShowSuccess(false)}
+        message="Login successful! Welcome back, Admin."
+        type="success"
+      />
 
       <div className="login-container">
         {/* Logo */}
