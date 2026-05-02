@@ -265,12 +265,16 @@
 
 /* Footer */
 .visitor-footer {
-  position: absolute;
-  bottom: 10px;
+  position: fixed;
+  bottom: 0;
+  left: 0;
   width: 100%;
   text-align: center;
   font-size: 14px;
   color: #aaa;
+  background-color: #ffffff;
+  padding: 10px 0;
+  z-index: 10;
 }
 
 /* ── Footer Banner ───────────────────────────────────────────── */
