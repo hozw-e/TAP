@@ -85,36 +85,10 @@
   margin: 4px 0;
 }
 
-.help-btn {
-  width: 90%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-radius: 10px;
-  cursor: pointer;
-  background: rgba(255, 255, 255, 0.08);
-  border: none;
-  color: rgba(255, 255, 255, 0.75);
-  font-size: 13px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.help-btn i {
-  font-size: 16px;
-  width: 18px;
-  text-align: center;
-}
-
-.help-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: white;
-}
-
 .logout-btn {
-  width: 90%;
-  padding: 12px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   background: #e74c3c;
   color: white;
   border: none;

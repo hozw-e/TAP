@@ -42,10 +42,6 @@ function Sidebar({ onLogoutClick }) {
       {/* Bottom section */}
       <div className="sidebar-bottom">
         <hr className="sidebar-divider" />
-        <button className="help-btn" onClick={() => {}}>
-          <i className="fas fa-question-circle"></i>
-          <span>Help</span>
-        </button>
         <button className="logout-btn" onClick={onLogoutClick}>
           <i className="fas fa-sign-out-alt"></i>
         </button>
