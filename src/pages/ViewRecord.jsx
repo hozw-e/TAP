@@ -41,16 +41,30 @@ function ViewRecord() {
 
   useEffect(() => {
     const loadAttendanceLogs = async () => {
-      if (!student?.student_id) return;
+      const targetStudentId = student?.student_id || studentId;
+      if (!targetStudentId) return;
       setIsLoadingLogs(true);
       try {
-        const response = await attendanceAPI.list({ student_id: student.student_id });
+        const response = await attendanceAPI.list({ student_id: targetStudentId });
         const logsData = Array.isArray(response?.data)
           ? response.data
           : Array.isArray(response?.data?.data)
             ? response.data.data
+            : Array.isArray(response?.data?.logs)
+              ? response.data.logs
             : [];
-        setAttendanceLogs(logsData.slice(0, 5));
+        const normalizedLogs = logsData
+          .map((log) => ({
+            ...log,
+            attendanceDate: log.date || log.log_date || log.date_created || log.created_at || null,
+          }))
+          .sort((a, b) => {
+            const aDateTime = new Date(`${a.attendanceDate || ''} ${a.time_in || '00:00:00'}`).getTime();
+            const bDateTime = new Date(`${b.attendanceDate || ''} ${b.time_in || '00:00:00'}`).getTime();
+            return bDateTime - aDateTime;
+          });
+
+        setAttendanceLogs(normalizedLogs);
       } catch (error) {
         console.error('Error loading attendance logs:', error);
         setAttendanceLogs([]);
@@ -59,7 +73,7 @@ function ViewRecord() {
       }
     };
     loadAttendanceLogs();
-  }, [student]);
+  }, [student, studentId]);
 
   const studentStatus = useMemo(() => {
     if (!attendanceLogs.length) return 'No Recent Logs';
@@ -78,6 +92,14 @@ function ViewRecord() {
     const date = new Date(dateString);
     if (Number.isNaN(date.getTime())) return dateString;
     return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  };
+
+  const formatTime = (timeString) => {
+    if (!timeString) return '--';
+    const normalized = timeString.length <= 5 ? `${timeString}:00` : timeString;
+    const date = new Date(`1970-01-01T${normalized}`);
+    if (Number.isNaN(date.getTime())) return timeString;
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   };
 
   return (
@@ -131,7 +153,8 @@ function ViewRecord() {
                         const status = getLogStatus(log);
                         return (
                           <li key={`${log.attendance_id || 'log'}-${index}`}>
-                            <span>{formatDate(log.log_date || log.date_created || log.created_at)}</span>
+                            <span>{formatDate(log.attendanceDate)}</span>
+                            <span className="log-time">{`${formatTime(log.time_in)} - ${log.time_out ? formatTime(log.time_out) : 'Active'}`}</span>
                             <span className={`log-badge ${status.toLowerCase()}`}>{status}</span>
                           </li>
                         );
@@ -145,7 +168,7 @@ function ViewRecord() {
                 <div className="view-panel-header">
                   <h3>Student Information</h3>
                   <div className="view-actions">
-                    <button className="view-action-btn edit" onClick={() => navigate('/students/edit', { state: { student } })}>
+                    <button className="view-action-btn edit" onClick={() => navigate(`/students/${student.student_id}/edit`, { state: { student } })}>
                       <i className="fas fa-pencil-alt"></i> Edit Profile
                     </button>
                     <button className="view-action-btn export" onClick={() => window.print()}>

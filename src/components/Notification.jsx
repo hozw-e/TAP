@@ -14,8 +14,14 @@ function Notification({ isOpen, onClose, message, type = 'success' }) {
 
   if (!isOpen) return null;
 
+  const positionStyle = {
+    top: '30px',
+    right: '30px',
+    bottom: 'auto',
+  };
+
   return (
-    <div className={`notification ${type} ${isOpen ? 'show' : ''}`}>
+    <div className={`notification ${type} ${isOpen ? 'show' : ''}`} style={positionStyle}>
       <div className="notification-icon">
         <i className="fas fa-check-circle"></i>
       </div>

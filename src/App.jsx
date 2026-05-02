@@ -122,7 +122,7 @@ function App() {
           path="/students/edit"
           element={
             <ProtectedRoute>
-              <EditRecord />
+              <Navigate to="/students" replace />
             </ProtectedRoute>
           }
         />

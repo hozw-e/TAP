@@ -93,7 +93,7 @@ function Students() {
   };
 
   const handleEditClick = (student) => {
-    navigate('/students/edit', { state: { student } });
+    navigate(`/students/${student.student_id}/edit`, { state: { student } });
   };
 
   const handleViewClick = (student) => {

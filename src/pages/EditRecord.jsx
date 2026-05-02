@@ -117,12 +117,29 @@ function EditRecord() {
 
   const handleSave = async () => {
     if (!student) return;
+    const getApiErrorMessage = (error, fallback) => {
+      return (
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        fallback
+      );
+    };
+
     if (!formData.address.trim()) {
       setNotification({ isOpen: true, message: 'Student address is required.', type: 'error' });
       return;
     }
+    if (!(student.student_name || '').trim()) {
+      setNotification({ isOpen: true, message: 'Student name is missing. Please reload and try again.', type: 'error' });
+      return;
+    }
     if (!formData.guardianName.trim()) {
       setNotification({ isOpen: true, message: 'Guardian name is required.', type: 'error' });
+      return;
+    }
+    if (!student.guardian_id) {
+      setNotification({ isOpen: true, message: 'Guardian ID is missing for this record.', type: 'error' });
       return;
     }
 
@@ -138,6 +155,7 @@ function EditRecord() {
       }
 
       const studentResponse = await studentsAPI.update(student.student_id, {
+        student_name: student.student_name,
         student_birthdate: formData.birthdate || null,
         student_address: formData.address,
         student_cellnum: formData.contactNumber || null,
@@ -151,7 +169,11 @@ function EditRecord() {
       navigate(`/students/${student.student_id}`);
     } catch (error) {
       console.error('Error saving record:', error);
-      setNotification({ isOpen: true, message: error.message || 'Failed to save changes.', type: 'error' });
+      setNotification({
+        isOpen: true,
+        message: getApiErrorMessage(error, 'Failed to save changes.'),
+        type: 'error',
+      });
     } finally {
       setIsSaving(false);
     }
