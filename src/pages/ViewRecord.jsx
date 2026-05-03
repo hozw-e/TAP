@@ -171,7 +171,19 @@ function ViewRecord() {
                     <button className="view-action-btn edit" onClick={() => navigate(`/students/${student.student_id}/edit`, { state: { student } })}>
                       <i className="fas fa-pencil-alt"></i> Edit Profile
                     </button>
-                    <button className="view-action-btn export" onClick={() => window.print()}>
+                    <button
+                      className="view-action-btn export"
+                      onClick={() => {
+                        if (!student) return;
+                        const params = new URLSearchParams({
+                          student_id: student.student_id,
+                          date_from: attendanceLogs.length > 0 ? attendanceLogs[attendanceLogs.length - 1].attendanceDate || '' : '',
+                          date_to: attendanceLogs.length > 0 ? attendanceLogs[0].attendanceDate || '' : '',
+                          _t: String(Date.now()),
+                        });
+                        window.open(`${import.meta.env.VITE_API_BASE_URL}/students/export_record.php?${params.toString()}`, '_blank');
+                      }}
+                    >
                       <i className="fas fa-file-pdf"></i> Export PDF
                     </button>
                   </div>

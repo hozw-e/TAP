@@ -213,11 +213,9 @@ function VisitorPage() {
       )}
 
       {/* Footer */}
-      <footer className="visitor-footer">
-        <div className="footer-banner">
-          <p>© 2026 A+ Solution Development Center. All rights reserved.</p>
-        </div>
-      </footer>
+      <div className="footer-banner">
+        <p>© 2026 A+ Solution Development Center. All rights reserved.</p>
+      </div>
     </div>
   );
 }

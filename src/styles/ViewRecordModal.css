@@ -1,5 +1,7 @@
 .view-record-page-content {
   width: 100%;
+  height: calc(100vh - 60px);
+  overflow: hidden;
 }
 
 .view-record-modal-content {
@@ -101,6 +103,8 @@
 
 .view-logs-card {
   padding: 14px;
+  overflow-y: auto;
+  max-height: calc(100vh - 320px);
 }
 
 .view-card-title {
