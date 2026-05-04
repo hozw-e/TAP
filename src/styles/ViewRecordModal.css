@@ -29,135 +29,118 @@
   border-radius: 8px;
   font-size: 14px;
   padding: 9px 16px;
-  cursor: pointer;
+  cursor: pointer;;
 }
 
 .view-record-layout {
-  display: grid;
-  grid-template-columns: 280px 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
 }
 
-.view-left-panel,
-.view-main-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+/* Top section: profile card + student info side by side */
+.view-top-section {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 16px;
+  align-items: start;
 }
 
-.view-profile-card,
-.view-logs-card,
-.view-main-panel {
+/* Profile card */
+.view-profile-card {
   background: #fff;
   border: 1px solid #e4e7ee;
   border-radius: 10px;
-}
-
-.view-profile-card {
-  padding: 16px;
+  padding: 20px 16px;
+  text-align: left;
+  height: 280px;
+  margin-top: 55px;
 }
 
 .view-profile-card h2 {
-  margin: 0;
-  font-size: 29px;
-  line-height: 1.1;
+  margin: 0 0 6px;
+  font-size: 28px;
+  line-height: 1.2;
   color: #243a5a;
 }
 
-.view-meta {
-  margin: 8px 0 14px;
-  font-size: 12px;
-  color: #8693a5;
-}
-
-.view-profile-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  padding-top: 10px;
-  border-top: 1px solid #edf0f5;
-}
-
-.view-profile-stats .label {
-  display: block;
-  font-size: 11px;
-  color: #8c95a3;
-}
-
-.view-profile-stats strong {
-  color: #2f4057;
-  font-size: 13px;
-}
-
-.view-profile-stats .status.active {
-  color: #1f9e5d;
-}
-
-.view-profile-stats .status.inactive {
-  color: #d84f4f;
-}
-
-.view-profile-stats .status.no-recent-logs {
-  color: #8b95a4;
-}
-
-.view-logs-card {
-  padding: 14px;
-  overflow-y: auto;
-  max-height: calc(100vh - 320px);
-}
-
-.view-card-title {
-  font-weight: 700;
-  color: #263752;
-  margin-bottom: 12px;
-}
-
-.view-log-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.view-log-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid #f0f3f9;
-  font-size: 13px;
-}
-
-.view-log-list li:last-child {
-  border-bottom: none;
-}
-
-.log-badge {
+.view-course-badge {
+  display: inline-block;
+  background: #e8edf5;
+  color: #3a5080;
   border-radius: 999px;
   font-size: 11px;
   font-weight: 700;
-  padding: 3px 10px;
+  padding: 4px 14px;
+  margin: 8px 0 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.log-badge.present {
-  background: #dcf7e9;
-  color: #188a55;
+/* Full-width attendance logs at bottom */
+.view-logs-section {
+  background: #fff;
+  border: 1px solid #e4e7ee;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
-.log-badge.completed {
-  background: #edf2fa;
-  color: #44546d;
+.view-logs-header {
+  background: #34495e;
+  color: white;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
 }
 
-.log-badge.absent {
-  background: #ffe5e5;
-  color: #c83d3d;
+.view-logs-body {
+  max-height: 280px;
+  overflow-y: auto;
 }
 
-.empty-log {
-  margin: 0;
-  color: #8f99a8;
+.view-logs-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.view-logs-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f8f9fa;
+  padding: 10px 15px;
+  text-align: left;
   font-size: 13px;
+  font-weight: 600;
+  color: #2c3e50;
+  border-bottom: 2px solid #e9ecef;
+  z-index: 1;
+}
+
+.view-logs-table td {
+  padding: 12px 15px;
+  font-size: 13px;
+  color: #2c3e50;
+  border-bottom: 1px solid #f0f3f9;
+}
+
+.view-logs-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.empty-log-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #95a5a6;
+  text-align: center;
+}
+
+.empty-log-state i {
+  font-size: 40px;
+  margin-bottom: 10px;
+  opacity: 0.3;
 }
 
 .view-main-panel {
@@ -277,4 +260,42 @@
   .view-info-grid.guardian {
     grid-template-columns: 1fr;
   }
+}
+
+.view-meta {
+  margin: 8px 0 14px;
+  font-size: 12px;
+  color: #8693a5;
+}
+
+.view-profile-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid #edf0f5;
+}
+
+.view-profile-stats .label {
+  display: block;
+  font-size: 11px;
+  color: #8c95a3;
+  margin-bottom: 4px;
+}
+
+.view-profile-stats strong {
+  color: #2f4057;
+  font-size: 13px;
+}
+
+.view-profile-stats .status.active {
+  color: #1f9e5d;
+}
+
+.view-profile-stats .status.inactive {
+  color: #d84f4f;
+}
+
+.view-profile-stats .status.no-recent-logs {
+  color: #8b95a4;
 }

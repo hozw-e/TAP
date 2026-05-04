@@ -125,10 +125,14 @@ function ViewRecord() {
             </div>
 
             <div className="view-record-layout">
-              <div className="view-left-panel">
+              {/* Top section: profile card left + student info right */}
+              <div className="view-top-section">
                 <div className="view-profile-card">
                   <h2>{student.student_name || 'Unknown Student'}</h2>
                   <p className="view-meta">NFC ID: {student.nfc_uid || 'XXXXXXX'}</p>
+                  {student.student_course && (
+                    <div className="view-course-badge">{student.student_course}</div>
+                  )}
                   <div className="view-profile-stats">
                     <div>
                       <span className="label">Member since</span>
@@ -141,70 +145,89 @@ function ViewRecord() {
                   </div>
                 </div>
 
-                <div className="view-logs-card">
-                  <div className="view-card-title">Attendance Logs</div>
-                  {isLoadingLogs ? (
-                    <p className="empty-log">Loading logs...</p>
-                  ) : attendanceLogs.length === 0 ? (
-                    <p className="empty-log">No attendance logs available.</p>
-                  ) : (
-                    <ul className="view-log-list">
-                      {attendanceLogs.map((log, index) => {
-                        const status = getLogStatus(log);
-                        return (
-                          <li key={`${log.attendance_id || 'log'}-${index}`}>
-                            <span>{formatDate(log.attendanceDate)}</span>
-                            <span className="log-time">{`${formatTime(log.time_in)} - ${log.time_out ? formatTime(log.time_out) : 'Active'}`}</span>
-                            <span className={`log-badge ${status.toLowerCase()}`}>{status}</span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
+                <div className="view-main-panel">
+                  <div className="view-panel-header">
+                    <h3>Student Information</h3>
+                    <div className="view-actions">
+                      <button className="view-action-btn edit" onClick={() => navigate(`/students/${student.student_id}/edit`, { state: { student } })}>
+                        <i className="fas fa-pencil-alt"></i> Edit Profile
+                      </button>
+                      <button
+                        className="view-action-btn export"
+                        onClick={() => {
+                          if (!student) return;
+                          const params = new URLSearchParams({
+                            student_id: student.student_id,
+                            date_from: attendanceLogs.length > 0 ? attendanceLogs[attendanceLogs.length - 1].attendanceDate || '' : '',
+                            date_to: attendanceLogs.length > 0 ? attendanceLogs[0].attendanceDate || '' : '',
+                            _t: String(Date.now()),
+                          });
+                          window.open(`${import.meta.env.VITE_API_BASE_URL}/students/export_record.php?${params.toString()}`, '_blank');
+                        }}
+                      >
+                        <i className="fas fa-file-pdf"></i> Export PDF
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="view-info-grid">
+                    <div className="info-item"><label>Course Enrolled</label><input value={student.student_course || ''} readOnly /></div>
+                    <div className="info-item"><label>Course Duration</label><input value={student.course_duration || ''} readOnly /></div>
+                    <div className="info-item"><label>NFC ID</label><input value={student.nfc_uid || ''} readOnly /></div>
+                    <div className="info-item"><label>Birthdate</label><input value={student.student_birthdate || ''} readOnly /></div>
+                    <div className="info-item"><label>Address</label><input value={student.student_address || ''} readOnly /></div>
+                    <div className="info-item"><label>Contact Number</label><input value={student.student_cellnum || ''} readOnly /></div>
+                  </div>
+
+                  <div className="view-guardian-section">
+                    <h3>Guardian Information</h3>
+                    <div className="view-info-grid guardian">
+                      <div className="info-item"><label>Guardian Name</label><input value={student.guardian_name || ''} readOnly /></div>
+                      <div className="info-item"><label>Contact Details</label><input value={student.guardian_cellnum || ''} readOnly /></div>
+                      <div className="info-item"><label>Address</label><input value={student.guardian_address || ''} readOnly /></div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="view-main-panel">
-                <div className="view-panel-header">
-                  <h3>Student Information</h3>
-                  <div className="view-actions">
-                    <button className="view-action-btn edit" onClick={() => navigate(`/students/${student.student_id}/edit`, { state: { student } })}>
-                      <i className="fas fa-pencil-alt"></i> Edit Profile
-                    </button>
-                    <button
-                      className="view-action-btn export"
-                      onClick={() => {
-                        if (!student) return;
-                        const params = new URLSearchParams({
-                          student_id: student.student_id,
-                          date_from: attendanceLogs.length > 0 ? attendanceLogs[attendanceLogs.length - 1].attendanceDate || '' : '',
-                          date_to: attendanceLogs.length > 0 ? attendanceLogs[0].attendanceDate || '' : '',
-                          _t: String(Date.now()),
-                        });
-                        window.open(`${import.meta.env.VITE_API_BASE_URL}/students/export_record.php?${params.toString()}`, '_blank');
-                      }}
-                    >
-                      <i className="fas fa-file-pdf"></i> Export PDF
-                    </button>
-                  </div>
+              {/* Bottom section: full-width attendance logs */}
+              <div className="view-logs-section">
+                <div className="view-logs-header">
+                  <span>Attendance Logs</span>
                 </div>
-
-                <div className="view-info-grid">
-                  <div className="info-item"><label>Course Enrolled</label><input value={student.student_course || ''} readOnly /></div>
-                  <div className="info-item"><label>Course Duration</label><input value={student.course_duration || ''} readOnly /></div>
-                  <div className="info-item"><label>NFC ID</label><input value={student.nfc_uid || ''} readOnly /></div>
-                  <div className="info-item"><label>Birthdate</label><input value={student.student_birthdate || ''} readOnly /></div>
-                  <div className="info-item"><label>Address</label><input value={student.student_address || ''} readOnly /></div>
-                  <div className="info-item"><label>Contact Number</label><input value={student.student_cellnum || ''} readOnly /></div>
-                </div>
-
-                <div className="view-guardian-section">
-                  <h3>Guardian Information</h3>
-                  <div className="view-info-grid guardian">
-                    <div className="info-item"><label>Guardian Name</label><input value={student.guardian_name || ''} readOnly /></div>
-                    <div className="info-item"><label>Contact Details</label><input value={student.guardian_cellnum || ''} readOnly /></div>
-                    <div className="info-item"><label>Address</label><input value={student.guardian_address || ''} readOnly /></div>
-                  </div>
+                <div className="view-logs-body">
+                  {isLoadingLogs ? (
+                    <div className="empty-log-state"><p>Loading logs...</p></div>
+                  ) : attendanceLogs.length === 0 ? (
+                    <div className="empty-log-state">
+                      <i className="fas fa-clipboard-list"></i>
+                      <p>No attendance logs for this date.</p>
+                    </div>
+                  ) : (
+                    <table className="view-logs-table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Time In</th>
+                          <th>Time Out</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {attendanceLogs.map((log, index) => {
+                          const status = getLogStatus(log);
+                          return (
+                            <tr key={`${log.attendance_id || 'log'}-${index}`}>
+                              <td>{formatDate(log.attendanceDate)}</td>
+                              <td>{formatTime(log.time_in)}</td>
+                              <td>{log.time_out ? formatTime(log.time_out) : 'Active'}</td>
+                              <td><span className={`log-badge ${status.toLowerCase()}`}>{status}</span></td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
               </div>
             </div>
