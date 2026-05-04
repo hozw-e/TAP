@@ -35,7 +35,8 @@ try {
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     $totalStudents = (int)$result['total'];
 
-    // Present today (checked in but not yet checked out)
+
+    // Present students today (checked in but not yet checked out)
     $stmt = $conn->prepare("
         SELECT COUNT(DISTINCT student_id) as present 
         FROM attendance_logs 
@@ -44,7 +45,17 @@ try {
     ");
     $stmt->execute([':today' => $today]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    $presentToday = (int)$result['present'];
+    $presentStudents = (int)$result['present'];
+
+    // Present visitors today (checked in today)
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) as present FROM visitors WHERE date_of_visit = :today
+    ");
+    $stmt->execute([':today' => $today]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    $presentVisitors = (int)$result['present'];
+
+    $presentToday = $presentStudents + $presentVisitors;
 
     // Enrolled today
     $stmt = $conn->prepare("
