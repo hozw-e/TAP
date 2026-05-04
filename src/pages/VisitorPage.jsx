@@ -80,6 +80,8 @@ function VisitorPage() {
       if (response.success) {
         setModal({ show: true, type: 'welcome', name: visitorName.trim() });
         setVisitorName('');
+        // Broadcast event for dashboard to refresh
+        localStorage.setItem('visitorCheckin', Date.now().toString());
       }
     } catch (err) {
       console.error('Visitor check-in error:', err);

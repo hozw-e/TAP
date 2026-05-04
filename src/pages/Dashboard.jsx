@@ -59,6 +59,19 @@ function Dashboard() {
     loadDashboardData();
   }, []);
 
+  // Listen for visitor check-in event (from VisitorPage)
+  useEffect(() => {
+    const handler = () => {
+      loadDashboardData();
+    };
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'visitorCheckin') handler();
+    });
+    return () => {
+      window.removeEventListener('storage', handler);
+    };
+  }, []);
+
   // Apply filters whenever logs or filter state changes
   useEffect(() => {
     applyFilters(attendanceLogs);
