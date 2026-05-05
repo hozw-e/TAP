@@ -52,19 +52,67 @@ function ViewRecord() {
             ? response.data.data
             : Array.isArray(response?.data?.logs)
               ? response.data.logs
-            : [];
-        const normalizedLogs = logsData
-          .map((log) => ({
-            ...log,
-            attendanceDate: log.date || log.log_date || log.date_created || log.created_at || null,
-          }))
-          .sort((a, b) => {
-            const aDateTime = new Date(`${a.attendanceDate || ''} ${a.time_in || '00:00:00'}`).getTime();
-            const bDateTime = new Date(`${b.attendanceDate || ''} ${b.time_in || '00:00:00'}`).getTime();
-            return bDateTime - aDateTime;
-          });
+              : [];
+        // Normalize logs by date string
+        const normalizedLogs = logsData.map((log) => ({
+          ...log,
+          attendanceDate: log.date || log.log_date || log.date_created || log.created_at || null,
+        }));
 
-        setAttendanceLogs(normalizedLogs);
+        // Build a map for quick lookup by date
+        const logMap = {};
+        normalizedLogs.forEach((log) => {
+          if (log.attendanceDate) {
+            logMap[log.attendanceDate] = log;
+          }
+        });
+
+        // Get enrollment date
+        const enrollmentDateStr = student?.created_at || student?.enrollment_date;
+        const enrollmentDate = enrollmentDateStr ? new Date(enrollmentDateStr) : null;
+        const today = new Date();
+
+        // Generate all dates from enrollment to today (Mon-Sat)
+        let allDates = [];
+        if (enrollmentDate) {
+          let current = new Date(enrollmentDate);
+          current.setHours(0, 0, 0, 0);
+          while (current <= today) {
+            const day = current.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+            if (day !== 0) { // Exclude Sundays
+              allDates.push(new Date(current));
+            }
+            current.setDate(current.getDate() + 1);
+          }
+        }
+
+        // Merge logs with allDates
+        const mergedLogs = allDates.map((dateObj) => {
+          const dateStr = dateObj.toISOString().slice(0, 10);
+          const log = logMap[dateStr];
+          if (log) {
+            // Determine status
+            let status = 'Absent';
+            if (log.time_in && log.time_out) status = 'Present';
+            else if (log.time_in && !log.time_out) status = 'No Time Out';
+            return {
+              ...log,
+              attendanceDate: dateStr,
+              status,
+            };
+          } else {
+            return {
+              attendanceDate: dateStr,
+              time_in: null,
+              time_out: null,
+              status: 'Absent',
+            };
+          }
+        });
+
+        // Sort by date descending
+        mergedLogs.sort((a, b) => new Date(b.attendanceDate) - new Date(a.attendanceDate));
+        setAttendanceLogs(mergedLogs);
       } catch (error) {
         console.error('Error loading attendance logs:', error);
         setAttendanceLogs([]);
@@ -81,10 +129,13 @@ function ViewRecord() {
     return latest?.time_out ? 'Inactive' : 'Active';
   }, [attendanceLogs]);
 
+  // Use log.status if present, otherwise fallback
   const getLogStatus = (log) => {
+    if (log?.status) return log.status;
     if (!log?.time_in) return 'Absent';
-    if (log?.time_in && !log?.time_out) return 'Present';
-    return 'Completed';
+    if (log?.time_in && !log?.time_out) return 'No Time Out';
+    if (log?.time_in && log?.time_out) return 'Present';
+    return '';
   };
 
   const formatDate = (dateString) => {
