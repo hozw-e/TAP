@@ -18,10 +18,6 @@
   grid-template-columns: 280px 1fr;
 }
 
-.view-record-topbar {
-  margin-bottom: 12px;
-}
-
 .view-back-btn {
   border: none;
   background: #273b63;
@@ -91,6 +87,40 @@
   padding: 12px 20px;
   font-size: 14px;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.view-logs-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+}
+
+.view-logs-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.view-logs-filters input[type="date"],
+.view-logs-filters select {
+  padding: 8px 12px;
+  border: 1px solid #e4e7ee;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  background: #fff;
+  color: #2c3e50;
+  transition: border-color 0.2s;
+}
+
+.view-logs-filters input[type="date"]:focus,
+.view-logs-filters select:focus {
+  border-color: #3498db;
 }
 
 .view-logs-body {
@@ -193,6 +223,26 @@
 .view-action-btn.edit:hover,
 .view-action-btn.cancel:hover {
   filter: brightness(0.95);
+}
+
+.view-action-btn.export {
+  padding: 8px 16px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  border-radius: 6px;
+  background: #e53935;
+  border-color: #e53935;
+  color: #fff;
+  font-weight: 600;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.view-action-btn.export:hover {
+  background: #c62828;
+  border-color: #c62828;
+  color: #fff;
 }
 
 .view-info-grid {

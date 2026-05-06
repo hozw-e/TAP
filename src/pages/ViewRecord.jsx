@@ -5,6 +5,7 @@ import LogoutModal from '../components/LogoutModal';
 import { attendanceAPI, studentsAPI } from '../services/api';
 import '../styles/Students.css';
 import '../styles/ViewRecordModal.css';
+import TopBar from '../components/TopBar';
 
 function ViewRecord() {
   const { studentId } = useParams();
@@ -132,24 +133,6 @@ function ViewRecord() {
     loadAttendanceLogs();
   }, [student, studentId]);
 
-  // Filtered logs for display
-  const filteredAttendanceLogs = useMemo(() => {
-    return attendanceLogs.filter((log) => {
-      // Date filter
-      if (filterFrom && log.attendanceDate < filterFrom) return false;
-      if (filterTo && log.attendanceDate > filterTo) return false;
-      // Status filter
-      if (filterStatus !== 'All' && getLogStatus(log) !== filterStatus) return false;
-      return true;
-    });
-  }, [attendanceLogs, filterFrom, filterTo, filterStatus]);
-
-  const studentStatus = useMemo(() => {
-    if (!attendanceLogs.length) return 'No Recent Logs';
-    const latest = attendanceLogs[0];
-    return latest?.time_out ? 'Inactive' : 'Active';
-  }, [attendanceLogs]);
-
   // Use log.status if present, otherwise fallback
   const getLogStatus = (log) => {
     if (log?.status) return log.status;
@@ -158,6 +141,21 @@ function ViewRecord() {
     if (log?.time_in && log?.time_out) return 'Present';
     return '';
   };
+
+  const studentStatus = useMemo(() => {
+    if (!attendanceLogs.length) return 'No Recent Logs';
+    const latest = attendanceLogs[0];
+    return latest?.time_out ? 'Inactive' : 'Active';
+  }, [attendanceLogs]);
+
+  const filteredAttendanceLogs = useMemo(() => {
+    return attendanceLogs.filter((log) => {
+      if (filterFrom && log.attendanceDate < filterFrom) return false;
+      if (filterTo && log.attendanceDate > filterTo) return false;
+      if (filterStatus !== 'All' && getLogStatus(log) !== filterStatus) return false;
+      return true;
+    });
+  }, [attendanceLogs, filterFrom, filterTo, filterStatus]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'No date';
@@ -178,6 +176,7 @@ function ViewRecord() {
     <div className="students-layout" style={{ overflow: 'visible', height: 'auto' }}>
       <Sidebar onLogoutClick={() => setShowLogoutModal(true)} />
       <div className="main-content">
+        <TopBar />
         {isLoadingStudent ? (
           <div className="loading-spinner">
             <div className="spinner"></div>
@@ -190,11 +189,9 @@ function ViewRecord() {
           </div>
         ) : (
           <div className="view-record-page-content">
-            <div className="view-record-topbar">
               <button className="view-back-btn" onClick={() => navigate('/students')}>
                 <i className="fas fa-chevron-left"></i> Back
               </button>
-            </div>
 
             <div className="view-record-layout">
               {/* Top section: profile card left + student info right */}
@@ -224,21 +221,6 @@ function ViewRecord() {
                       <button className="view-action-btn edit" onClick={() => navigate(`/students/${student.student_id}/edit`, { state: { student } })}>
                         <i className="fas fa-pencil-alt"></i> Edit Profile
                       </button>
-                      <button
-                        className="view-action-btn export"
-                        onClick={() => {
-                          if (!student) return;
-                          const params = new URLSearchParams({
-                            student_id: student.student_id,
-                            date_from: attendanceLogs.length > 0 ? attendanceLogs[attendanceLogs.length - 1].attendanceDate || '' : '',
-                            date_to: attendanceLogs.length > 0 ? attendanceLogs[0].attendanceDate || '' : '',
-                            _t: String(Date.now()),
-                          });
-                          window.open(`${import.meta.env.VITE_API_BASE_URL}/students/export_record.php?${params.toString()}`, '_blank');
-                        }}
-                      >
-                        <i className="fas fa-file-pdf"></i> Export PDF
-                      </button>
                     </div>
                   </div>
 
@@ -264,20 +246,38 @@ function ViewRecord() {
 
               {/* Bottom section: full-width attendance logs */}
               <div className="view-logs-section">
-                <div className="view-logs-header" style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                  <span style={{ fontWeight: 600, fontSize: 18 }}>Attendance Logs</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', flex: 1 }}>
-                    <label style={{ marginRight: 4 }}>From</label>
-                    <input type="date" value={filterFrom} onChange={e => setFilterFrom(e.target.value)} style={{ marginRight: 8 }} />
-                    <label style={{ marginRight: 4 }}>To</label>
-                    <input type="date" value={filterTo} onChange={e => setFilterTo(e.target.value)} style={{ marginRight: 8 }} />
-                    <label style={{ marginRight: 4 }}>Status</label>
-                    <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ marginRight: 8 }}>
-                      <option value="All">All</option>
-                      <option value="Present">Present</option>
-                      <option value="Absent">Absent</option>
-                      <option value="No Time Out">No Time Out</option>
-                    </select>
+                <div className="view-logs-header">
+                  <span>Attendance Logs</span>
+                  <div className="view-logs-header-right" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginLeft: 'auto' }}>
+                    <div className="view-logs-filters" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <label>From</label>
+                      <input type="date" className="view-filter-date" value={filterFrom} onChange={e => setFilterFrom(e.target.value)} />
+                      <label>To</label>
+                      <input type="date" className="view-filter-date" value={filterTo} onChange={e => setFilterTo(e.target.value)} />
+                      <label>Status</label>
+                      <select className="view-filter-select" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+                        <option value="All">All</option>
+                        <option value="Present">Present</option>
+                        <option value="Absent">Absent</option>
+                        <option value="No Time Out">No Time Out</option>
+                      </select>
+                    </div>
+                    <button
+                      className="view-action-btn export"
+                      style={{ marginLeft: '12px' }}
+                      onClick={() => {
+                        if (!student) return;
+                        const params = new URLSearchParams({
+                          student_id: student.student_id,
+                          date_from: attendanceLogs.length > 0 ? attendanceLogs[attendanceLogs.length - 1].attendanceDate || '' : '',
+                          date_to: attendanceLogs.length > 0 ? attendanceLogs[0].attendanceDate || '' : '',
+                          _t: String(Date.now()),
+                        });
+                        window.open(`${import.meta.env.VITE_API_BASE_URL}/students/export_record.php?${params.toString()}`, '_blank');
+                      }}
+                    >
+                      <i className="fas fa-file-pdf"></i> Export PDF
+                    </button>
                   </div>
                 </div>
                 <div className="view-logs-body">

@@ -4,6 +4,7 @@ import LogoutModal from '../components/LogoutModal';
 import Notification from '../components/Notification';
 import axios from 'axios';
 import '../styles/Dashboard.css';
+import TopBar from '../components/TopBar';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const BASE = import.meta.env.VITE_API_BASE_URL;
@@ -38,21 +39,6 @@ function Dashboard() {
 
   // Live clock
   const [clock, setClock] = useState('');
-
-  useEffect(() => {
-    const tick = () => {
-      const now = new Date();
-      const hours = now.getHours();
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      const h12 = hours % 12 || 12;
-      const date = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-      setClock(`${h12}:${minutes} ${ampm} | ${date}`);
-    };
-    tick();
-    const interval = setInterval(tick, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Load on mount
   useEffect(() => {
@@ -169,12 +155,13 @@ function Dashboard() {
       <Sidebar onLogoutClick={() => setShowLogoutModal(true)} />
       <div className="main-content">
 
+        <TopBar />
+
         {/* Header */}
         <div className="page-header">
           <div>
             <h1>Dashboard</h1>
           </div>
-          <div className="live-clock">{clock}</div>
         </div>
 
         {/* Stats */}

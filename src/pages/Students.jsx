@@ -6,6 +6,7 @@ import NewRecordModal from '../components/NewRecordModal';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import Notification from '../components/Notification';
 import { studentsAPI } from '../services/api';
+import TopBar from '../components/TopBar';
 import '../styles/Students.css';
 
 function Students() {
@@ -114,6 +115,7 @@ function Students() {
     <div className="students-layout">
       <Sidebar onLogoutClick={() => setShowLogoutModal(true)} />
       <div className="main-content">
+        <TopBar />
         <div className="page-header">
           <h1>Student Records</h1>
         </div>
