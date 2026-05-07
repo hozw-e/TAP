@@ -7,6 +7,7 @@ import ViewRecord from './pages/ViewRecord';
 import EditRecord from './pages/EditRecord';
 import VisitorPage from './pages/VisitorPage';
 import LandingPage from './pages/LandingPage';
+import ActivityLogs from './pages/ActivityLogs';
 import { authAPI } from './services/api';
 
 function App() {
@@ -123,6 +124,15 @@ function App() {
           element={
             <ProtectedRoute>
               <Navigate to="/students" replace />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/activity-logs"
+          element={
+            <ProtectedRoute>
+              <ActivityLogs />
             </ProtectedRoute>
           }
         />

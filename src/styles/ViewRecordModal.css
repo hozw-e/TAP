@@ -1,6 +1,6 @@
 .view-record-page-content {
   width: 100%;
-  height: calc(100vh - 60px);
+  margin-top: 12px;
   overflow: hidden;
 }
 
@@ -25,7 +25,9 @@
   border-radius: 8px;
   font-size: 14px;
   padding: 9px 16px;
-  cursor: pointer;;
+  cursor: pointer;
+  position: absolute;
+  z-index: 10;
 }
 
 .view-record-layout {

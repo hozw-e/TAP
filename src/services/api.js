@@ -208,4 +208,23 @@ export const dashboardAPI = {
   },
 };
 
+// ============================================
+// ACTIVITY LOGS API
+// ============================================
+
+export const activityLogsAPI = {
+  // Get activity logs with filters
+  list: async (filters = {}) => {
+    const params = new URLSearchParams(filters).toString();
+    const response = await api.get(`/activity-logs/list.php?${params}`);
+    return response.data;
+  },
+
+  // Export activity logs as CSV
+  export: async (filters = {}) => {
+    const params = new URLSearchParams(filters).toString();
+    window.location.href = `${API_BASE_URL}/activity-logs/export.php?${params}`;
+  },
+};
+
 export default api;

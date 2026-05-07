@@ -3,6 +3,7 @@ require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
 require_once '../../utils/session.php';
+require_once '../../utils/activity-logger.php';
 
 // Get JSON input
 $data = json_decode(file_get_contents('php://input'), true);
@@ -42,6 +43,15 @@ try {
         'admin_name' => $admin['admin_name'],
         'username'   => $admin['username'],
     ]);
+
+    // Log the login activity
+    logActivity(
+        'LOGIN',
+        'ADMIN',
+        $admin['admin_name'],
+        'Admin logged in successfully',
+        $admin['admin_name']
+    );
 
     sendSuccessResponse('Login successful', [
         'admin_id'   => $admin['admin_id'],

@@ -6,6 +6,7 @@ import Notification from '../components/Notification';
 import { attendanceAPI, guardiansAPI, studentsAPI } from '../services/api';
 import '../styles/Students.css';
 import '../styles/ViewRecordModal.css';
+import TopBar from '../components/TopBar';
 
 function EditRecord() {
   const { studentId } = useParams();
@@ -98,9 +99,11 @@ function EditRecord() {
   }, [attendanceLogs]);
 
   const getLogStatus = (log) => {
+    if (log?.status) return log.status;
     if (!log?.time_in) return 'Absent';
-    if (log?.time_in && !log?.time_out) return 'Present';
-    return 'Completed';
+    if (log?.time_in && !log?.time_out) return 'No Time Out';
+    if (log?.time_in && log?.time_out) return 'Present';
+    return '';
   };
 
   const formatDate = (dateString) => {
@@ -108,6 +111,14 @@ function EditRecord() {
     const date = new Date(dateString);
     if (Number.isNaN(date.getTime())) return dateString;
     return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  };
+
+  const formatTime = (timeString) => {
+    if (!timeString) return '--';
+    const normalized = timeString.length <= 5 ? `${timeString}:00` : timeString;
+    const date = new Date(`1970-01-01T${normalized}`);
+    if (Number.isNaN(date.getTime())) return timeString;
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   };
 
   const handleChange = (e) => {
@@ -183,6 +194,7 @@ function EditRecord() {
     <div className="students-layout">
       <Sidebar onLogoutClick={() => setShowLogoutModal(true)} />
       <div className="main-content">
+        <TopBar />
         {isLoadingStudent ? (
           <div className="loading-spinner">
             <div className="spinner"></div>
@@ -283,10 +295,36 @@ function EditRecord() {
                           const status = getLogStatus(log);
                           return (
                             <tr key={`${log.attendance_id || 'log'}-${index}`}>
-                              <td>{formatDate(log.log_date || log.date_created || log.created_at)}</td>
-                              <td>{log.time_in ? log.time_in : '--'}</td>
-                              <td>{log.time_out ? log.time_out : (status === 'Present' ? 'Active' : '--')}</td>
-                              <td><span className={`log-badge ${status.toLowerCase()}`}>{status}</span></td>
+                              <td>{formatDate(log.date || log.log_date || log.date_created || log.created_at)}</td>
+                              <td>{formatTime(log.time_in)}</td>
+                              <td>{log.time_out ? formatTime(log.time_out) : '--'}</td>
+                              <td>
+                                <span
+                                  className="log-badge"
+                                  style={{
+                                    backgroundColor:
+                                      status === 'Present'
+                                        ? '#4caf50'
+                                        : status === 'Absent'
+                                          ? '#f44336'
+                                          : status === 'No Time Out'
+                                            ? '#ffeb3b'
+                                            : '#e0e0e0',
+                                    color:
+                                      status === 'No Time Out'
+                                        ? '#333'
+                                        : '#fff',
+                                    fontWeight: 600,
+                                    borderRadius: '12px',
+                                    padding: '2px 12px',
+                                    display: 'inline-block',
+                                    minWidth: '90px',
+                                    textAlign: 'center',
+                                  }}
+                                >
+                                  {status}
+                                </span>
+                              </td>
                             </tr>
                           );
                         })}

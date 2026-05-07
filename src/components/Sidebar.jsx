@@ -33,6 +33,14 @@ function Sidebar({ onLogoutClick }) {
       </div>
 
       <div
+        className={`nav-item ${isActive('/activity-logs') ? 'active' : ''}`}
+        onClick={() => navigate('/activity-logs')}
+      >
+        <i className="fas fa-history"></i>
+        <span>Activity Logs</span>
+      </div>
+
+      <div
         className={`nav-item ${isActive('/visitor') ? 'active' : ''}`}
         onClick={() => navigate('/visitor')}
       >

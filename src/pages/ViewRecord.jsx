@@ -6,6 +6,8 @@ import { attendanceAPI, studentsAPI } from '../services/api';
 import '../styles/Students.css';
 import '../styles/ViewRecordModal.css';
 import TopBar from '../components/TopBar';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 function ViewRecord() {
   const { studentId } = useParams();
@@ -172,8 +174,73 @@ function ViewRecord() {
     return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   };
 
+  const handleExportPDF = () => {
+    if (!student) return;
+
+    const doc = new jsPDF();
+
+    // Add Header
+    doc.setFontSize(18);
+    doc.setTextColor(39, 59, 99);
+    doc.text('Attendance Log Report', 14, 22);
+
+    // Add Student Details
+    doc.setFontSize(11);
+    doc.setTextColor(60, 60, 60);
+    doc.text(`Student Name: ${student.student_name || 'N/A'}`, 14, 32);
+    doc.text(`NFC ID: ${student.nfc_uid || 'N/A'}`, 14, 38);
+    if (student.student_course) {
+      doc.text(`Course: ${student.student_course}`, 14, 44);
+    }
+    doc.text(`Report Generated: ${new Date().toLocaleDateString()}`, 14, student.student_course ? 50 : 44);
+
+    // Prepare Table Data
+    const tableColumn = ["No.", "Date", "Time In", "Time Out", "Status"];
+    const tableRows = [];
+
+    filteredAttendanceLogs.forEach((log, index) => {
+      const status = getLogStatus(log);
+      const logData = [
+        index + 1,
+        formatDate(log.attendanceDate),
+        formatTime(log.time_in),
+        log.time_out ? formatTime(log.time_out) : '--',
+        status
+      ];
+      tableRows.push(logData);
+    });
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: student.student_course ? 56 : 50,
+      theme: 'grid',
+      headStyles: { fillColor: [52, 73, 94] },
+      styles: { fontSize: 10, cellPadding: 4, halign: 'center' },
+      columnStyles: { 0: { halign: 'center' }, 1: { halign: 'left' } },
+      alternateRowStyles: { fillColor: [248, 249, 250] },
+      didParseCell: function(data) {
+        if (data.section === 'body' && data.column.index === 4) {
+          const status = data.cell.raw;
+          if (status === 'Present') {
+            data.cell.styles.textColor = [76, 175, 80];
+            data.cell.styles.fontStyle = 'bold';
+          } else if (status === 'Absent') {
+            data.cell.styles.textColor = [244, 67, 54];
+            data.cell.styles.fontStyle = 'bold';
+          } else if (status === 'No Time Out') {
+            data.cell.styles.textColor = [255, 152, 0];
+            data.cell.styles.fontStyle = 'bold';
+          }
+        }
+      }
+    });
+
+    doc.save(`${student.student_name}_Attendance_Logs.pdf`);
+  };
+
   return (
-    <div className="students-layout" style={{ overflow: 'visible', height: 'auto' }}>
+    <div className="students-layout">
       <Sidebar onLogoutClick={() => setShowLogoutModal(true)} />
       <div className="main-content">
         <TopBar />
@@ -189,9 +256,9 @@ function ViewRecord() {
           </div>
         ) : (
           <div className="view-record-page-content">
-              <button className="view-back-btn" onClick={() => navigate('/students')}>
-                <i className="fas fa-chevron-left"></i> Back
-              </button>
+            <button className="view-back-btn" onClick={() => navigate('/students')}>
+              <i className="fas fa-chevron-left"></i> Back
+            </button>
 
             <div className="view-record-layout">
               {/* Top section: profile card left + student info right */}
@@ -265,16 +332,7 @@ function ViewRecord() {
                     <button
                       className="view-action-btn export"
                       style={{ marginLeft: '12px' }}
-                      onClick={() => {
-                        if (!student) return;
-                        const params = new URLSearchParams({
-                          student_id: student.student_id,
-                          date_from: attendanceLogs.length > 0 ? attendanceLogs[attendanceLogs.length - 1].attendanceDate || '' : '',
-                          date_to: attendanceLogs.length > 0 ? attendanceLogs[0].attendanceDate || '' : '',
-                          _t: String(Date.now()),
-                        });
-                        window.open(`${import.meta.env.VITE_API_BASE_URL}/students/export_record.php?${params.toString()}`, '_blank');
-                      }}
+                      onClick={handleExportPDF}
                     >
                       <i className="fas fa-file-pdf"></i> Export PDF
                     </button>
@@ -314,10 +372,10 @@ function ViewRecord() {
                                       status === 'Present'
                                         ? '#4caf50' // green
                                         : status === 'Absent'
-                                        ? '#f44336' // red
-                                        : status === 'No Time Out'
-                                        ? '#ffeb3b' // yellow
-                                        : '#e0e0e0',
+                                          ? '#f44336' // red
+                                          : status === 'No Time Out'
+                                            ? '#ffeb3b' // yellow
+                                            : '#e0e0e0',
                                     color:
                                       status === 'No Time Out'
                                         ? '#333'
