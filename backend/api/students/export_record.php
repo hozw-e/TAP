@@ -65,13 +65,14 @@ class StudentAttendancePDF extends FPDF {
     public string $dateTo = '';
 
     function Header() {
+        // Company header - centered
         $this->SetFont('Arial', 'B', 20);
         $this->SetTextColor(0, 112, 192);
-        $this->Cell(0, 10, 'A+ Solution Development Center Corp.', 0, 1, 'L');
+        $this->Cell(0, 10, 'A+ Solution Development Center Corp.', 0, 1, 'C');
         $this->SetFont('Arial', 'B', 8.5);
         $this->SetTextColor(0, 0, 0);
-        $this->Cell(0, 4.5, '35A National Highway, Lower Kalaklan, Olongapo City, Philippines 2200', 0, 1, 'L');
-        $this->Cell(0, 4.5, '0917 832 6822 | (047) 232 2449 | infoapsteamph@gmail.com', 0, 1, 'L');
+        $this->Cell(0, 4.5, '35A National Highway, Lower Kalaklan, Olongapo City, Philippines 2200', 0, 1, 'C');
+        $this->Cell(0, 4.5, '0917 832 6822 | (047) 232 2449 | infoapsteamph@gmail.com', 0, 1, 'C');
         $this->Ln(7);
         $this->SetFont('Arial', 'B', 14);
         $this->Cell(0, 8, 'Student Attendance Report', 0, 1, 'C');
@@ -81,6 +82,13 @@ class StudentAttendancePDF extends FPDF {
         $this->SetFont('Arial', 'B', 10);
         $this->Cell(0, 6, 'From ' . $this->dateFrom . '   To ' . $this->dateTo, 0, 1, 'C');
         $this->Ln(3);
+        
+        // Calculate table width and center position
+        $tableWidth = 126; // 12 + 38 + 38 + 38
+        $pageWidth = $this->GetPageWidth();
+        $leftMargin = ($pageWidth - $tableWidth) / 2;
+        $this->SetX($leftMargin);
+        
         // Table header
         $this->SetFillColor(21, 61, 99);
         $this->SetTextColor(255, 255, 255);
@@ -115,7 +123,13 @@ if (empty($logs)) {
     $pdf->SetTextColor(150, 150, 150);
     $pdf->Cell(0, 12, 'No records found for the selected filters.', 0, 1, 'C');
 } else {
+    // Calculate table width and center position
+    $tableWidth = 126; // 12 + 38 + 38 + 38
+    $pageWidth = $pdf->GetPageWidth();
+    $leftMargin = ($pageWidth - $tableWidth) / 2;
+    
     foreach ($logs as $i => $row) {
+        $pdf->SetX($leftMargin);
         $pdf->Cell(12, 8, $i+1, 1, 0, 'C');
         $pdf->Cell(38, 8, formatDisplayDate($row['date']), 1, 0, 'C');
         $pdf->Cell(38, 8, formatTimeDisplay($row['time_in']), 1, 0, 'C');

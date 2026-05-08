@@ -20,6 +20,10 @@ function EditRecord() {
   const [isLoadingStudent, setIsLoadingStudent] = useState(!location.state?.student);
   const [isSaving, setIsSaving] = useState(false);
   const [notification, setNotification] = useState({ isOpen: false, message: '', type: 'success' });
+  // Filters
+  const [filterFrom, setFilterFrom] = useState('');
+  const [filterTo, setFilterTo] = useState('');
+  const [filterStatus, setFilterStatus] = useState('All');
   const [formData, setFormData] = useState({
     studentCourse: '',
     courseDuration: '',
@@ -72,16 +76,81 @@ function EditRecord() {
 
   useEffect(() => {
     const loadAttendanceLogs = async () => {
-      if (!student?.student_id) return;
+      const targetStudentId = student?.student_id || studentId;
+      if (!targetStudentId) return;
       setIsLoadingLogs(true);
       try {
-        const response = await attendanceAPI.list({ student_id: student.student_id });
+        const response = await attendanceAPI.list({ student_id: targetStudentId });
         const logsData = Array.isArray(response?.data)
           ? response.data
           : Array.isArray(response?.data?.data)
             ? response.data.data
-            : [];
-        setAttendanceLogs(logsData.slice(0, 5));
+            : Array.isArray(response?.data?.logs)
+              ? response.data.logs
+              : [];
+        
+        // Normalize actual logs and add status
+        const actualLogs = logsData.map((log) => {
+          let status = 'Absent';
+          if (log.time_in && log.time_out) status = 'Present';
+          else if (log.time_in && !log.time_out) status = 'No Time Out';
+          
+          return {
+            ...log,
+            attendanceDate: log.date || log.log_date || log.date_created || log.created_at || null,
+            status,
+            isActual: true,
+          };
+        });
+
+        // Build a set of dates that have actual logs
+        const datesWithLogs = new Set();
+        actualLogs.forEach((log) => {
+          if (log.attendanceDate) {
+            datesWithLogs.add(log.attendanceDate);
+          }
+        });
+
+        // Get enrollment date
+        const enrollmentDateStr = student?.created_at || student?.enrollment_date;
+        const enrollmentDate = enrollmentDateStr ? new Date(enrollmentDateStr) : null;
+        const today = new Date();
+
+        // Generate absent entries for dates without logs (Mon-Sat only)
+        let absentLogs = [];
+        if (enrollmentDate) {
+          let current = new Date(enrollmentDate);
+          current.setHours(0, 0, 0, 0);
+          while (current <= today) {
+            const day = current.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+            const dateStr = current.toISOString().slice(0, 10);
+            
+            // Only add absent entry if: it's Mon-Sat AND no actual log exists for this date
+            if (day !== 0 && !datesWithLogs.has(dateStr)) {
+              absentLogs.push({
+                attendanceDate: dateStr,
+                time_in: null,
+                time_out: null,
+                status: 'Absent',
+                isActual: false,
+              });
+            }
+            current.setDate(current.getDate() + 1);
+          }
+        }
+
+        // Combine actual logs and absent logs
+        const allLogs = [...actualLogs, ...absentLogs];
+
+        // Sort by date descending (newest first)
+        allLogs.sort((a, b) => new Date(b.attendanceDate) - new Date(a.attendanceDate));
+        setAttendanceLogs(allLogs);
+        
+        // Set default filter dates
+        if (allLogs.length > 0) {
+          setFilterFrom(allLogs[allLogs.length - 1].attendanceDate);
+          setFilterTo(allLogs[0].attendanceDate);
+        }
       } catch (error) {
         console.error('Error loading attendance logs:', error);
         setAttendanceLogs([]);
@@ -90,7 +159,7 @@ function EditRecord() {
       }
     };
     loadAttendanceLogs();
-  }, [student]);
+  }, [student, studentId]);
 
   const studentStatus = useMemo(() => {
     if (!attendanceLogs.length) return 'No Recent Logs';
@@ -105,6 +174,15 @@ function EditRecord() {
     if (log?.time_in && log?.time_out) return 'Present';
     return '';
   };
+
+  const filteredAttendanceLogs = useMemo(() => {
+    return attendanceLogs.filter((log) => {
+      if (filterFrom && log.attendanceDate < filterFrom) return false;
+      if (filterTo && log.attendanceDate > filterTo) return false;
+      if (filterStatus !== 'All' && getLogStatus(log) !== filterStatus) return false;
+      return true;
+    });
+  }, [attendanceLogs, filterFrom, filterTo, filterStatus]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'No date';
@@ -271,11 +349,26 @@ function EditRecord() {
               <div className="view-logs-section">
                 <div className="view-logs-header">
                   <span>Attendance Logs</span>
+                  <div className="view-logs-header-right" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginLeft: 'auto' }}>
+                    <div className="view-logs-filters" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <label>From</label>
+                      <input type="date" className="view-filter-date" value={filterFrom} onChange={e => setFilterFrom(e.target.value)} />
+                      <label>To</label>
+                      <input type="date" className="view-filter-date" value={filterTo} onChange={e => setFilterTo(e.target.value)} />
+                      <label>Status</label>
+                      <select className="view-filter-select" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+                        <option value="All">All</option>
+                        <option value="Present">Present</option>
+                        <option value="Absent">Absent</option>
+                        <option value="No Time Out">No Time Out</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
                 <div className="view-logs-body">
                   {isLoadingLogs ? (
                     <div className="empty-log-state"><p>Loading logs...</p></div>
-                  ) : attendanceLogs.length === 0 ? (
+                  ) : filteredAttendanceLogs.length === 0 ? (
                     <div className="empty-log-state">
                       <i className="fas fa-clipboard-list"></i>
                       <p>No attendance logs for this date.</p>
@@ -291,11 +384,11 @@ function EditRecord() {
                         </tr>
                       </thead>
                       <tbody>
-                        {attendanceLogs.map((log, index) => {
+                        {filteredAttendanceLogs.map((log, index) => {
                           const status = getLogStatus(log);
                           return (
                             <tr key={`${log.attendance_id || 'log'}-${index}`}>
-                              <td>{formatDate(log.date || log.log_date || log.date_created || log.created_at)}</td>
+                              <td>{formatDate(log.attendanceDate)}</td>
                               <td>{formatTime(log.time_in)}</td>
                               <td>{log.time_out ? formatTime(log.time_out) : '--'}</td>
                               <td>

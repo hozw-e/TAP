@@ -6,8 +6,6 @@ import { attendanceAPI, studentsAPI } from '../services/api';
 import '../styles/Students.css';
 import '../styles/ViewRecordModal.css';
 import TopBar from '../components/TopBar';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 
 function ViewRecord() {
   const { studentId } = useParams();
@@ -60,17 +58,26 @@ function ViewRecord() {
             : Array.isArray(response?.data?.logs)
               ? response.data.logs
               : [];
-        // Normalize logs by date string
-        const normalizedLogs = logsData.map((log) => ({
-          ...log,
-          attendanceDate: log.date || log.log_date || log.date_created || log.created_at || null,
-        }));
+        
+        // Normalize actual logs and add status
+        const actualLogs = logsData.map((log) => {
+          let status = 'Absent';
+          if (log.time_in && log.time_out) status = 'Present';
+          else if (log.time_in && !log.time_out) status = 'No Time Out';
+          
+          return {
+            ...log,
+            attendanceDate: log.date || log.log_date || log.date_created || log.created_at || null,
+            status,
+            isActual: true,
+          };
+        });
 
-        // Build a map for quick lookup by date
-        const logMap = {};
-        normalizedLogs.forEach((log) => {
+        // Build a set of dates that have actual logs
+        const datesWithLogs = new Set();
+        actualLogs.forEach((log) => {
           if (log.attendanceDate) {
-            logMap[log.attendanceDate] = log;
+            datesWithLogs.add(log.attendanceDate);
           }
         });
 
@@ -79,51 +86,40 @@ function ViewRecord() {
         const enrollmentDate = enrollmentDateStr ? new Date(enrollmentDateStr) : null;
         const today = new Date();
 
-        // Generate all dates from enrollment to today (Mon-Sat)
-        let allDates = [];
+        // Generate absent entries for dates without logs (Mon-Sat only)
+        let absentLogs = [];
         if (enrollmentDate) {
           let current = new Date(enrollmentDate);
           current.setHours(0, 0, 0, 0);
           while (current <= today) {
             const day = current.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-            if (day !== 0) { // Exclude Sundays
-              allDates.push(new Date(current));
+            const dateStr = current.toISOString().slice(0, 10);
+            
+            // Only add absent entry if: it's Mon-Sat AND no actual log exists for this date
+            if (day !== 0 && !datesWithLogs.has(dateStr)) {
+              absentLogs.push({
+                attendanceDate: dateStr,
+                time_in: null,
+                time_out: null,
+                status: 'Absent',
+                isActual: false,
+              });
             }
             current.setDate(current.getDate() + 1);
           }
         }
 
-        // Merge logs with allDates
-        const mergedLogs = allDates.map((dateObj) => {
-          const dateStr = dateObj.toISOString().slice(0, 10);
-          const log = logMap[dateStr];
-          if (log) {
-            // Determine status
-            let status = 'Absent';
-            if (log.time_in && log.time_out) status = 'Present';
-            else if (log.time_in && !log.time_out) status = 'No Time Out';
-            return {
-              ...log,
-              attendanceDate: dateStr,
-              status,
-            };
-          } else {
-            return {
-              attendanceDate: dateStr,
-              time_in: null,
-              time_out: null,
-              status: 'Absent',
-            };
-          }
-        });
+        // Combine actual logs and absent logs
+        const allLogs = [...actualLogs, ...absentLogs];
 
-        // Sort by date descending
-        mergedLogs.sort((a, b) => new Date(b.attendanceDate) - new Date(a.attendanceDate));
-        setAttendanceLogs(mergedLogs);
+        // Sort by date descending (newest first)
+        allLogs.sort((a, b) => new Date(b.attendanceDate) - new Date(a.attendanceDate));
+        setAttendanceLogs(allLogs);
+        
         // Set default filter dates
-        if (mergedLogs.length > 0) {
-          setFilterFrom(mergedLogs[mergedLogs.length - 1].attendanceDate);
-          setFilterTo(mergedLogs[0].attendanceDate);
+        if (allLogs.length > 0) {
+          setFilterFrom(allLogs[allLogs.length - 1].attendanceDate);
+          setFilterTo(allLogs[0].attendanceDate);
         }
       } catch (error) {
         console.error('Error loading attendance logs:', error);
@@ -177,66 +173,16 @@ function ViewRecord() {
   const handleExportPDF = () => {
     if (!student) return;
 
-    const doc = new jsPDF();
-
-    // Add Header
-    doc.setFontSize(18);
-    doc.setTextColor(39, 59, 99);
-    doc.text('Attendance Log Report', 14, 22);
-
-    // Add Student Details
-    doc.setFontSize(11);
-    doc.setTextColor(60, 60, 60);
-    doc.text(`Student Name: ${student.student_name || 'N/A'}`, 14, 32);
-    doc.text(`NFC ID: ${student.nfc_uid || 'N/A'}`, 14, 38);
-    if (student.student_course) {
-      doc.text(`Course: ${student.student_course}`, 14, 44);
-    }
-    doc.text(`Report Generated: ${new Date().toLocaleDateString()}`, 14, student.student_course ? 50 : 44);
-
-    // Prepare Table Data
-    const tableColumn = ["No.", "Date", "Time In", "Time Out", "Status"];
-    const tableRows = [];
-
-    filteredAttendanceLogs.forEach((log, index) => {
-      const status = getLogStatus(log);
-      const logData = [
-        index + 1,
-        formatDate(log.attendanceDate),
-        formatTime(log.time_in),
-        log.time_out ? formatTime(log.time_out) : '--',
-        status
-      ];
-      tableRows.push(logData);
+    // Build query parameters
+    const params = new URLSearchParams({
+      student_id: student.student_id,
+      date_from: filterFrom || '',
+      date_to: filterTo || ''
     });
 
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: student.student_course ? 56 : 50,
-      theme: 'grid',
-      headStyles: { fillColor: [52, 73, 94] },
-      styles: { fontSize: 10, cellPadding: 4, halign: 'center' },
-      columnStyles: { 0: { halign: 'center' }, 1: { halign: 'left' } },
-      alternateRowStyles: { fillColor: [248, 249, 250] },
-      didParseCell: function(data) {
-        if (data.section === 'body' && data.column.index === 4) {
-          const status = data.cell.raw;
-          if (status === 'Present') {
-            data.cell.styles.textColor = [76, 175, 80];
-            data.cell.styles.fontStyle = 'bold';
-          } else if (status === 'Absent') {
-            data.cell.styles.textColor = [244, 67, 54];
-            data.cell.styles.fontStyle = 'bold';
-          } else if (status === 'No Time Out') {
-            data.cell.styles.textColor = [255, 152, 0];
-            data.cell.styles.fontStyle = 'bold';
-          }
-        }
-      }
-    });
-
-    doc.save(`${student.student_name}_Attendance_Logs.pdf`);
+    // Open the PHP export endpoint
+    const exportUrl = `/backend/api/students/export_record.php?${params.toString()}`;
+    window.open(exportUrl, '_blank');
   };
 
   return (

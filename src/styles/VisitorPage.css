@@ -166,6 +166,67 @@
   margin-top: 8px;
 }
 
+/* ── Already Tapped In Modal (Denied) ────────────────────────── */
+.visitor-modal.denied-modal {
+  max-width: 650px;
+  padding: 50px 70px;
+}
+
+.visitor-modal-icon.denied-icon i {
+  font-size: 52px;
+  color: #34495e;
+}
+
+.visitor-modal-icon.denied-icon p {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-top: 12px;
+}
+
+.session-status {
+  margin: 20px 0;
+  display: flex;
+  justify-content: center;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.status-badge.active {
+  background: #d4edda;
+  color: #155724;
+  border: 2px solid #28a745;
+}
+
+.status-badge i {
+  font-size: 10px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.denied-message {
+  font-size: 17px;
+  color: #666;
+  line-height: 1.6;
+  margin-top: 16px;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
 /* ── Admin Login Modal ────────────────────────────────────────── */
 .admin-login-modal {
   background: #2c3e50;

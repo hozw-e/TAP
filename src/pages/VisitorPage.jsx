@@ -10,6 +10,9 @@ function VisitorPage() {
 
   // Welcome/Farewell modal
   const [modal, setModal] = useState({ show: false, type: '', name: '' });
+  
+  // Already tapped in modal (check-out denied)
+  const [deniedModal, setDeniedModal] = useState({ show: false, name: '', remainingTime: 0 });
 
   // Admin login modal (back button)
   const [showAdminModal, setShowAdminModal] = useState(false);
@@ -30,6 +33,14 @@ function VisitorPage() {
       return () => clearTimeout(timer);
     }
   }, [modal.show]);
+  
+  // Auto-dismiss denied modal after 5 seconds
+  useEffect(() => {
+    if (deniedModal.show) {
+      const timer = setTimeout(() => setDeniedModal({ show: false, name: '', remainingTime: 0 }), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [deniedModal.show]);
 
   // Start NFC polling on mount — clear stale scans first to prevent ghost logs
   useEffect(() => {
@@ -55,6 +66,11 @@ function VisitorPage() {
               const action = scanResponse.data.action;
               const name   = scanResponse.data.student_name;
               setModal({ show: true, type: action === 'check_in' ? 'welcome' : 'farewell', name });
+            } else if (scanResponse.success && scanResponse.data.status === 'denied') {
+              // Check-out denied - show "already tapped in" modal
+              const name = scanResponse.data.student_name;
+              const remainingTime = scanResponse.data.required_time - scanResponse.data.time_since_checkin;
+              setDeniedModal({ show: true, name, remainingTime });
             }
           }
         }
@@ -172,6 +188,27 @@ function VisitorPage() {
                 hour: '2-digit',
                 minute: '2-digit',
               })}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Already Tapped In Modal (Check-out Denied) */}
+      {deniedModal.show && (
+        <div className="visitor-modal-overlay">
+          <div className="visitor-modal denied-modal">
+            <div className="visitor-modal-icon denied-icon">
+              <i className="fas fa-hourglass-half"></i>
+              <p>You've Already Tapped In</p>
+            </div>
+            <h2>{deniedModal.name}</h2>
+            <div className="session-status">
+              <span className="status-badge active">
+                <i className="fas fa-circle"></i> Session Active
+              </span>
+            </div>
+            <p className="denied-message">
+              Your entry has already been recorded for this session. Please wait for a minute to pass before tapping your ID to time out.
             </p>
           </div>
         </div>

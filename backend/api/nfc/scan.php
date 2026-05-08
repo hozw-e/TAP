@@ -125,7 +125,40 @@ try {
         $smsSent = false;
 
         if ($openRecord) {
-            // Student is checking OUT — fill in time_out
+            // Student is checking OUT — but first check if 1 minute has passed
+            
+            // Get the time_in from the open record
+            $stmt = $conn->prepare("
+                SELECT time_in, date
+                FROM attendance_logs
+                WHERE attendance_id = :attendance_id
+            ");
+            $stmt->execute([':attendance_id' => $openRecord['attendance_id']]);
+            $recordDetails = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Calculate time difference in seconds
+            $timeInDateTime = new DateTime($recordDetails['date'] . ' ' . $recordDetails['time_in']);
+            $currentDateTime = new DateTime($today . ' ' . $now);
+            $timeDifference = $currentDateTime->getTimestamp() - $timeInDateTime->getTimestamp();
+            
+            // Check if at least 60 seconds (1 minute) have passed
+            if ($timeDifference < 60) {
+                $remainingSeconds = 60 - $timeDifference;
+                error_log("Check-out denied for $studentName: Only $timeDifference seconds since check-in");
+                
+                sendSuccessResponse('Check-out too soon', [
+                    'status' => 'denied',
+                    'action' => 'check_out_denied',
+                    'uid' => $uid,
+                    'student_id' => $studentId,
+                    'student_name' => $studentName,
+                    'message' => "Please wait $remainingSeconds more seconds before checking out",
+                    'time_since_checkin' => $timeDifference,
+                    'required_time' => 60
+                ]);
+            }
+            
+            // Proceed with check-out if 1 minute has passed
             $stmt = $conn->prepare("
                 UPDATE attendance_logs
                 SET time_out = :time_out

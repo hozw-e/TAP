@@ -136,13 +136,13 @@ class AttendancePDF extends FPDF {
         $this->SetFillColor(21, 61, 99);
         $this->SetTextColor(255, 255, 255);
         $this->SetFont('Arial', 'B', 9);
-        $this->Cell(8,  8, '#',       1, 0, 'C', true);
-        $this->Cell(48, 8, 'Name',    1, 0, 'C', true); // was 55
-        $this->Cell(25, 8, 'Course',  1, 0, 'C', true); // was 30
-        $this->Cell(20, 8, 'Date',    1, 0, 'C', true); // was 22
-        $this->Cell(20, 8, 'Time In', 1, 0, 'C', true); // was 22
-        $this->Cell(22, 8, 'Time Out',1, 0, 'C', true); // was 23
-        $this->Cell(17, 8, 'Duration',1, 1, 'C', true); // was 21
+        $this->Cell(8,  8, '#',        1, 0, 'C', true);
+        $this->Cell(50, 8, 'Name',     1, 0, 'C', true);
+        $this->Cell(23, 8, 'Category', 1, 0, 'C', true);
+        $this->Cell(22, 8, 'Date',     1, 0, 'C', true);
+        $this->Cell(22, 8, 'Time In',  1, 0, 'C', true);
+        $this->Cell(22, 8, 'Time Out', 1, 0, 'C', true);
+        $this->Cell(33, 8, 'Duration', 1, 1, 'C', true);
         $this->SetTextColor(0, 0, 0);
     }
 
@@ -182,15 +182,16 @@ if (empty($logs)) {
     $fill = false;
     foreach ($logs as $i => $row) {
         $isVisitor = $row['row_type'] === 'visitor';
+        $category = $isVisitor ? 'Visitor' : 'Student';
         $bgR = $fill ? 235 : 255;
         $pdf->SetFillColor($bgR, $bgR, $bgR);
         $pdf->Cell(8,  8, $i+1,                                        1, 0, 'C', $fill);
-        $pdf->Cell(48, 8, $row['student_name'] ?? '---',               1, 0, 'L', $fill);
-        $pdf->Cell(25, 8, $isVisitor ? 'Visitor' : ($row['student_course'] ?? '---'), 1, 0, 'C', $fill);
-        $pdf->Cell(20, 8, formatDisplayDate($row['date']),             1, 0, 'C', $fill);
-        $pdf->Cell(20, 8, formatTimeDisplay($row['time_in']),          1, 0, 'C', $fill);
+        $pdf->Cell(50, 8, $row['student_name'] ?? '---',               1, 0, 'L', $fill);
+        $pdf->Cell(23, 8, $category,                                   1, 0, 'C', $fill);
+        $pdf->Cell(22, 8, formatDisplayDate($row['date']),             1, 0, 'C', $fill);
+        $pdf->Cell(22, 8, formatTimeDisplay($row['time_in']),          1, 0, 'C', $fill);
         $pdf->Cell(22, 8, formatTimeDisplay($row['time_out']),         1, 0, 'C', $fill);
-        $pdf->Cell(17, 8, calcDuration($row['time_in'], $row['time_out']), 1, 1, 'C', $fill);
+        $pdf->Cell(33, 8, calcDuration($row['time_in'], $row['time_out']), 1, 1, 'C', $fill);
         $fill = !$fill;
     }
 
@@ -199,15 +200,15 @@ if (empty($logs)) {
     $pdf->SetFillColor(21, 61, 99);
     $pdf->SetTextColor(255, 255, 255);
     $pdf->Cell(8,  8, '',                    1, 0, 'C', true);
-    $pdf->Cell(48, 8, 'TOTAL RECORDS',       1, 0, 'L', true);
-    $pdf->Cell(25, 8, count($logs),          1, 0, 'C', true);
-    $pdf->Cell(20, 8, '',                    1, 0, 'C', true);
-    $pdf->Cell(20, 8, '',                    1, 0, 'C', true);
+    $pdf->Cell(50, 8, 'TOTAL RECORDS',       1, 0, 'L', true);
+    $pdf->Cell(23, 8, count($logs),          1, 0, 'C', true);
     $pdf->Cell(22, 8, '',                    1, 0, 'C', true);
-    $pdf->Cell(17, 8, '',                    1, 1, 'C', true);
+    $pdf->Cell(22, 8, '',                    1, 0, 'C', true);
+    $pdf->Cell(22, 8, '',                    1, 0, 'C', true);
+    $pdf->Cell(33, 8, '',                    1, 1, 'C', true);
 }
 
-$filename = 'attendance_a4_portrait_' . $dateFrom . '_to_' . $dateTo . '.pdf';
+$filename = 'attendance_' . $dateFrom . '_to_' . $dateTo . '.pdf';
 header('Content-Type: application/pdf');
 header('Content-Disposition: attachment; filename="' . $filename . '"');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
