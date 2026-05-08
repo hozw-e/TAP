@@ -10,6 +10,10 @@ require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
 require_once '../../utils/activity-logger.php';
+require_once '../../utils/jwt.php';
+
+// Check authentication (JWT or Session)
+requireAuth();
 
 // Only allow POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

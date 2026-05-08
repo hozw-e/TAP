@@ -2,11 +2,11 @@
 require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
-require_once '../../utils/session.php';
+require_once '../../utils/jwt.php';
 require_once '../../utils/activity-logger.php';
  
-// Check if admin is logged in
-requireAdminAuth();
+// Check authentication (JWT or Session)
+requireAuth();
  
 // Get guardian ID from query parameter
 $guardianId = isset($_GET['id']) ? intval($_GET['id']) : 0;

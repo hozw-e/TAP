@@ -84,11 +84,13 @@ function ActivityLogs() {
   // Handle export
   const handleExport = async () => {
     try {
+      const token = localStorage.getItem('auth_token');
       const params = new URLSearchParams({
         from_date: fromDate,
         to_date: toDate,
         action_type: actionType,
-        search: searchKeyword
+        search: searchKeyword,
+        token: token
       });
 
       window.location.href = `${import.meta.env.VITE_API_BASE_URL}/activity-logs/export.php?${params}`;

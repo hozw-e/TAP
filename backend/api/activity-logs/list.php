@@ -4,8 +4,8 @@ require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/jwt.php';
 
-// Check JWT authentication
-$payload = requireJWTAuth();
+// Check authentication (JWT or Session)
+requireAuth();
 
 try {
     $conn = getDBConnection();

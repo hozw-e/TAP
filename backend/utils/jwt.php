@@ -112,4 +112,34 @@ function requireJWTAuth() {
     
     return $payload;
 }
+
+/**
+ * Check authentication (JWT or Session)
+ * Supports both JWT tokens and legacy session authentication
+ */
+function requireAuth() {
+    // Try JWT first
+    $jwtPayload = verifyJWT();
+    if ($jwtPayload) {
+        return $jwtPayload;
+    }
+    
+    // Fallback to session authentication
+    require_once __DIR__ . '/session.php';
+    if (isAdminLoggedIn()) {
+        return [
+            'admin_id' => $_SESSION['admin_id'] ?? null,
+            'admin_name' => $_SESSION['admin_name'] ?? null,
+            'username' => $_SESSION['username'] ?? null
+        ];
+    }
+    
+    // Neither JWT nor session is valid
+    http_response_code(401);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Unauthorized. Please login.'
+    ]);
+    exit;
+}
 ?>

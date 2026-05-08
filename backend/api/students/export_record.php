@@ -9,6 +9,14 @@ date_default_timezone_set('Asia/Manila');
 require_once '../../config/database.php';
 require_once '../../lib/fpdf.php';
 require_once '../../utils/activity-logger.php';
+require_once '../../utils/jwt.php';
+
+// Check authentication (JWT or Session) - for PDF exports, check token from query param
+$token = isset($_GET['token']) ? $_GET['token'] : null;
+if ($token) {
+    $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer ' . $token;
+}
+requireAuth();
 
 $studentId = isset($_GET['student_id']) ? $_GET['student_id'] : null;
 $dateFrom  = isset($_GET['date_from']) ? $_GET['date_from'] : date('Y-m-d');

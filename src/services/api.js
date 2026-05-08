@@ -250,7 +250,8 @@ export const activityLogsAPI = {
 
   // Export activity logs as CSV
   export: async (filters = {}) => {
-    const params = new URLSearchParams(filters).toString();
+    const token = localStorage.getItem('auth_token');
+    const params = new URLSearchParams({...filters, token}).toString();
     window.location.href = `${API_BASE_URL}/activity-logs/export.php?${params}`;
   },
 };

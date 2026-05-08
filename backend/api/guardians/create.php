@@ -14,11 +14,11 @@
 require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
-require_once '../../utils/session.php';
+require_once '../../utils/jwt.php';
 require_once '../../utils/activity-logger.php';
 
-// Check admin authentication
-requireAdminAuth();
+// Check authentication (JWT or Session)
+requireAuth();
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
