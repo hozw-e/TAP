@@ -10,6 +10,7 @@ date_default_timezone_set('Asia/Manila');
 require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
+require_once '../../utils/activity-logger.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendErrorResponse('Method not allowed', 405);
@@ -61,8 +62,18 @@ try {
         ':time_in' => $now,
     ]);
 
+    $visitId = $conn->lastInsertId();
+    
+    // Log the activity
+    logActivity(
+        'CREATE',
+        'VISITOR',
+        $name,
+        'Visitor checked in at ' . $now
+    );
+
     sendSuccessResponse('Visitor checked in successfully', [
-        'visit_id'      => $conn->lastInsertId(),
+        'visit_id'      => $visitId,
         'name'          => $name,
         'date_of_visit' => $today,
         'time_in'       => $now,

@@ -15,6 +15,7 @@ require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
 require_once '../../utils/session.php';
+require_once '../../utils/activity-logger.php';
 
 // Check admin authentication
 requireAdminAuth();
@@ -57,6 +58,14 @@ try {
     ]);
     
     $guardianId = $conn->lastInsertId();
+    
+    // Log the activity
+    logActivity(
+        'CREATE',
+        'GUARDIAN',
+        $guardianName,
+        'Guardian created with ID: ' . $guardianId
+    );
     
     sendSuccessResponse('Guardian created successfully', [
         'guardian_id' => $guardianId,

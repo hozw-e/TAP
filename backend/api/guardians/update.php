@@ -3,6 +3,7 @@ require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
 require_once '../../utils/session.php';
+require_once '../../utils/activity-logger.php';
  
 // Check if admin is logged in
 requireAdminAuth();
@@ -44,6 +45,14 @@ try {
         ':guardian_cellnum' => $data['guardian_cellnum'] ?? null,
         ':guardian_id' => $guardianId
     ]);
+    
+    // Log the activity
+    logActivity(
+        'UPDATE',
+        'GUARDIAN',
+        $data['guardian_name'],
+        'Guardian updated (ID: ' . $guardianId . ')'
+    );
     
     if ($stmt->rowCount() > 0 || $stmt->rowCount() === 0) {
         // rowCount() === 0 means no changes but record exists

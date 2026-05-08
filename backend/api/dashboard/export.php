@@ -7,6 +7,7 @@
 date_default_timezone_set('Asia/Manila');
 
 require_once '../../config/database.php';
+require_once '../../utils/activity-logger.php';
 
 $dateFrom    = isset($_GET['date_from']) ? $_GET['date_from'] : date('Y-m-d');
 $dateTo      = isset($_GET['date_to'])   ? $_GET['date_to']   : date('Y-m-d');
@@ -206,6 +207,14 @@ if (empty($logs)) {
     $pdf->Cell(22, 8, '',                    1, 0, 'C', true);
     $pdf->Cell(17, 8, '',                    1, 1, 'C', true);
 }
+
+// Log the export activity
+logActivity(
+    'EXPORT',
+    'STUDENT',
+    'Bulk Export',
+    'Exported ' . count($logs) . ' attendance records from ' . $dateFrom . ' to ' . $dateTo . ' (Type: ' . $filterType . ', Course: ' . $filterCourse . ')'
+);
 
 $filename = 'attendance_a4_portrait_' . $dateFrom . '_to_' . $dateTo . '.pdf';
 header('Content-Type: application/pdf');

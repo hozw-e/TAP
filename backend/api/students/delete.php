@@ -3,6 +3,7 @@ require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
 require_once '../../utils/session.php';
+require_once '../../utils/activity-logger.php';
 
 // Check if admin is logged in
 requireAdminAuth();
@@ -21,8 +22,8 @@ try {
         sendErrorResponse('Database connection failed');
     }
     
-    // Get guardian_id before deleting student
-    $stmt = $conn->prepare("SELECT guardian_id FROM students WHERE student_id = :student_id");
+    // Get guardian_id and student name before deleting student
+    $stmt = $conn->prepare("SELECT guardian_id, student_name FROM students WHERE student_id = :student_id");
     $stmt->execute([':student_id' => $studentId]);
     $student = $stmt->fetch();
     
@@ -31,6 +32,7 @@ try {
     }
     
     $guardianId = $student['guardian_id'];
+    $studentName = $student['student_name'];
     
     // First, delete related NFC tags (if any)
     $stmtNfc = $conn->prepare("DELETE FROM nfc_tags WHERE student_id = :student_id");
@@ -43,6 +45,14 @@ try {
     // Third, delete the student
     $stmt = $conn->prepare("DELETE FROM students WHERE student_id = :student_id");
     $stmt->execute([':student_id' => $studentId]);
+    
+    // Log the activity
+    logActivity(
+        'DELETE',
+        'STUDENT',
+        $studentName,
+        'Student deleted (ID: ' . $studentId . ')'
+    );
     
     // Finally, delete the guardian (if this was their only student)
     if ($guardianId) {
