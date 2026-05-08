@@ -4,6 +4,7 @@ require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
 require_once '../../utils/session.php';
 require_once '../../utils/activity-logger.php';
+require_once '../../utils/jwt.php';
 
 // Get JSON input
 $data = json_decode(file_get_contents('php://input'), true);
@@ -37,12 +38,23 @@ try {
         sendErrorResponse('Invalid username or password');
     }
 
-    // Set session using utility
+    // Set session (for backward compatibility)
     setAdminSession([
         'admin_id'   => $admin['admin_id'],
         'admin_name' => $admin['admin_name'],
         'username'   => $admin['username'],
     ]);
+
+    // Generate JWT token
+    $payload = [
+        'admin_id' => $admin['admin_id'],
+        'admin_name' => $admin['admin_name'],
+        'username' => $admin['username'],
+        'iat' => time(),
+        'exp' => time() + (7 * 24 * 60 * 60) // 7 days expiration
+    ];
+    
+    $token = JWT::encode($payload);
 
     // Log the login activity
     logActivity(
@@ -57,6 +69,7 @@ try {
         'admin_id'   => $admin['admin_id'],
         'admin_name' => $admin['admin_name'],
         'username'   => $admin['username'],
+        'token'      => $token
     ]);
 
 } catch (PDOException $e) {
