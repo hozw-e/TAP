@@ -105,20 +105,14 @@ class AttendancePDF extends FPDF {
     public string $filterInfo = '';
 
     function Header() {
-        // Company header block (logo + text) aligned on the upper-left
-        if ($this->logoPath && file_exists($this->logoPath)) {
-            $this->Image($this->logoPath, 14, 8, 28, 28);
-        }
-        $this->SetXY(48, 10);
+        // Company header - centered (no logo)
         $this->SetFont('Arial', 'B', 20);
         $this->SetTextColor(0, 112, 192);
-        $this->Cell(0, 10, 'A+ Solution Development Center Corp.', 0, 1, 'L');
-        $this->SetX(48);
+        $this->Cell(0, 10, 'A+ Solution Development Center Corp.', 0, 1, 'C');
         $this->SetFont('Arial', 'B', 8.5);
         $this->SetTextColor(0, 0, 0);
-        $this->Cell(0, 4.5, '35A National Highway, Lower Kalaklan, Olongapo City, Philippines 2200', 0, 1, 'L');
-        $this->SetX(48);
-        $this->Cell(0, 4.5, '0917 832 6822 | (047) 232 2449 | infoapsteamph@gmail.com', 0, 1, 'L');
+        $this->Cell(0, 4.5, '35A National Highway, Lower Kalaklan, Olongapo City, Philippines 2200', 0, 1, 'C');
+        $this->Cell(0, 4.5, '0917 832 6822 | (047) 232 2449 | infoapsteamph@gmail.com', 0, 1, 'C');
         $this->Ln(7);
 
         $this->SetFont('Arial', 'B', 14);
