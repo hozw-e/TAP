@@ -4,10 +4,32 @@ require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/session.php';
 
+// Ensure session is started
+if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'domain' => '',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'None'
+    ]);
+    session_start();
+}
+
 // Check if admin is logged in
 if (!isAdminLoggedIn()) {
     http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Unauthorized',
+        'debug' => [
+            'session_id' => session_id(),
+            'has_admin_id' => isset($_SESSION['admin_id']),
+            'has_logged_in_flag' => isset($_SESSION['admin_logged_in']),
+            'session_data' => $_SESSION
+        ]
+    ]);
     exit;
 }
 

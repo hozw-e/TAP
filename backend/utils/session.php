@@ -5,9 +5,16 @@
 
 // Configure session for cross-domain use on Railway
 if (session_status() === PHP_SESSION_NONE) {
-    ini_set('session.cookie_samesite', 'None');
-    ini_set('session.cookie_secure', '1');
-    ini_set('session.cookie_httponly', '1');
+    // Set session cookie parameters for cross-domain
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'domain' => '',  // Empty to allow cross-domain
+        'secure' => true,  // HTTPS only
+        'httponly' => true,  // Prevent JavaScript access
+        'samesite' => 'None'  // Allow cross-site requests
+    ]);
+    
     session_start();
 }
 
