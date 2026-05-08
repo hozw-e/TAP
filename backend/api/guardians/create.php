@@ -14,11 +14,10 @@
 require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
-require_once '../../utils/jwt.php';
-require_once '../../utils/activity-logger.php';
+require_once '../../utils/session.php';
 
-// Check authentication (JWT or Session)
-requireAuth();
+// Check admin authentication
+requireAdminAuth();
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -58,14 +57,6 @@ try {
     ]);
     
     $guardianId = $conn->lastInsertId();
-    
-    // Log the activity
-    logActivity(
-        'CREATE',
-        'GUARDIAN',
-        $guardianName,
-        'Guardian created with ID: ' . $guardianId
-    );
     
     sendSuccessResponse('Guardian created successfully', [
         'guardian_id' => $guardianId,

@@ -2,10 +2,14 @@
 header('Content-Type: application/json');
 require_once '../../config/database.php';
 require_once '../../utils/cors.php';
-require_once '../../utils/jwt.php';
+require_once '../../utils/session.php';
 
-// Check authentication (JWT or Session)
-requireAuth();
+// Check if admin is logged in
+if (!isAdminLoggedIn()) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+    exit;
+}
 
 try {
     $conn = getDBConnection();

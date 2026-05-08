@@ -18,11 +18,10 @@
 require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
-require_once '../../utils/jwt.php';
-require_once '../../utils/activity-logger.php';
+require_once '../../utils/session.php';
 
-// Check authentication (JWT or Session)
-requireAuth();
+// Check admin authentication
+requireAdminAuth();
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -104,14 +103,6 @@ try {
     ]);
     
     $studentId = $conn->lastInsertId();
-    
-    // Log the activity
-    logActivity(
-        'CREATE',
-        'STUDENT',
-        $studentName,
-        'Student created with ID: ' . $studentId
-    );
     
     sendSuccessResponse('Student created successfully', [
         'student_id' => $studentId,

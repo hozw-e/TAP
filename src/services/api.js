@@ -9,22 +9,8 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Keep for backward compatibility
+  withCredentials: true, // Important for sessions/cookies
 });
-
-// Add request interceptor to include JWT token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
 
 // ============================================
 // AUTHENTICATION API
@@ -34,26 +20,12 @@ export const authAPI = {
   // Login admin
   login: async (username, password) => {
     const response = await api.post('/auth/login.php', { username, password });
-    
-    // Store JWT token in localStorage
-    if (response.data.success && response.data.data.token) {
-      localStorage.setItem('auth_token', response.data.data.token);
-      localStorage.setItem('admin_name', response.data.data.admin_name);
-      localStorage.setItem('admin_id', response.data.data.admin_id);
-    }
-    
     return response.data;
   },
 
   // Logout admin
   logout: async () => {
     const response = await api.post('/auth/logout.php');
-    
-    // Clear JWT token from localStorage
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('admin_name');
-    localStorage.removeItem('admin_id');
-    
     return response.data;
   },
 
@@ -250,8 +222,7 @@ export const activityLogsAPI = {
 
   // Export activity logs as CSV
   export: async (filters = {}) => {
-    const token = localStorage.getItem('auth_token');
-    const params = new URLSearchParams({...filters, token}).toString();
+    const params = new URLSearchParams(filters).toString();
     window.location.href = `${API_BASE_URL}/activity-logs/export.php?${params}`;
   },
 };

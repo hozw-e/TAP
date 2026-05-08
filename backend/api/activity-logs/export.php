@@ -1,10 +1,6 @@
 <?php
 require_once '../../config/database.php';
-require_once '../../utils/cors.php';
-require_once '../../utils/jwt.php';
-
-// Check authentication (JWT or Session)
-requireAuth();
+require_once '../../utils/session.php';
 
 // Check if admin is logged in
 if (!isAdminLoggedIn()) {

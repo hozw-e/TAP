@@ -17,11 +17,10 @@
 require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
-require_once '../../utils/jwt.php';
-require_once '../../utils/activity-logger.php';
+require_once '../../utils/session.php';
 
-// Check authentication (JWT or Session)
-requireAuth();
+// Check admin authentication
+requireAdminAuth();
 
 // Accept POST request (changed from PUT for better compatibility)
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -96,14 +95,6 @@ try {
         ':duration'     => $courseDuration,
         ':student_id'   => $studentId
     ]);
-
-    // Log the activity
-    logActivity(
-        'UPDATE',
-        'STUDENT',
-        $studentName,
-        'Student updated (ID: ' . $studentId . ')'
-    );
 
     sendSuccessResponse('Student updated successfully', [
         'student_id'       => $studentId,

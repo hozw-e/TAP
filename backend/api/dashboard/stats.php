@@ -4,16 +4,14 @@
  * GET /api/dashboard/stats.php
  */
 
-require_once '../../config/database.php';
-require_once '../../utils/cors.php';
-require_once '../../utils/response.php';
-require_once '../../utils/jwt.php';
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
 
-// Check authentication (JWT or Session)
-requireAuth();
-
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    sendErrorResponse('Method not allowed', 405);
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
 }
 
 require_once '../../config/database.php';

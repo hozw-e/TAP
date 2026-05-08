@@ -8,15 +8,6 @@ date_default_timezone_set('Asia/Manila');
 
 require_once '../../config/database.php';
 require_once '../../lib/fpdf.php';
-require_once '../../utils/activity-logger.php';
-require_once '../../utils/jwt.php';
-
-// Check authentication (JWT or Session) - for PDF exports, check token from query param
-$token = isset($_GET['token']) ? $_GET['token'] : null;
-if ($token) {
-    $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer ' . $token;
-}
-requireAuth();
 
 $studentId = isset($_GET['student_id']) ? $_GET['student_id'] : null;
 $dateFrom  = isset($_GET['date_from']) ? $_GET['date_from'] : date('Y-m-d');
@@ -131,14 +122,6 @@ if (empty($logs)) {
         $pdf->Cell(38, 8, formatTimeDisplay($row['time_out']), 1, 1, 'C');
     }
 }
-
-// Log the export activity
-logActivity(
-    'EXPORT',
-    'STUDENT',
-    $student['student_name'],
-    'Exported attendance record (' . count($logs) . ' records) from ' . $dateFrom . ' to ' . $dateTo
-);
 
 $filename = 'student_attendance_' . $studentId . '_' . $dateFrom . '_to_' . $dateTo . '.pdf';
 header('Content-Type: application/pdf');

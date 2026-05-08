@@ -2,11 +2,10 @@
 require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
-require_once '../../utils/jwt.php';
-require_once '../../utils/activity-logger.php';
+require_once '../../utils/session.php';
  
-// Check authentication (JWT or Session)
-requireAuth();
+// Check if admin is logged in
+requireAdminAuth();
  
 // Get guardian ID from query parameter
 $guardianId = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -45,14 +44,6 @@ try {
         ':guardian_cellnum' => $data['guardian_cellnum'] ?? null,
         ':guardian_id' => $guardianId
     ]);
-    
-    // Log the activity
-    logActivity(
-        'UPDATE',
-        'GUARDIAN',
-        $data['guardian_name'],
-        'Guardian updated (ID: ' . $guardianId . ')'
-    );
     
     if ($stmt->rowCount() > 0 || $stmt->rowCount() === 0) {
         // rowCount() === 0 means no changes but record exists

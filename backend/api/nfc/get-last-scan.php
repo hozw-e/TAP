@@ -10,10 +10,6 @@
 require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
-require_once '../../utils/jwt.php';
-
-// Check authentication (JWT or Session)
-requireAuth();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     sendErrorResponse('Method not allowed', 405);
