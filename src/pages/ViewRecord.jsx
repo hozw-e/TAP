@@ -180,8 +180,9 @@ function ViewRecord() {
       date_to: filterTo || ''
     });
 
-    // Open the PHP export endpoint
-    const exportUrl = `/backend/api/students/export_record.php?${params.toString()}`;
+    // Use the API base URL from environment
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+    const exportUrl = `${API_BASE_URL}/students/export_record.php?${params.toString()}`;
     window.open(exportUrl, '_blank');
   };
 
