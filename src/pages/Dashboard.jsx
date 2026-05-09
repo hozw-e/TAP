@@ -6,6 +6,8 @@ import axios from 'axios';
 import '../styles/Dashboard.css';
 import TopBar from '../components/TopBar';
 import { useLocation, useNavigate } from 'react-router-dom';
+import introJs from 'intro.js';
+import 'intro.js/introjs.css';
 
 const BASE = import.meta.env.VITE_API_BASE_URL;
 const API_STATS_URL = `${BASE}/dashboard/stats.php`;
@@ -24,7 +26,6 @@ function Dashboard() {
   const [attendanceLogs, setAttendanceLogs] = useState([]);
   const [filteredLogs, setFilteredLogs] = useState([]);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [showHelpModal, setShowHelpModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showLoginSuccessToast, setShowLoginSuccessToast] = useState(false);
 
@@ -111,6 +112,107 @@ function Dashboard() {
       _t: String(Date.now()),
     });
     window.open(`${API_EXPORT_URL}?${params.toString()}`, '_blank');
+  };
+
+  const startTour = () => {
+    const intro = introJs();
+    intro.setOptions({
+      steps: [
+        {
+          title: 'Welcome to Dashboard! 👋',
+          intro: 'This is your main control center for monitoring attendance and system activity. Let me show you around!'
+        },
+        {
+          element: '.stats-grid',
+          title: 'Statistics Overview 📊',
+          intro: 'These cards give you a quick snapshot of your facility\'s current status at a glance.'
+        },
+        {
+          element: '.stat-card:nth-child(1)',
+          title: 'Total Enrollees 👥',
+          intro: 'Shows the total number of students registered in the system.'
+        },
+        {
+          element: '.stat-card:nth-child(2)',
+          title: 'Present Students ✅',
+          intro: 'Displays how many students are currently inside the facility right now.'
+        },
+        {
+          element: '.stat-card:nth-child(3)',
+          title: 'Newcomers Today 🆕',
+          intro: 'Shows the number of students who enrolled today.'
+        },
+        {
+          element: '.logs-section',
+          title: 'Attendance Logs 📋',
+          intro: 'This section displays all attendance records including check-in/check-out times, duration, and SMS notifications.'
+        },
+        {
+          element: '.date-picker:nth-of-type(1)',
+          title: 'From Date 📅',
+          intro: 'Select the start date to filter attendance logs. Default is today\'s date.'
+        },
+        {
+          element: '.date-picker:nth-of-type(2)',
+          title: 'To Date 📅',
+          intro: 'Select the end date for your date range filter. Default is today\'s date.'
+        },
+        {
+          element: '.filter-select:nth-of-type(1)',
+          title: 'Type Filter 🔍',
+          intro: 'Filter records by type: view All records, only Students, or only Visitors.'
+        },
+        {
+          element: '.filter-select:nth-of-type(2)',
+          title: 'Course Filter 📚',
+          intro: 'Filter students by their enrolled course. This is disabled when viewing Visitors.'
+        },
+        {
+          element: '.refresh-btn',
+          title: 'Search Button 🔎',
+          intro: 'Click here to apply your selected date range and filters to the attendance logs.'
+        },
+        {
+          element: '.logs-table',
+          title: 'Attendance Table 📊',
+          intro: 'View detailed attendance information: Name, Time In, Time Out, Duration, SMS Notification status, and current Status.'
+        },
+        {
+          element: '.sms-badge',
+          title: 'SMS Notifications 📱',
+          intro: 'Shows SMS status: <strong>SENT</strong> (blue) means guardian was notified, <strong>FAILED TO SEND</strong> (red) means notification failed, <strong>N/A</strong> (gray) for visitors.'
+        },
+        {
+          element: '.status-badge',
+          title: 'Status Indicators 🚦',
+          intro: '<strong>PRESENT</strong> (green) = student is in facility, <strong>LEFT</strong> (orange) = student has checked out, <strong>VISITOR</strong> (blue) = visitor entry.'
+        },
+        {
+          element: '.export-btn',
+          title: 'Export PDF 📄',
+          intro: 'Generate and download a PDF report of the filtered attendance data for your records.'
+        },
+        {
+          element: '.sidebar',
+          title: 'Navigation Menu 🧭',
+          intro: 'Use the sidebar to navigate to Students management, Activity Logs, and other sections of the system.'
+        },
+        {
+          element: '.help-float-btn',
+          title: 'Help Button ❓',
+          intro: 'Click this button anytime to restart this tour and get help with the dashboard features. That\'s it! You\'re all set! 🎉'
+        }
+      ],
+      showProgress: true,
+      showBullets: true,
+      exitOnOverlayClick: false,
+      doneLabel: 'Got it!',
+      nextLabel: 'Next →',
+      prevLabel: '← Back',
+      skipLabel: 'Skip Tour'
+    });
+    
+    intro.start();
   };
 
   const formatTime = (timeStr) => {
@@ -273,26 +375,11 @@ function Dashboard() {
       </div>
 
       {/* Floating Help Button */}
-      <button className="help-float-btn" onClick={() => setShowHelpModal(true)}>
+      <button className="help-float-btn" onClick={startTour}>
         <i className="fas fa-question"></i>
       </button>
 
-      {/* Help Modal */}
-      {showHelpModal && (
-        <div className="modal-overlay show" onClick={() => setShowHelpModal(false)}>
-          <div className="help-modal-content" onClick={e => e.stopPropagation()}>
-            <div className="help-modal-header">
-              <h2>Help</h2>
-              <button className="modal-close-btn" onClick={() => setShowHelpModal(false)}>
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-            <div className="help-modal-body">
-              <p>Help content coming soon.</p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Help Modal - Removed, replaced with Intro.js tour */}
 
       <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
 

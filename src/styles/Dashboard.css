@@ -461,3 +461,89 @@
   font-size: 14px;
   line-height: 1.6;
 }
+
+/* Intro.js Custom Styling */
+.introjs-tooltip {
+  max-width: 450px;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.introjs-tooltiptext {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #2c3e50;
+}
+
+.introjs-tooltip-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.introjs-button {
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  text-shadow: none;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.introjs-button:hover {
+  transform: translateY(-1px);
+}
+
+.introjs-nextbutton {
+  background: #3498db;
+  color: white;
+}
+
+.introjs-nextbutton:hover {
+  background: #2980b9;
+}
+
+.introjs-prevbutton {
+  background: #95a5a6;
+  color: white;
+}
+
+.introjs-prevbutton:hover {
+  background: #7f8c8d;
+}
+
+.introjs-skipbutton {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+.introjs-donebutton {
+  background: #27ae60;
+  color: white;
+}
+
+.introjs-donebutton:hover {
+  background: #229954;
+}
+
+.introjs-helperLayer {
+  border-radius: 8px;
+}
+
+.introjs-tooltipReferenceLayer {
+  border-radius: 8px;
+}
+
+.introjs-progressbar {
+  background-color: #3498db;
+}
+
+.introjs-bullets ul li a {
+  background: #bdc3c7;
+}
+
+.introjs-bullets ul li a.active {
+  background: #3498db;
+}
