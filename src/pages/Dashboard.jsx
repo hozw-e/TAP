@@ -204,7 +204,7 @@ function Dashboard() {
         }
       ],
       showProgress: false,
-      showBullets: true,
+      showBullets: false,
       showStepNumbers: true,
       exitOnOverlayClick: false,
       doneLabel: 'Next',
