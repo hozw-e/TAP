@@ -38,6 +38,10 @@ function Dashboard() {
   const [filterType, setFilterType]     = useState('All');
   const [filterCourse, setFilterCourse] = useState('All');
 
+  // Pagination
+  const ITEMS_PER_PAGE = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+
   // Live clock
   const [clock, setClock] = useState('');
 
@@ -63,6 +67,11 @@ function Dashboard() {
   useEffect(() => {
     applyFilters(attendanceLogs);
   }, [attendanceLogs, filterType, filterCourse]);
+
+  // Reset to first page whenever the filtered set changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredLogs.length]);
 
   const loadDashboardData = async () => {
     setIsLoading(true);
@@ -275,8 +284,8 @@ function Dashboard() {
             { label: 'Newcomers', value: stats.enrolledToday, sub: 'Enrolled Today' },
           ].map((s) => (
             <div className="stat-card" key={s.label}>
-              <div className="stat-card-header">{s.label}</div>
-              <div className="stat-card-body">
+              <div className="stat-card-title">{s.label}</div>
+              <div className="stat-card-figure">
                 <div className="stat-card-value">{s.value}</div>
                 <div className="stat-card-label">{s.sub}</div>
               </div>
@@ -342,7 +351,9 @@ function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredLogs.map((log) => (
+                  {filteredLogs
+                    .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                    .map((log) => (
                     <tr key={`${log.row_type}-${log.attendance_id}`}>
                       <td>{log.student_name || 'Unknown'}</td>
                       <td>{formatTime(log.time_in)}</td>
@@ -364,6 +375,33 @@ function Dashboard() {
               </table>
             )}
           </div>
+
+          {/* Pagination - bottom-right of the logs card */}
+          {filteredLogs.length > ITEMS_PER_PAGE && (
+            <div className="pagination">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="pagination-btn"
+              >
+                Previous
+              </button>
+              <span className="pagination-info">
+                Page {currentPage} of {Math.ceil(filteredLogs.length / ITEMS_PER_PAGE)} ({filteredLogs.length} total)
+              </span>
+              <button
+                onClick={() =>
+                  setCurrentPage((p) =>
+                    Math.min(Math.ceil(filteredLogs.length / ITEMS_PER_PAGE), p + 1)
+                  )
+                }
+                disabled={currentPage === Math.ceil(filteredLogs.length / ITEMS_PER_PAGE)}
+                className="pagination-btn"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Bottom row */}

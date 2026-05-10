@@ -272,9 +272,27 @@ function Login({ setIsAuthenticated }) {
               />
               <label htmlFor="agree">
                 I agree to the{' '}
-                <span className="pp-link" onClick={() => setShowPPModal(true)}>Privacy Policy</span>
+                <span
+                  className="pp-link"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowPPModal(true);
+                  }}
+                >
+                  Privacy Policy
+                </span>
                 {' '}&#38;{' '}
-                <span className="pp-link" onClick={() => setShowTCModal(true)}>Terms and Conditions</span>.
+                <span
+                  className="pp-link"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowTCModal(true);
+                  }}
+                >
+                  Terms and Conditions
+                </span>.
               </label>
             </div>
 
@@ -301,7 +319,15 @@ function Login({ setIsAuthenticated }) {
                 </p>
               ))}
               <div style={{ textAlign: 'center', marginTop: '20px' }}>
-                <button className="pp-understand-btn" onClick={() => setShowPPModal(false)}>I understand</button>
+                <button
+                  className="pp-understand-btn"
+                  onClick={() => {
+                    setAgreed(true);
+                    setShowPPModal(false);
+                  }}
+                >
+                  I understand
+                </button>
               </div>
             </div>
           </div>
@@ -319,7 +345,15 @@ function Login({ setIsAuthenticated }) {
                 </p>
               ))}
               <div style={{ textAlign: 'center', marginTop: '20px' }}>
-                <button className="pp-understand-btn" onClick={() => setShowTCModal(false)}>I understand</button>
+                <button
+                  className="pp-understand-btn"
+                  onClick={() => {
+                    setAgreed(true);
+                    setShowTCModal(false);
+                  }}
+                >
+                  I understand
+                </button>
               </div>
             </div>
           </div>
