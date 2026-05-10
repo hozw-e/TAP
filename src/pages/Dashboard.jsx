@@ -39,7 +39,7 @@ function Dashboard() {
   const [filterCourse, setFilterCourse] = useState('All');
 
   // Pagination
-  const ITEMS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 5;
   const [currentPage, setCurrentPage] = useState(1);
 
   // Live clock
