@@ -10,13 +10,13 @@ function ActivityLogs() {
   const navigate = useNavigate();
   const [logs, setLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [notification, setNotification] = useState({ isOpen: false, message: '', type: 'success' });
 
   // Filter states
   const [fromDate, setFromDate] = useState(new Date().toISOString().split('T')[0]);
   const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
   const [actionType, setActionType] = useState('');
-  const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
   // Pagination state
@@ -49,7 +49,6 @@ function ActivityLogs() {
         to_date: toDate,
       };
       if (actionType) params.action_type = actionType;
-      if (searchKeyword) params.search = searchKeyword;
 
       const response = await api.get('/activity-logs/list.php', { params });
 
@@ -75,28 +74,34 @@ function ActivityLogs() {
     fetchLogs(1);
   };
 
-  // Handle search
-  const handleSearch = (e) => {
-    if (e) e.preventDefault();
-    setCurrentPage(1);
-    fetchLogs(1);
-  };
-
-  // Handle export
+  // Handle export (PDF)
   const handleExport = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
     try {
-      const filters = {
-        from_date: fromDate,
-        to_date: toDate,
-      };
+      const filters = { from_date: fromDate, to_date: toDate };
       if (actionType) filters.action_type = actionType;
-      if (searchKeyword) filters.search = searchKeyword;
 
-      await activityLogsAPI.export(filters);
+      const blob = await activityLogsAPI.export(filters);
+
+      // Trigger a client-side download from the blob
+      const url = window.URL.createObjectURL(
+        new Blob([blob], { type: 'application/pdf' })
+      );
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `activity_logs_${fromDate}_to_${toDate}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
       showNotification('Activity logs exported successfully', 'success');
     } catch (error) {
       console.error('Error exporting logs:', error);
       showNotification('Error exporting activity logs', 'error');
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -164,31 +169,6 @@ function ActivityLogs() {
             <h1>Activity Logs</h1>
           </div>
 
-          {/* Search Section */}
-          <div className="controls-section">
-            <div className="search-container">
-              <input
-                type="text"
-                className="search-input"
-                placeholder="Search for actions or records..."
-                value={searchKeyword}
-                onChange={(e) => setSearchKeyword(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    handleSearch(e);
-                  }
-                }}
-              />
-              <button
-                className="search-btn-icon"
-                onClick={handleSearch}
-                disabled={isLoading}
-              >
-                <i className="fas fa-search"></i>
-              </button>
-            </div>
-          </div>
-
           {/* Filters and Table Combined */}
           <div className="logs-section">
             {/* Filters Header */}
@@ -228,9 +208,9 @@ function ActivityLogs() {
               <button
                 onClick={handleExport}
                 className="export-btn"
-                disabled={isLoading || logs.length === 0}
+                disabled={isLoading || isExporting || logs.length === 0}
               >
-                <i className="fas fa-file-csv"></i> Export CSV
+                <i className="fas fa-file-pdf"></i> {isExporting ? 'Exporting...' : 'Export PDF'}
               </button>
             </div>
 
@@ -273,33 +253,30 @@ function ActivityLogs() {
                 </table>
               )}
             </div>
-          </div>
 
-          {/* Pagination */}
-          {pagination.total_pages > 1 && (
-            <div className="pagination">
-              <button
-                onClick={() => fetchLogs(currentPage - 1)}
-                disabled={currentPage === 1 || isLoading}
-                className="pagination-btn"
-              >
-                Previous
-              </button>
-
-              <div className="pagination-info">
-                Page {pagination.current_page} of {pagination.total_pages}
-                ({pagination.total_count} total logs)
+            {/* Pagination - bottom-right of table card */}
+            {pagination.total_pages > 1 && (
+              <div className="pagination">
+                <button
+                  onClick={() => fetchLogs(currentPage - 1)}
+                  disabled={currentPage === 1 || isLoading}
+                  className="pagination-btn"
+                >
+                  Previous
+                </button>
+                <span className="pagination-info">
+                  Page {pagination.current_page} of {pagination.total_pages} ({pagination.total_count} total)
+                </span>
+                <button
+                  onClick={() => fetchLogs(currentPage + 1)}
+                  disabled={currentPage === pagination.total_pages || isLoading}
+                  className="pagination-btn"
+                >
+                  Next
+                </button>
               </div>
-
-              <button
-                onClick={() => fetchLogs(currentPage + 1)}
-                disabled={currentPage === pagination.total_pages || isLoading}
-                className="pagination-btn"
-              >
-                Next
-              </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 

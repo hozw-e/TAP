@@ -233,10 +233,15 @@ export const activityLogsAPI = {
     return response.data;
   },
 
-  // Export activity logs as CSV
+  // Export activity logs as PDF
+  // Uses axios so the session cookie is sent the same way list.php receives it.
+  // Returns a Blob that the caller downloads client-side.
   export: async (filters = {}) => {
-    const params = new URLSearchParams(filters).toString();
-    window.location.href = `${API_BASE_URL}/activity-logs/export.php?${params}`;
+    const response = await api.get('/activity-logs/export.php', {
+      params: filters,
+      responseType: 'blob',
+    });
+    return response.data;
   },
 };
 
