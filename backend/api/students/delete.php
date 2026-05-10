@@ -3,6 +3,7 @@ require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
 require_once '../../utils/session.php';
+require_once '../../utils/activity-logger.php';
 
 // Check if admin is logged in
 requireAdminAuth();
@@ -21,13 +22,18 @@ try {
         sendErrorResponse('Database connection failed');
     }
     
-    // Get guardian_id before deleting student
-    $stmt = $conn->prepare("SELECT guardian_id FROM students WHERE student_id = :student_id");
+    // Get guardian_id and archive status before deleting student
+    $stmt = $conn->prepare("SELECT guardian_id, student_name, is_archived FROM students WHERE student_id = :student_id");
     $stmt->execute([':student_id' => $studentId]);
     $student = $stmt->fetch();
     
     if (!$student) {
         sendErrorResponse('Student not found');
+    }
+    
+    // Only allow deleting archived students
+    if ($student['is_archived'] == 0) {
+        sendErrorResponse('Cannot delete active student. Please archive the student first.');
     }
     
     $guardianId = $student['guardian_id'];
@@ -57,6 +63,9 @@ try {
             $stmt->execute([':guardian_id' => $guardianId]);
         }
     }
+    
+    // Log the activity
+    logActivity($conn, 'student_deleted', 'Student permanently deleted: ' . $student['student_name'], $studentId);
     
     sendSuccessResponse('Student and related records deleted successfully', [
         'student_id' => $studentId

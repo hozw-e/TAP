@@ -4,6 +4,8 @@ import Sidebar from '../components/Sidebar';
 import LogoutModal from '../components/LogoutModal';
 import NewRecordModal from '../components/NewRecordModal';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
+import ArchiveConfirmModal from '../components/ArchiveConfirmModal';
+import UnarchiveConfirmModal from '../components/UnarchiveConfirmModal';
 import Notification from '../components/Notification';
 import { studentsAPI } from '../services/api';
 import TopBar from '../components/TopBar';
@@ -14,9 +16,12 @@ function Students() {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showNewRecordModal, setShowNewRecordModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [showUnarchiveModal, setShowUnarchiveModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -29,7 +34,7 @@ function Students() {
 
   useEffect(() => {
     loadStudents();
-  }, []);
+  }, [showArchived]); // Reload when toggling between active/archived
 
   useEffect(() => {
     if (!Array.isArray(students)) return;
@@ -44,7 +49,7 @@ function Students() {
   const loadStudents = async () => {
     setIsLoading(true);
     try {
-      const response = await studentsAPI.list();
+      const response = await studentsAPI.list(showArchived);
 
       const studentsData = Array.isArray(response?.data)
         ? response.data
@@ -78,7 +83,9 @@ function Students() {
     const messages = {
       added: 'New record added successfully!',
       updated: 'Record updated successfully!',
-      deleted: 'Record deleted successfully!'
+      deleted: 'Record deleted successfully!',
+      archived: 'Student archived successfully!',
+      unarchived: 'Student unarchived successfully!'
     };
 
     setNotification({
@@ -106,7 +113,27 @@ function Students() {
     setShowDeleteModal(true);
   };
 
+  const handleArchiveClick = (student) => {
+    setSelectedStudent(student);
+    setShowArchiveModal(true);
+  };
+
+  const handleUnarchiveClick = (student) => {
+    setSelectedStudent(student);
+    setShowUnarchiveModal(true);
+  };
+
   const handleDeleteSuccess = (action) => {
+    loadStudents();
+    showNotification(action);
+  };
+
+  const handleArchiveSuccess = (action) => {
+    loadStudents();
+    showNotification(action);
+  };
+
+  const handleUnarchiveSuccess = (action) => {
     loadStudents();
     showNotification(action);
   };
@@ -136,7 +163,15 @@ function Students() {
           </button>
         </div>
         <div className="students-section">
-          <div className="students-header">Students</div>
+          <div className="students-header">
+            <span>{showArchived ? 'Archived Students' : 'Active Students'}</span>
+            <button 
+              className="toggle-archive-btn" 
+              onClick={() => setShowArchived(!showArchived)}
+            >
+              {showArchived ? 'See Active' : 'See Archived'}
+            </button>
+          </div>
           <div className="students-body">
             {isLoading ? (
               <div className="loading-spinner">
@@ -175,15 +210,28 @@ function Students() {
                       <td>{student.guardian_cellnum || '-'}</td>
                       <td>
                         <div className="action-buttons">
-                          <button className="action-btn action-btn-view" onClick={() => handleViewClick(student)} title="View Record">
-                            <i className="fas fa-eye"></i>
-                          </button>
-                          <button className="action-btn action-btn-edit" onClick={() => handleEditClick(student)} title="Edit">
-                            <i className="fas fa-edit"></i>
-                          </button>
-                          <button className="action-btn action-btn-delete" onClick={() => handleDeleteClick(student)} title="Delete">
-                            <i className="fas fa-trash"></i>
-                          </button>
+                          {!showArchived ? (
+                            <>
+                              <button className="action-btn action-btn-view" onClick={() => handleViewClick(student)} title="View Record">
+                                <i className="fas fa-eye"></i>
+                              </button>
+                              <button className="action-btn action-btn-edit" onClick={() => handleEditClick(student)} title="Edit">
+                                <i className="fas fa-edit"></i>
+                              </button>
+                              <button className="action-btn action-btn-archive" onClick={() => handleArchiveClick(student)} title="Archive">
+                                <i className="fas fa-archive"></i>
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button className="action-btn action-btn-unarchive" onClick={() => handleUnarchiveClick(student)} title="Unarchive">
+                                <i className="fas fa-undo"></i>
+                              </button>
+                              <button className="action-btn action-btn-delete" onClick={() => handleDeleteClick(student)} title="Delete">
+                                <i className="fas fa-trash"></i>
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -197,6 +245,8 @@ function Students() {
       <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
       <NewRecordModal isOpen={showNewRecordModal} onClose={() => setShowNewRecordModal(false)} onSuccess={handleNewRecordSuccess} />
       <DeleteConfirmModal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} onSuccess={handleDeleteSuccess} student={selectedStudent} />
+      <ArchiveConfirmModal isOpen={showArchiveModal} onClose={() => setShowArchiveModal(false)} onSuccess={handleArchiveSuccess} student={selectedStudent} />
+      <UnarchiveConfirmModal isOpen={showUnarchiveModal} onClose={() => setShowUnarchiveModal(false)} onSuccess={handleUnarchiveSuccess} student={selectedStudent} />
       <Notification isOpen={notification.isOpen} onClose={() => setNotification({ ...notification, isOpen: false })} message={notification.message} type={notification.type} />
     </div>
   );

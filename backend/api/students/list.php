@@ -26,7 +26,10 @@ if (!$conn) {
 }
 
 try {
-    $stmt = $conn->query("
+    // Get archive filter from query parameter (default to active students)
+    $isArchived = isset($_GET['archived']) && $_GET['archived'] === '1' ? 1 : 0;
+    
+    $stmt = $conn->prepare("
         SELECT
             s.student_id,
             s.guardian_id,
@@ -37,6 +40,7 @@ try {
             s.student_cellnum,
             s.student_course,
             s.course_duration,
+            s.is_archived,
             s.created_at,
             g.guardian_name,
             g.guardian_address,
@@ -45,9 +49,11 @@ try {
         FROM students s
         LEFT JOIN guardians g ON s.guardian_id = g.guardian_id
         LEFT JOIN nfc_tags n ON s.student_id = n.student_id
+        WHERE s.is_archived = :is_archived
         ORDER BY s.student_name ASC
     ");
-
+    
+    $stmt->execute([':is_archived' => $isArchived]);
     $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     sendSuccessResponse('Students retrieved successfully', $students);

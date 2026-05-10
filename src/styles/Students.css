@@ -94,6 +94,27 @@
   padding: 15px 20px;
   font-weight: 600;
   font-size: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toggle-archive-btn {
+  padding: 8px 16px;
+  background: #5d6d7e;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.toggle-archive-btn:hover {
+  background: #4a5a6a;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
 }
 
 .students-table {
@@ -237,6 +258,28 @@
   background: #c0392b;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+}
+
+.action-btn-archive {
+  background: #f39c12;
+  color: white;
+}
+
+.action-btn-archive:hover {
+  background: #d68910;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+}
+
+.action-btn-unarchive {
+  background: #27ae60;
+  color: white;
+}
+
+.action-btn-unarchive:hover {
+  background: #229954;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
 }
 
 /* NFC Badge */

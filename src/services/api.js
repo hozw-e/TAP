@@ -41,9 +41,10 @@ export const authAPI = {
 // ============================================
 
 export const studentsAPI = {
-  // Get all students
-  list: async () => {
-    const response = await api.get('/students/list.php');
+  // Get all students (with optional archive filter)
+  list: async (archived = false) => {
+    const params = archived ? '?archived=1' : '';
+    const response = await api.get(`/students/list.php${params}`);
     return response.data;
   },
  
@@ -59,9 +60,21 @@ export const studentsAPI = {
     return response.data;
   },
  
-  // Delete student
+  // Delete student (only archived students can be deleted)
   delete: async (studentId) => {
     const response = await api.post(`/students/delete.php?id=${studentId}`, {});
+    return response.data;
+  },
+  
+  // Archive student
+  archive: async (studentId) => {
+    const response = await api.post(`/students/archive.php?id=${studentId}`, {});
+    return response.data;
+  },
+  
+  // Unarchive student
+  unarchive: async (studentId) => {
+    const response = await api.post(`/students/unarchive.php?id=${studentId}`, {});
     return response.data;
   },
 };
