@@ -156,7 +156,7 @@ function Students() {
             <input
               type="text"
               className="search-input"
-              placeholder="Search students..."
+              placeholder="Search students"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />

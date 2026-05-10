@@ -25,17 +25,24 @@
 
 .search-input {
   width: 100%;
-  padding: 12px 15px 12px 45px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  padding: 14px 15px 14px 45px;
+  border: 1.5px solid #b0b8d1;
+  border-radius: 10px;
   font-size: 14px;
+  color: #34495e;
+  background: #fff;
   outline: none;
-  transition: all 0.3s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.search-input::placeholder {
+  color: #aab0c0;
 }
 
 .search-input:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #4a6fa5;
+  box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.12);
 }
 
 .search-icon {
@@ -43,8 +50,9 @@
   left: 15px;
   top: 50%;
   transform: translateY(-50%);
-  color: #999;
-  font-size: 16px;
+  color: #aab0c0;
+  font-size: 15px;
+  pointer-events: none;
 }
 
 .add-record-btn {
