@@ -186,9 +186,15 @@ function Students() {
               <div className="empty-state">
                 <i className="fas fa-users"></i>
                 <p>No students found</p>
-                <p style={{ fontSize: '14px', color: '#95a5a6' }}>
-                  {searchTerm ? 'Try a different search term' : 'Click "New record" to add a student'}
-                </p>
+                {searchTerm ? (
+                  <p style={{ fontSize: '14px', color: '#95a5a6' }}>
+                    Try a different search term
+                  </p>
+                ) : !showArchived ? (
+                  <p style={{ fontSize: '14px', color: '#95a5a6' }}>
+                    Click "New record" to add a student
+                  </p>
+                ) : null}
               </div>
             ) : (
               <table className="students-table">

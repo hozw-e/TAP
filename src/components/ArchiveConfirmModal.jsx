@@ -11,8 +11,10 @@ function ArchiveConfirmModal({ isOpen, onClose, onSuccess, student }) {
     try {
       const response = await studentsAPI.archive(student.student_id);
       
-      if (!response.success) {
-        throw new Error(response.message || 'Failed to archive student');
+      console.log('Archive response:', response); // Debug log
+      
+      if (!response || !response.success) {
+        throw new Error(response?.message || 'Failed to archive student');
       }
 
       // Close modal first, then show success notification

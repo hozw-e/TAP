@@ -11,8 +11,10 @@ function UnarchiveConfirmModal({ isOpen, onClose, onSuccess, student }) {
     try {
       const response = await studentsAPI.unarchive(student.student_id);
       
-      if (!response.success) {
-        throw new Error(response.message || 'Failed to unarchive student');
+      console.log('Unarchive response:', response); // Debug log
+      
+      if (!response || !response.success) {
+        throw new Error(response?.message || 'Failed to unarchive student');
       }
 
       // Close modal first, then show success notification
