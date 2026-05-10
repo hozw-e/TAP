@@ -4,7 +4,7 @@ import Sidebar from '../components/Sidebar';
 import TopBar from '../components/TopBar';
 import Notification from '../components/Notification';
 import '../styles/ActivityLogs.css';
-import api from '../services/api';
+import api, { activityLogsAPI } from '../services/api';
 
 function ActivityLogs() {
   const navigate = useNavigate();
@@ -43,26 +43,27 @@ function ActivityLogs() {
   const fetchLogs = async (page = 1) => {
     setIsLoading(true);
     try {
-      const response = await api.get('/activity-logs/list.php', {
-        params: {
-          page,
-          from_date: fromDate,
-          to_date: toDate,
-          action_type: actionType,
-          search: searchKeyword
-        }
-      });
+      const params = {
+        page,
+        from_date: fromDate,
+        to_date: toDate,
+      };
+      if (actionType) params.action_type = actionType;
+      if (searchKeyword) params.search = searchKeyword;
+
+      const response = await api.get('/activity-logs/list.php', { params });
 
       if (response.data.success) {
         setLogs(response.data.data);
         setPagination(response.data.pagination);
         setCurrentPage(page);
       } else {
-        showNotification('Failed to fetch activity logs', 'error');
+        showNotification(response.data.message || 'Failed to fetch activity logs', 'error');
       }
     } catch (error) {
       console.error('Error fetching logs:', error);
-      showNotification('Error fetching activity logs', 'error');
+      const message = error.response?.data?.message || 'Error fetching activity logs';
+      showNotification(message, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -84,14 +85,14 @@ function ActivityLogs() {
   // Handle export
   const handleExport = async () => {
     try {
-      const params = new URLSearchParams({
+      const filters = {
         from_date: fromDate,
         to_date: toDate,
-        action_type: actionType,
-        search: searchKeyword
-      });
+      };
+      if (actionType) filters.action_type = actionType;
+      if (searchKeyword) filters.search = searchKeyword;
 
-      window.location.href = `${import.meta.env.VITE_API_BASE_URL}/activity-logs/export.php?${params}`;
+      await activityLogsAPI.export(filters);
       showNotification('Activity logs exported successfully', 'success');
     } catch (error) {
       console.error('Error exporting logs:', error);
@@ -229,7 +230,7 @@ function ActivityLogs() {
                 className="export-btn"
                 disabled={isLoading || logs.length === 0}
               >
-                <i className="fas fa-file-pdf"></i> Export PDF
+                <i className="fas fa-file-csv"></i> Export CSV
               </button>
             </div>
 
