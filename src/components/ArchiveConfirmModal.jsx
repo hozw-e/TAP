@@ -4,10 +4,8 @@ import ConfirmModal from './ConfirmModal';
 
 function ArchiveConfirmModal({ isOpen, onClose, onSuccess, student }) {
   const [isArchiving, setIsArchiving] = useState(false);
-  const [error, setError] = useState('');
 
   const handleArchive = async () => {
-    setError('');
     setIsArchiving(true);
 
     try {
@@ -17,11 +15,14 @@ function ArchiveConfirmModal({ isOpen, onClose, onSuccess, student }) {
         throw new Error(response.message || 'Failed to archive student');
       }
 
-      onSuccess('archived');
+      // Close modal first, then show success notification
       onClose();
+      onSuccess('archived');
     } catch (err) {
       console.error('Error archiving student:', err);
-      setError(err.message || 'Failed to archive student. Please try again.');
+      // Close modal and show error notification
+      onClose();
+      onSuccess('archive_error');
     } finally {
       setIsArchiving(false);
     }
@@ -35,7 +36,7 @@ function ArchiveConfirmModal({ isOpen, onClose, onSuccess, student }) {
       onClose={onClose}
       onConfirm={handleArchive}
       title="Archive this student?"
-      message={error || "The student will be moved to archived students. You can unarchive them later."}
+      message="The student will be moved to archived students. You can unarchive them later."
       isLoading={isArchiving}
     />
   );

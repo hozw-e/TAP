@@ -4,10 +4,8 @@ import ConfirmModal from './ConfirmModal';
 
 function UnarchiveConfirmModal({ isOpen, onClose, onSuccess, student }) {
   const [isUnarchiving, setIsUnarchiving] = useState(false);
-  const [error, setError] = useState('');
 
   const handleUnarchive = async () => {
-    setError('');
     setIsUnarchiving(true);
 
     try {
@@ -17,11 +15,14 @@ function UnarchiveConfirmModal({ isOpen, onClose, onSuccess, student }) {
         throw new Error(response.message || 'Failed to unarchive student');
       }
 
-      onSuccess('unarchived');
+      // Close modal first, then show success notification
       onClose();
+      onSuccess('unarchived');
     } catch (err) {
       console.error('Error unarchiving student:', err);
-      setError(err.message || 'Failed to unarchive student. Please try again.');
+      // Close modal and show error notification
+      onClose();
+      onSuccess('unarchive_error');
     } finally {
       setIsUnarchiving(false);
     }
@@ -35,7 +36,7 @@ function UnarchiveConfirmModal({ isOpen, onClose, onSuccess, student }) {
       onClose={onClose}
       onConfirm={handleUnarchive}
       title="Unarchive this student?"
-      message={error || "The student will be restored to active students."}
+      message="The student will be restored to active students."
       isLoading={isUnarchiving}
     />
   );

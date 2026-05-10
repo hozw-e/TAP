@@ -85,13 +85,17 @@ function Students() {
       updated: 'Record updated successfully!',
       deleted: 'Record deleted successfully!',
       archived: 'Student archived successfully!',
-      unarchived: 'Student unarchived successfully!'
+      unarchived: 'Student unarchived successfully!',
+      archive_error: 'Failed to archive student. Please try again.',
+      unarchive_error: 'Failed to unarchive student. Please try again.'
     };
+
+    const type = action.includes('error') ? 'error' : 'success';
 
     setNotification({
       isOpen: true,
       message: messages[action] || 'Action completed successfully!',
-      type: 'success'
+      type: type
     });
   };
 

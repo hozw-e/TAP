@@ -38,6 +38,11 @@
   color: #27ae60;
 }
 
+.notification.error .notification-icon {
+  background: #f8d7da;
+  color: #e74c3c;
+}
+
 .notification-icon i {
   font-size: 18px;
 }

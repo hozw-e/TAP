@@ -23,7 +23,11 @@ function Notification({ isOpen, onClose, message, type = 'success' }) {
   return (
     <div className={`notification ${type} ${isOpen ? 'show' : ''}`} style={positionStyle}>
       <div className="notification-icon">
-        <i className="fas fa-check-circle"></i>
+        {type === 'success' ? (
+          <i className="fas fa-check-circle"></i>
+        ) : (
+          <i className="fas fa-exclamation-circle"></i>
+        )}
       </div>
       <span className="notification-message">{message}</span>
     </div>
