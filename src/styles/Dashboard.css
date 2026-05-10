@@ -462,38 +462,69 @@
   line-height: 1.6;
 }
 
-/* Intro.js Custom Styling - Exact Match to Reference Design */
+/* Intro.js Custom Styling - Speech Bubble Design */
 .introjs-tooltip {
-  max-width: 600px;
-  min-width: 500px;
-  border-radius: 20px;
-  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
-  background: white;
+  max-width: 440px;
+  min-width: 380px;
+  border-radius: 18px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  background: #ffffff;
   border: none;
-  padding: 40px 45px 35px 45px;
+  padding: 28px 32px 22px 32px;
   position: relative;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.introjs-tooltiptext {
-  font-size: 18px;
-  line-height: 1.7;
-  color: #888;
+/* Title row: title on the left, step badge on the right */
+.introjs-tooltip-header {
   padding: 0;
-  margin-bottom: 30px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-weight: 400;
+  min-height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
 }
 
 .introjs-tooltip-title {
-  font-size: 42px;
-  font-weight: 400;
-  color: #888;
-  margin-bottom: 25px;
+  font-size: 26px;
+  font-weight: 500;
+  color: #2c3e50;
+  margin: 0;
   padding: 0;
-  letter-spacing: -0.5px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+  flex: 1;
 }
 
+/* Step counter "1 of 3" badge - light gray pill on the right */
+.introjs-helperNumberLayer {
+  background: #e5e7eb;
+  color: #6b7280;
+  border: none;
+  box-shadow: none;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 6px;
+  position: static;
+  width: auto;
+  height: auto;
+  line-height: 1.2;
+  font-family: inherit;
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+.introjs-tooltiptext {
+  font-size: 16px;
+  line-height: 1.55;
+  color: #6b7280;
+  padding: 0;
+  margin-bottom: 22px;
+  font-weight: 400;
+}
+
+/* Button row */
 .introjs-tooltipbuttons {
   border-top: none;
   padding: 0;
@@ -501,111 +532,133 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 15px;
+  gap: 10px;
 }
 
 .introjs-button {
-  border-radius: 4px;
-  padding: 14px 40px;
+  border-radius: 6px;
+  padding: 9px 22px;
   font-weight: 500;
-  font-size: 20px;
+  font-size: 15px;
   text-shadow: none;
-  border: 2px solid #34495e;
-  transition: all 0.2s ease;
+  border: 1.5px solid #1e3a5f;
+  transition: all 0.15s ease;
   cursor: pointer;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  min-width: 120px;
+  font-family: inherit;
+  min-width: auto;
+  line-height: 1.3;
 }
 
 .introjs-button:hover {
   transform: none;
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
 .introjs-button:focus {
   outline: none;
+  box-shadow: none;
 }
 
+/* Back / Prev - filled navy */
 .introjs-prevbutton {
-  background: #34495e;
-  color: white;
-  border-color: #34495e;
+  background: #1e3a5f;
+  color: #ffffff;
+  border-color: #1e3a5f;
   order: 2;
 }
 
 .introjs-prevbutton:hover {
-  background: #2c3e50;
-  border-color: #2c3e50;
+  background: #162d4a;
+  border-color: #162d4a;
+  color: #ffffff;
 }
 
-.introjs-nextbutton {
-  background: white;
-  color: #34495e;
-  border-color: #34495e;
+/* Next - outlined navy */
+.introjs-nextbutton,
+.introjs-donebutton {
+  background: #ffffff;
+  color: #1e3a5f;
+  border-color: #1e3a5f;
   order: 3;
 }
 
-.introjs-nextbutton:hover {
-  background: #f8f8f8;
+.introjs-nextbutton:hover,
+.introjs-donebutton:hover {
+  background: #f3f4f6;
+  color: #1e3a5f;
 }
 
+/* Skip Tour - underlined text link on the left */
 .introjs-skipbutton {
-  color: #888;
+  color: #6b7280;
   font-weight: 400;
   background: transparent;
   border: none;
   padding: 0;
   text-decoration: underline;
-  font-size: 20px;
+  font-size: 15px;
   order: 1;
   margin-right: auto;
   min-width: auto;
+  line-height: 1.3;
 }
 
 .introjs-skipbutton:hover {
-  color: #666;
+  color: #374151;
   background: transparent;
+  text-decoration: underline;
 }
 
-.introjs-donebutton {
-  background: white;
-  color: #34495e;
-  border-color: #34495e;
-  order: 3;
-}
-
-.introjs-donebutton:hover {
-  background: #f8f8f8;
-}
-
+/* Highlight box around the target element */
 .introjs-helperLayer {
   border-radius: 8px;
   border: none;
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
 }
 
 .introjs-tooltipReferenceLayer {
   border-radius: 8px;
 }
 
+/* Speech bubble arrow/tail - make it match the white tooltip */
 .introjs-arrow {
-  border-color: white;
+  border-width: 12px;
 }
 
 .introjs-arrow.top {
-  border-bottom-color: white;
+  border-bottom-color: #ffffff;
+  top: -12px;
 }
 
 .introjs-arrow.bottom {
-  border-top-color: white;
+  border-top-color: #ffffff;
+  bottom: -12px;
 }
 
 .introjs-arrow.left {
-  border-right-color: white;
+  border-right-color: #ffffff;
+  left: -12px;
 }
 
 .introjs-arrow.right {
-  border-left-color: white;
+  border-left-color: #ffffff;
+  right: -12px;
+}
+
+.introjs-arrow.top-right {
+  border-bottom-color: #ffffff;
+}
+
+.introjs-arrow.bottom-right {
+  border-top-color: #ffffff;
+}
+
+.introjs-arrow.top-middle {
+  border-bottom-color: #ffffff;
+}
+
+.introjs-arrow.bottom-middle {
+  border-top-color: #ffffff;
 }
 
 /* Progress bar - hidden */
@@ -618,26 +671,7 @@
   display: none;
 }
 
-/* Step counter badge in top right - "1 of 3" style */
-.introjs-helperNumberLayer {
-  background: #e8e8e8;
-  color: #888;
-  border: none;
-  box-shadow: none;
-  font-size: 22px;
-  font-weight: 400;
-  padding: 12px 24px;
-  border-radius: 8px;
-  position: absolute;
-  top: 40px;
-  right: 45px;
-  width: auto;
-  height: auto;
-  line-height: 1;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-/* Disable default disabled button styling */
+/* Disabled button styling */
 .introjs-disabled {
   opacity: 0.4;
   cursor: not-allowed;
