@@ -14,6 +14,9 @@ function VisitorPage() {
   // Already tapped in modal (check-out denied)
   const [deniedModal, setDeniedModal] = useState({ show: false, name: '', remainingTime: 0 });
 
+  // Unassigned NFC modal
+  const [unassignedModal, setUnassignedModal] = useState({ show: false });
+
   // Admin login modal (back button)
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [adminUsername, setAdminUsername] = useState('');
@@ -41,6 +44,14 @@ function VisitorPage() {
       return () => clearTimeout(timer);
     }
   }, [deniedModal.show]);
+
+  // Auto-dismiss unassigned NFC modal after 4 seconds
+  useEffect(() => {
+    if (unassignedModal.show) {
+      const timer = setTimeout(() => setUnassignedModal({ show: false }), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [unassignedModal.show]);
 
   // Start NFC polling on mount — clear stale scans first to prevent ghost logs
   useEffect(() => {
@@ -71,6 +82,9 @@ function VisitorPage() {
               const name = scanResponse.data.student_name;
               const remainingTime = scanResponse.data.required_time - scanResponse.data.time_since_checkin;
               setDeniedModal({ show: true, name, remainingTime });
+            } else if (scanResponse.success && scanResponse.data.status === 'unassigned') {
+              // Unassigned NFC - show notification modal
+              setUnassignedModal({ show: true });
             }
           }
         }
@@ -209,6 +223,22 @@ function VisitorPage() {
             </div>
             <p className="denied-message">
               Your entry has already been recorded for this session. Please wait for a minute to pass before tapping your ID to time out.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Unassigned NFC Modal */}
+      {unassignedModal.show && (
+        <div className="visitor-modal-overlay">
+          <div className="visitor-modal unassigned-modal">
+            <div className="visitor-modal-icon unassigned-icon">
+              <i className="fas fa-user-slash"></i>
+              <p>This ID is not registered</p>
+            </div>
+            <h2>NFC not assigned</h2>
+            <p className="unassigned-message">
+              Please ask the admin personnel for assistance. Your NFC ID may not have been registered to your name.
             </p>
           </div>
         </div>

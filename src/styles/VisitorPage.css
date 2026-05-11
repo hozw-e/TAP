@@ -227,6 +227,38 @@
   }
 }
 
+/* ── Unassigned NFC Modal ─────────────────────────────────────── */
+.visitor-modal.unassigned-modal {
+  max-width: 520px;
+  padding: 50px 60px;
+}
+
+.visitor-modal-icon.unassigned-icon i {
+  font-size: 48px;
+  color: #2c3e50;
+}
+
+.visitor-modal-icon.unassigned-icon p {
+  font-size: 16px;
+  font-weight: 600;
+  color: #555;
+  margin-top: 8px;
+}
+
+.visitor-modal.unassigned-modal h2 {
+  font-size: 38px;
+  font-weight: 800;
+  color: #2c3e50;
+  margin-bottom: 12px;
+}
+
+.unassigned-message {
+  font-size: 16px;
+  color: #888;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+
 /* ── Admin Login Modal ────────────────────────────────────────── */
 .admin-login-modal {
   background: #2c3e50;
