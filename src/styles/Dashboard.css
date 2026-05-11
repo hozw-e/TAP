@@ -89,6 +89,7 @@
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #dce1e6;
 }
 
 .logs-header {
@@ -152,6 +153,7 @@
   padding: 0;
   overflow-y: auto;
   position: relative;
+  min-height: 350px;
 }
 
 /* Logs Table */
@@ -193,14 +195,17 @@
 
 /* SMS Notification Badge */
 .sms-badge {
-  display: inline-block;
-  padding: 4px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 12px;
   border-radius: 12px;
   font-size: 11px;
   font-weight: 600;
   text-align: center;
   white-space: nowrap;
-  line-height: 1.2;
+  min-width: 90px;
+  box-sizing: border-box;
 }
 
 .sms-badge.sms-sent {
@@ -215,14 +220,17 @@
 
 /* Status Badge - same sizing as SMS badge */
 .status-badge {
-  display: inline-block;
-  padding: 4px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 12px;
   border-radius: 12px;
   font-size: 11px;
   font-weight: 600;
   text-align: center;
   white-space: nowrap;
-  line-height: 1.2;
+  min-width: 90px;
+  box-sizing: border-box;
 }
 
 .status-badge.status-present {
@@ -241,23 +249,23 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 300px;
+  min-height: 350px;
   padding: 40px 20px;
   color: #95a5a6;
   text-align: center;
 }
 
 .empty-state i {
-  font-size: 64px;
-  margin-bottom: 20px;
-  opacity: 0.3;
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.4;
   color: #bdc3c7;
 }
 
 .empty-state p {
   margin: 5px 0;
-  font-size: 16px;
-  color: #7f8c8d;
+  font-size: 14px;
+  color: #95a5a6;
 }
 
 /* Loading Spinner */
