@@ -52,7 +52,7 @@ try {
     $stmt->execute([':student_id' => $studentId]);
     
     // Log the activity
-    logActivity($conn, 'student_archived', 'Student archived: ' . $student['student_name'], $studentId);
+    logActivity('ARCHIVE', 'STUDENT', $student['student_name'], 'Student archived: ' . $student['student_name']);
     
     sendSuccessResponse('Student archived successfully', [
         'student_id' => $studentId,

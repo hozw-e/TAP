@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import TopBar from '../components/TopBar';
+import LogoutModal from '../components/LogoutModal';
 import Notification from '../components/Notification';
 import '../styles/ActivityLogs.css';
 import api, { activityLogsAPI } from '../services/api';
 
 function ActivityLogs() {
-  const navigate = useNavigate();
   const [logs, setLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -113,10 +112,8 @@ function ActivityLogs() {
     }, 3000);
   };
 
-  // Handle logout
-  const handleLogout = () => {
-    navigate('/login');
-  };
+  // Logout modal state
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // Fetch logs on component mount
   useEffect(() => {
@@ -161,7 +158,7 @@ function ActivityLogs() {
 
   return (
     <div className="activity-logs-container">
-      <Sidebar onLogoutClick={handleLogout} />
+      <Sidebar onLogoutClick={() => setShowLogoutModal(true)} />
       <div className="activity-logs-content">
         <TopBar />
         <div className="activity-logs-main">
@@ -219,7 +216,10 @@ function ActivityLogs() {
               {isLoading ? (
                 <div className="loading-state">Loading activity logs...</div>
               ) : logs.length === 0 ? (
-                <div className="empty-state">No activity logs found</div>
+              <div className="empty-state">
+                <i className="fas fa-clipboard-list"></i>
+                <p>No records yet</p>
+              </div>
               ) : (
                 <table className="logs-table">
                   <thead>
@@ -279,6 +279,8 @@ function ActivityLogs() {
           </div>
         </div>
       </div>
+
+      <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
 
       <Notification
         isOpen={notification.isOpen}

@@ -336,7 +336,7 @@ function Dashboard() {
             ) : filteredLogs.length === 0 ? (
               <div className="empty-state">
                 <i className="fas fa-clipboard-list"></i>
-                <p>No attendance logs for this date</p>
+                <p>No records yet</p>
               </div>
             ) : (
               <table className="logs-table">

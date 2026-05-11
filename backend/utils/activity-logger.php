@@ -37,7 +37,7 @@ function logActivity($actionType, $entityType, $entityName, $details = '', $admi
             ':entity_name' => $entityName,
             ':details'     => $details,
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         error_log('Activity Logger Error: ' . $e->getMessage());
         return false;
     }
