@@ -151,7 +151,6 @@
 /* Logs Body */
 .logs-body {
   padding: 0;
-  overflow-y: auto;
   position: relative;
   min-height: 350px;
 }
