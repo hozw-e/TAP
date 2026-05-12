@@ -68,9 +68,7 @@ function App() {
           element={
             isAuthenticated
               ? <Navigate to="/dashboard" replace />
-              : sessionStorage.getItem('showLoggedOutToast')
-                ? <Navigate to="/login" replace />
-                : <LandingPage />
+              : <LandingPage />
           }
         />
 
