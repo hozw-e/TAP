@@ -55,9 +55,7 @@ function App() {
   }
 
   // Protected Route Component
-  const ProtectedRoute = ({ children }) => {
-    return isAuthenticated ? children : <Navigate to="/login" replace />;
-  };
+
 
   return (
     <Router>
