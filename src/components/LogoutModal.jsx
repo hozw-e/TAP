@@ -9,12 +9,12 @@ function LogoutModal({ isOpen, onClose }) {
       onClose();
       sessionStorage.setItem('showLoggedOutToast', 'true');
       setTimeout(() => {
-        window.location.replace('/apdc/login');
+        window.location.replace('/apdc/');
       }, 1500);
     } catch (error) {
       console.error('Logout error:', error);
       sessionStorage.setItem('showLoggedOutToast', 'true');
-      window.location.replace('/apdc/login');
+      window.location.replace('/apdc/');
     }
   };
 
