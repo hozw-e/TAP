@@ -11,13 +11,13 @@ function LogoutModal({ isOpen, onClose }) {
       onClose();
       sessionStorage.setItem('showLoggedOutToast', 'true');
       setTimeout(() => {
-        navigate('/login');
+        navigate('/');
         window.location.reload();
       }, 1500);
     } catch (error) {
       console.error('Logout error:', error);
       sessionStorage.setItem('showLoggedOutToast', 'true');
-      navigate('/login');
+      navigate('/');
       window.location.reload();
     }
   };
