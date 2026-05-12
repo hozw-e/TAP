@@ -1,9 +1,7 @@
-import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import '../styles/Modal.css';
 
 function LogoutModal({ isOpen, onClose }) {
-  const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
@@ -11,14 +9,12 @@ function LogoutModal({ isOpen, onClose }) {
       onClose();
       sessionStorage.setItem('showLoggedOutToast', 'true');
       setTimeout(() => {
-        navigate('/login');
-        window.location.reload();
+        window.location.replace('/apdc/login');
       }, 1500);
     } catch (error) {
       console.error('Logout error:', error);
       sessionStorage.setItem('showLoggedOutToast', 'true');
-      navigate('/login');
-      window.location.reload();
+      window.location.replace('/apdc/login');
     }
   };
 
