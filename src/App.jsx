@@ -10,8 +10,6 @@ import LandingPage from './pages/LandingPage';
 import ActivityLogs from './pages/ActivityLogs';
 import { authAPI } from './services/api';
 
-const BASE_PATH = '/apdc';
-
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,7 +60,7 @@ function App() {
   };
 
   return (
-    <Router basename={BASE_PATH}>
+    <Router>
       <Routes>
         {/* Landing Page */}
         <Route
