@@ -41,13 +41,14 @@ try {
         )
     ");
     
-    // Insert the new scan
+    // Insert the new scan (action_result will be updated after processing)
     $stmt = $conn->prepare("
         INSERT INTO temp_nfc_scans (uid, scanned_at, consumed) 
         VALUES (:uid, NOW(), FALSE)
     ");
     
     $stmt->execute([':uid' => $uid]);
+    $scanInsertId = $conn->lastInsertId();
     
     // Clean up old scans (older than 1 minute)
     $conn->exec("DELETE FROM temp_nfc_scans WHERE scanned_at < DATE_SUB(NOW(), INTERVAL 1 MINUTE)");
@@ -146,6 +147,20 @@ try {
                 $remainingSeconds = 60 - $timeDifference;
                 error_log("Check-out denied for $studentName: Only $timeDifference seconds since check-in");
                 
+                // Store action result in temp_nfc_scans
+                $resultData = json_encode([
+                    'status' => 'denied',
+                    'action' => 'check_out_denied',
+                    'uid' => $uid,
+                    'student_id' => $studentId,
+                    'student_name' => $studentName,
+                    'message' => "Please wait $remainingSeconds more seconds before checking out",
+                    'time_since_checkin' => $timeDifference,
+                    'required_time' => 60
+                ]);
+                $stmtUpdate = $conn->prepare("UPDATE temp_nfc_scans SET action_result = :result WHERE id = :id");
+                $stmtUpdate->execute([':result' => $resultData, ':id' => $scanInsertId]);
+                
                 sendSuccessResponse('Check-out too soon', [
                     'status' => 'denied',
                     'action' => 'check_out_denied',
@@ -224,6 +239,19 @@ try {
 
         error_log("Attendance recorded: $actionMessage | SMS sent: " . ($smsSent ? 'yes' : 'no'));
 
+        // Store action result in temp_nfc_scans
+        $resultData = json_encode([
+            'status'       => 'assigned',
+            'action'       => $action,
+            'uid'          => $uid,
+            'student_id'   => $studentId,
+            'student_name' => $studentName,
+            'sms_sent'     => $smsSent,
+            'message'      => $actionMessage,
+        ]);
+        $stmtUpdate = $conn->prepare("UPDATE temp_nfc_scans SET action_result = :result WHERE id = :id");
+        $stmtUpdate->execute([':result' => $resultData, ':id' => $scanInsertId]);
+
         sendSuccessResponse('NFC tag scanned (assigned)', [
             'status'       => 'assigned',
             'action'       => $action,
@@ -235,6 +263,15 @@ try {
         ]);
     } else {
         // Not assigned - ready for assignment
+        // Store action result in temp_nfc_scans
+        $resultData = json_encode([
+            'status' => 'unassigned',
+            'uid' => $uid,
+            'message' => 'NFC tag stored for assignment'
+        ]);
+        $stmtUpdate = $conn->prepare("UPDATE temp_nfc_scans SET action_result = :result WHERE id = :id");
+        $stmtUpdate->execute([':result' => $resultData, ':id' => $scanInsertId]);
+
         sendSuccessResponse('NFC tag scanned successfully', [
             'status' => 'unassigned',
             'uid' => $uid,

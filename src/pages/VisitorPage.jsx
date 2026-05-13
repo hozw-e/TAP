@@ -71,21 +71,24 @@ function VisitorPage() {
           if (uid !== lastUIDRef.current) {
             lastUIDRef.current = uid;
             await nfcAPI.clearScan();
-            // Let scan.php handle attendance — just check response for action
-            const scanResponse = await nfcAPI.scan(uid);
-            if (scanResponse.success && scanResponse.data.status === 'assigned') {
-              const action = scanResponse.data.action;
-              const name   = scanResponse.data.student_name;
-              setModal({ show: true, type: action === 'check_in' ? 'welcome' : 'farewell', name });
-            } else if (scanResponse.success && scanResponse.data.status === 'denied') {
-              // Check-out denied - show "already tapped in" modal
-              const name = scanResponse.data.student_name;
-              const remainingTime = scanResponse.data.required_time - scanResponse.data.time_since_checkin;
-              setDeniedModal({ show: true, name, remainingTime });
-            } else if (scanResponse.success && scanResponse.data.status === 'unassigned') {
-              // Unassigned NFC - show notification modal
+
+            // get-last-scan.php only returns fully processed scans,
+            // so we can use the result directly without calling scan.php again
+            const { status, action, student_name, time_since_checkin, required_time } = response.data;
+            if (status === 'assigned') {
+              setModal({ show: true, type: action === 'check_in' ? 'welcome' : 'farewell', name: student_name });
+            } else if (status === 'denied') {
+              const remainingTime = required_time - time_since_checkin;
+              setDeniedModal({ show: true, name: student_name, remainingTime });
+            } else if (status === 'unassigned') {
               setUnassignedModal({ show: true });
             }
+
+            // Reset lastUID after modals dismiss so the same card can be tapped again.
+            // We use a delay slightly longer than the longest modal auto-dismiss (5s for denied)
+            // to prevent the same scan from being picked up twice, while still allowing
+            // the student to tap again for their next action.
+            setTimeout(() => { lastUIDRef.current = null; }, 5000);
           }
         }
       } catch (e) {

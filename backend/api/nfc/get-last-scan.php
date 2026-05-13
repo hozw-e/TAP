@@ -4,6 +4,7 @@
  * GET /api/nfc/get-last-scan.php
  *
  * Returns the most recent unconsumed scan from temp_nfc_scans.
+ * Only returns scans that have been fully processed by scan.php (action_result populated).
  * Polled by the frontend every 500ms while NFC scanning is active.
  */
 
@@ -21,11 +22,14 @@ try {
         sendErrorResponse('Database connection failed', 500);
     }
 
-    // Get the latest unconsumed scan
+    // Only return scans that scan.php has finished processing (action_result IS NOT NULL).
+    // This eliminates the race condition where the frontend picks up a scan
+    // before the ESP32's scan.php call has finished writing the result.
     $stmt = $conn->prepare("
-        SELECT uid, scanned_at
+        SELECT uid, scanned_at, action_result
         FROM temp_nfc_scans
         WHERE consumed = FALSE
+          AND action_result IS NOT NULL
         ORDER BY scanned_at DESC
         LIMIT 1
     ");
@@ -33,27 +37,17 @@ try {
     $scan = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$scan) {
-        // No pending scan — return empty so frontend keeps polling
+        // No pending processed scan — return empty so frontend keeps polling
         sendSuccessResponse('No pending scan', ['uid' => null]);
         exit;
     }
 
-    // Check if this UID is already assigned to a student
-    $stmt = $conn->prepare("
-        SELECT n.nfctag_id, n.student_id, s.student_name
-        FROM nfc_tags n
-        LEFT JOIN students s ON n.student_id = s.student_id
-        WHERE n.uid = :uid
-    ");
-    $stmt->execute([':uid' => $scan['uid']]);
-    $existing = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    sendSuccessResponse('Scan found', [
-        'uid'        => $scan['uid'],
-        'unassigned' => !$existing || !$existing['student_id'],
-        'student_id' => $existing['student_id'] ?? null,
-        'student_name' => $existing['student_name'] ?? null,
-    ]);
+    // Return the pre-processed result from scan.php directly
+    $actionResult = json_decode($scan['action_result'], true);
+    sendSuccessResponse('Scan found', array_merge(
+        ['uid' => $scan['uid']],
+        $actionResult
+    ));
 
 } catch (PDOException $e) {
     error_log("Get Last Scan Error: " . $e->getMessage());
