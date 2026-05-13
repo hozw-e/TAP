@@ -391,7 +391,7 @@
 .running-robot {
   position: fixed;
   bottom: 42px; /* sits right on top of the footer */
-  width: 80px;
+  width: 120px;
   height: auto;
   z-index: 11;
   animation: runAcross 12s linear infinite;

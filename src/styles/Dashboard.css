@@ -526,18 +526,18 @@
 }
 
 .introjs-tooltip-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  display: block;
   margin-bottom: 15px;
   padding: 0;
+  position: relative;
 }
 
 .introjs-tooltip-title {
+  display: block;
   font-size: 24px !important;
   font-weight: 500 !important;
   color: #555 !important;
-  margin: 0 !important;
+  margin: 0 0 8px 0 !important;
 }
 
 .step-count {
@@ -547,7 +547,31 @@
   border-radius: 4px;
   font-size: 14px;
   font-weight: 500;
-  margin-left: auto;
+  display: block;
+  width: fit-content;
+  margin-top: 4px;
+}
+
+/* Skip Tour Link */
+.introjs-skipbutton {
+  position: absolute !important;
+  bottom: 0 !important;
+  right: 0 !important;
+  color: #666 !important;
+  text-decoration: underline !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  background: transparent !important;
+  border: none !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  padding: 4px 0 !important;
+  margin: 0 !important;
+}
+
+.introjs-skipbutton:hover {
+  color: #333 !important;
 }
 
 .introjs-tooltiptext {
@@ -565,24 +589,6 @@
   border-top: none;
   padding: 10px 0 0 0;
   gap: 10px;
-}
-
-/* Skip Tour Link */
-.introjs-skipbutton {
-  margin-right: auto !important;
-  color: #666 !important;
-  text-decoration: underline !important;
-  font-size: 16px !important;
-  font-weight: 400 !important;
-  background: transparent !important;
-  border: none !important;
-  text-shadow: none !important;
-  box-shadow: none !important;
-  cursor: pointer;
-}
-
-.introjs-skipbutton:hover {
-  color: #333 !important;
 }
 
 /* Navigation Buttons */
