@@ -125,101 +125,104 @@ function Dashboard() {
 
   const startTour = () => {
     const intro = introJs();
+    const totalSteps = 17;
+    
     intro.setOptions({
       steps: [
         {
-          title: 'Welcome to Dashboard!',
+          title: 'Welcome to Dashboard! <span class="step-count">1 of 17</span>',
           intro: 'This is your main control center for monitoring attendance and system activity. Let me show you around!'
         },
         {
           element: '.stats-grid',
-          title: 'Statistics Overview',
+          title: 'Statistics Overview <span class="step-count">2 of 17</span>',
           intro: 'These cards give you a quick snapshot of your facility\'s current status at a glance.'
         },
         {
           element: '.stat-card:nth-child(1)',
-          title: 'Total Enrollees',
+          title: 'Total Enrollees <span class="step-count">3 of 17</span>',
           intro: 'Shows the total number of students registered in the system.'
         },
         {
           element: '.stat-card:nth-child(2)',
-          title: 'Present Students',
+          title: 'Present Students <span class="step-count">4 of 17</span>',
           intro: 'Displays how many students are currently inside the facility right now.'
         },
         {
           element: '.stat-card:nth-child(3)',
-          title: 'Newcomers Today',
+          title: 'Newcomers Today <span class="step-count">5 of 17</span>',
           intro: 'Shows the number of students who enrolled today.'
         },
         {
           element: '.logs-section',
-          title: 'Attendance Logs',
+          title: 'Attendance Logs <span class="step-count">6 of 17</span>',
           intro: 'This section displays all attendance records including check-in/check-out times, duration, and SMS notifications.'
         },
         {
           element: '.date-picker:nth-of-type(1)',
-          title: 'From Date',
+          title: 'From Date <span class="step-count">7 of 17</span>',
           intro: 'Select the start date to filter attendance logs. Default is today\'s date.'
         },
         {
           element: '.date-picker:nth-of-type(2)',
-          title: 'To Date',
+          title: 'To Date <span class="step-count">8 of 17</span>',
           intro: 'Select the end date for your date range filter. Default is today\'s date.'
         },
         {
           element: '.filter-select:nth-of-type(1)',
-          title: 'Type Filter',
+          title: 'Type Filter <span class="step-count">9 of 17</span>',
           intro: 'Filter records by type: view All records, only Students, or only Visitors.'
         },
         {
           element: '.filter-select:nth-of-type(2)',
-          title: 'Course Filter',
+          title: 'Course Filter <span class="step-count">10 of 17</span>',
           intro: 'Filter students by their enrolled course. This is disabled when viewing Visitors.'
         },
         {
           element: '.refresh-btn',
-          title: 'Search Button',
+          title: 'Search Button <span class="step-count">11 of 17</span>',
           intro: 'Click here to apply your selected date range and filters to the attendance logs.'
         },
         {
           element: '.logs-table',
-          title: 'Attendance Table',
+          title: 'Attendance Table <span class="step-count">12 of 17</span>',
           intro: 'View detailed attendance information: Name, Time In, Time Out, Duration, SMS Notification status, and current Status.'
         },
         {
           element: '.sms-badge',
-          title: 'SMS Notifications',
+          title: 'SMS Notifications <span class="step-count">13 of 17</span>',
           intro: 'Shows SMS status: SENT (blue) means guardian was notified, FAILED TO SEND (red) means notification failed, N/A (gray) for visitors.'
         },
         {
           element: '.status-badge',
-          title: 'Status Indicators',
+          title: 'Status Indicators <span class="step-count">14 of 17</span>',
           intro: 'PRESENT (green) = student is in facility, LEFT (orange) = student has checked out, VISITOR (blue) = visitor entry.'
         },
         {
           element: '.export-btn',
-          title: 'Export PDF',
+          title: 'Export PDF <span class="step-count">15 of 17</span>',
           intro: 'Generate and download a PDF report of the filtered attendance data for your records.'
         },
         {
           element: '.sidebar',
-          title: 'Navigation Menu',
+          title: 'Navigation Menu <span class="step-count">16 of 17</span>',
           intro: 'Use the sidebar to navigate to Students management, Activity Logs, and other sections of the system.'
         },
         {
           element: '.help-float-btn',
-          title: 'Help Button',
+          title: 'Help Button <span class="step-count">17 of 17</span>',
           intro: 'Click this button anytime to restart this tour and get help with the dashboard features. That\'s it! You\'re all set!'
         }
       ],
       showProgress: false,
       showBullets: false,
-      showStepNumbers: true,
+      showStepNumbers: false,
       exitOnOverlayClick: false,
-      doneLabel: 'Next',
+      doneLabel: 'Done',
       nextLabel: 'Next',
       prevLabel: 'Back',
-      skipLabel: 'Skip Tour'
+      skipLabel: 'Skip Tour',
+      allowHtml: true
     });
     
     intro.start();

@@ -516,3 +516,114 @@
   font-size: 14px;
   line-height: 1.6;
 }
+/* Intro.js Custom Styles */
+.introjs-tooltip {
+  min-width: 400px;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.introjs-tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 0;
+}
+
+.introjs-tooltip-title {
+  font-size: 24px !important;
+  font-weight: 500 !important;
+  color: #555 !important;
+  margin: 0 !important;
+}
+
+.step-count {
+  background: #e9ecef;
+  color: #495057;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-left: auto;
+}
+
+.introjs-tooltiptext {
+  font-size: 15px;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 25px;
+  padding: 0;
+}
+
+.introjs-tooltipbuttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  border-top: none;
+  padding: 10px 0 0 0;
+  gap: 10px;
+}
+
+/* Skip Tour Link */
+.introjs-skipbutton {
+  margin-right: auto !important;
+  color: #666 !important;
+  text-decoration: underline !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  background: transparent !important;
+  border: none !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+
+.introjs-skipbutton:hover {
+  color: #333 !important;
+}
+
+/* Navigation Buttons */
+.introjs-button {
+  padding: 8px 24px !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  border-radius: 4px !important;
+  transition: all 0.2s ease !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+  border: 1px solid transparent !important;
+}
+
+/* Back Button */
+.introjs-prevbutton {
+  background-color: #1e3a5f !important;
+  color: white !important;
+}
+
+.introjs-prevbutton:hover {
+  background-color: #152943 !important;
+}
+
+/* Next/Done Button */
+.introjs-nextbutton {
+  background-color: white !important;
+  color: #555 !important;
+  border: 1px solid #ced4da !important;
+}
+
+.introjs-nextbutton:hover {
+  background-color: #f8f9fa !important;
+}
+
+/* Disable default bullets and progress if any */
+.introjs-bullets, .introjs-progress {
+  display: none !important;
+}
+
+/* Hide default number layer if it appears */
+.introjs-helperNumberLayer {
+  display: none !important;
+}

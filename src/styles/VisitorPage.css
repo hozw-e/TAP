@@ -166,6 +166,20 @@
   margin-top: 8px;
 }
 
+/* ── Manual Login Modal ────────────────────────────────────────── */
+.visitor-modal.manual-login-modal {
+  max-width: 560px;
+}
+
+.visitor-modal-icon.manual-login-icon i {
+  font-size: 48px;
+  color: #27ae60;
+}
+
+.visitor-modal-icon.manual-login-icon p {
+  color: #27ae60;
+}
+
 /* ── Already Tapped In Modal (Denied) ────────────────────────── */
 .visitor-modal.denied-modal {
   max-width: 650px;
@@ -219,9 +233,12 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.4;
   }
@@ -235,7 +252,7 @@
 
 .visitor-modal-icon.unassigned-icon i {
   font-size: 48px;
-  color: #2c3e50;
+  color: #cf1e1e;
 }
 
 .visitor-modal-icon.unassigned-icon p {
@@ -246,9 +263,9 @@
 }
 
 .visitor-modal.unassigned-modal h2 {
-  font-size: 38px;
-  font-weight: 800;
-  color: #2c3e50;
+  font-size: 32px;
+  font-weight: 600;
+  color: #cf1e1e;
   margin-bottom: 12px;
 }
 
@@ -368,6 +385,28 @@
   background-color: #ffffff;
   padding: 10px 0;
   z-index: 10;
+}
+
+/* ── Running Robot ────────────────────────────────────────────── */
+.running-robot {
+  position: fixed;
+  bottom: 42px; /* sits right on top of the footer */
+  width: 80px;
+  height: auto;
+  z-index: 11;
+  animation: runAcross 12s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes runAcross {
+  from {
+    transform: translateX(-100px);
+    left: 0;
+  }
+  to {
+    transform: translateX(0);
+    left: 100%;
+  }
 }
 
 /* ── Footer Banner ───────────────────────────────────────────── */

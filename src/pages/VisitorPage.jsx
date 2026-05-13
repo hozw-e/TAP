@@ -8,8 +8,11 @@ function VisitorPage() {
   const [visitorName, setVisitorName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Welcome/Farewell modal
+  // Welcome/Farewell modal (NFC tap)
   const [modal, setModal] = useState({ show: false, type: '', name: '' });
+
+  // Manual login modal (typed name)
+  const [manualLoginModal, setManualLoginModal] = useState({ show: false, name: '' });
   
   // Already tapped in modal (check-out denied)
   const [deniedModal, setDeniedModal] = useState({ show: false, name: '', remainingTime: 0 });
@@ -29,13 +32,21 @@ function VisitorPage() {
   const intervalRef = useRef(null);
   const lastUIDRef  = useRef(null);
 
-  // Auto-dismiss modal after 3 seconds
+  // Auto-dismiss NFC modal after 3 seconds
   useEffect(() => {
     if (modal.show) {
       const timer = setTimeout(() => setModal({ show: false, type: '', name: '' }), 3000);
       return () => clearTimeout(timer);
     }
   }, [modal.show]);
+
+  // Auto-dismiss manual login modal after 3 seconds
+  useEffect(() => {
+    if (manualLoginModal.show) {
+      const timer = setTimeout(() => setManualLoginModal({ show: false, name: '' }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [manualLoginModal.show]);
   
   // Auto-dismiss denied modal after 5 seconds
   useEffect(() => {
@@ -111,7 +122,7 @@ function VisitorPage() {
     try {
       const response = await visitorsAPI.checkin(visitorName.trim());
       if (response.success) {
-        setModal({ show: true, type: 'welcome', name: visitorName.trim() });
+        setManualLoginModal({ show: true, name: visitorName.trim() });
         setVisitorName('');
         // Broadcast event for dashboard to refresh
         localStorage.setItem('visitorCheckin', Date.now().toString());
@@ -185,7 +196,7 @@ function VisitorPage() {
         </div>
       </div>
 
-      {/* Welcome / Farewell Modal */}
+      {/* Welcome / Farewell Modal (NFC Tap) */}
       {modal.show && (
         <div className="visitor-modal-overlay">
           <div className="visitor-modal">
@@ -196,6 +207,29 @@ function VisitorPage() {
             <h2>
               {modal.type === 'welcome' ? `Welcome, ${modal.name}!` : `Goodbye, ${modal.name}!`}
             </h2>
+            <p className="visitor-modal-timestamp">
+              {new Date().toLocaleString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Login Modal (Typed Name) */}
+      {manualLoginModal.show && (
+        <div className="visitor-modal-overlay">
+          <div className="visitor-modal manual-login-modal">
+            <div className="visitor-modal-icon manual-login-icon">
+              <i className="fas fa-check-circle"></i>
+              <p>Login successful</p>
+            </div>
+            <h2>Welcome, {manualLoginModal.name}!</h2>
             <p className="visitor-modal-timestamp">
               {new Date().toLocaleString('en-US', {
                 weekday: 'long',
@@ -283,6 +317,9 @@ function VisitorPage() {
           </div>
         </div>
       )}
+
+      {/* Running Robot */}
+      <img src="/robot.gif" alt="" className="running-robot" />
 
       {/* Footer */}
       <div className="footer-banner">
