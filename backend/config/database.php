@@ -1,8 +1,8 @@
 <?php
-define('DB_HOST', getenv('DB_HOST') ?: 'mysql.railway.internal');
-define('DB_NAME', getenv('DB_NAME') ?: 'railway');
+define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+define('DB_NAME', getenv('DB_NAME') ?: 'apdc_attendance');
 define('DB_USER', getenv('DB_USER') ?: 'root');
-define('DB_PASS', getenv('DB_PASS') ?: 'NxLKfYOWBZhKQdeJzIMkoplLPyWbmbUM');
+define('DB_PASS', getenv('DB_PASS') ?: '');
 define('DB_PORT', getenv('DB_PORT') ?: '3306');
 
 function getDBConnection() {

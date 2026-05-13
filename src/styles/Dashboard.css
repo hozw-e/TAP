@@ -516,120 +516,146 @@
   font-size: 14px;
   line-height: 1.6;
 }
-/* Intro.js Custom Styles */
-.introjs-tooltip {
+/* ===== Intro.js Tour - Custom Tooltip ===== */
+
+/* Base tooltip - clean rectangle */
+.custom-tour-tooltip.introjs-tooltip {
   min-width: 400px;
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  max-width: 480px;
+  padding: 20px 24px;
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.introjs-tooltip-header {
-  display: block;
-  margin-bottom: 15px;
-  padding: 0;
-  position: relative;
-}
-
-.introjs-tooltip-title {
-  display: block;
-  font-size: 24px !important;
-  font-weight: 500 !important;
-  color: #555 !important;
-  margin: 0 0 8px 0 !important;
-}
-
-.step-count {
-  background: #e9ecef;
-  color: #495057;
-  padding: 4px 12px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  display: block;
-  width: fit-content;
-  margin-top: 4px;
-}
-
-/* Skip Tour Link */
-.introjs-skipbutton {
-  position: absolute !important;
-  bottom: 0 !important;
-  right: 0 !important;
-  color: #666 !important;
-  text-decoration: underline !important;
-  font-size: 16px !important;
-  font-weight: 400 !important;
-  background: transparent !important;
-  border: none !important;
-  text-shadow: none !important;
-  box-shadow: none !important;
-  cursor: pointer;
-  padding: 4px 0 !important;
-  margin: 0 !important;
-}
-
-.introjs-skipbutton:hover {
-  color: #333 !important;
-}
-
-.introjs-tooltiptext {
-  font-size: 15px;
-  color: #666;
-  line-height: 1.5;
-  margin-bottom: 25px;
-  padding: 0;
-}
-
-.introjs-tooltipbuttons {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  border-top: none;
-  padding: 10px 0 0 0;
-  gap: 10px;
-}
-
-/* Navigation Buttons */
-.introjs-button {
-  padding: 8px 24px !important;
-  font-size: 16px !important;
-  font-weight: 500 !important;
-  border-radius: 4px !important;
-  transition: all 0.2s ease !important;
-  text-shadow: none !important;
-  box-shadow: none !important;
-  border: 1px solid transparent !important;
-}
-
-/* Back Button */
-.introjs-prevbutton {
-  background-color: #1e3a5f !important;
-  color: white !important;
-}
-
-.introjs-prevbutton:hover {
-  background-color: #152943 !important;
-}
-
-/* Next/Done Button */
-.introjs-nextbutton {
-  background-color: white !important;
-  color: #555 !important;
-  border: 1px solid #ced4da !important;
-}
-
-.introjs-nextbutton:hover {
-  background-color: #f8f9fa !important;
-}
-
-/* Disable default bullets and progress if any */
-.introjs-bullets, .introjs-progress {
+/* Hide the default header (we build our own in the intro HTML) */
+.custom-tour-tooltip .introjs-tooltip-header {
   display: none !important;
 }
 
-/* Hide default number layer if it appears */
+/* Body - no extra spacing, our custom HTML handles layout */
+.custom-tour-tooltip .introjs-tooltiptext {
+  padding: 0 0 16px 0;
+  margin: 0;
+}
+
+/* === Custom tour card layout === */
+.tour-card {
+  display: block;
+}
+
+/* Top row: title left, step badge right */
+.tour-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.tour-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.tour-step {
+  background: #e9ecef;
+  color: #495057;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Description text */
+.tour-body {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* Skip Tour link inside tour card */
+.tour-skip {
+  margin-top: 12px;
+}
+
+.tour-skip-btn {
+  color: #2c3e50;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.tour-skip-btn:hover {
+  color: #1a252f;
+}
+
+/* === Footer: Skip Tour (left) | Back + Next (right) === */
+.custom-tour-tooltip .introjs-tooltipbuttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: none !important;
+  padding: 0 !important;
+  margin: 0;
+}
+
+/* Skip Tour - hidden visually (triggered programmatically by custom skip button) */
+.custom-tour-tooltip .introjs-skipbutton {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  padding: 0 !important;
+  margin: -1px !important;
+}
+
+/* Back button - dark navy filled */
+.custom-tour-tooltip .introjs-prevbutton {
+  padding: 7px 18px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  border-radius: 4px !important;
+  background-color: #1e3a5f !important;
+  color: white !important;
+  border: 1px solid #1e3a5f !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+  transition: background 0.2s ease !important;
+}
+
+.custom-tour-tooltip .introjs-prevbutton:hover {
+  background-color: #152943 !important;
+}
+
+/* Next/Done button - outlined */
+.custom-tour-tooltip .introjs-nextbutton {
+  padding: 7px 18px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  border-radius: 4px !important;
+  background-color: white !important;
+  color: #1e3a5f !important;
+  border: 1px solid #1e3a5f !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+  margin-left: 0 !important;
+  transition: background 0.2s ease !important;
+}
+
+.custom-tour-tooltip .introjs-nextbutton:hover {
+  background-color: #f0f4f8 !important;
+}
+
+/* Hide bullets, progress, number layer */
+.custom-tour-tooltip .introjs-bullets,
+.custom-tour-tooltip .introjs-progress,
 .introjs-helperNumberLayer {
   display: none !important;
 }

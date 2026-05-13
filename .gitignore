@@ -17,3 +17,4 @@ dist
 
 # Database credentials
 backend/config/database.php
+apdc_attendance.sql
