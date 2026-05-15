@@ -186,7 +186,7 @@ function VisitorRecords() {
                 className="export-btn"
                 disabled={isLoading || isExporting || visitors.length === 0}
               >
-                {isExporting ? 'Exporting...' : 'Export PDF'}
+                <i className="fas fa-file-pdf"></i> {isExporting ? 'Exporting...' : 'Export PDF'}
               </button>
             </div>
 

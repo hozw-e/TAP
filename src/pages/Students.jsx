@@ -11,6 +11,11 @@ import { studentsAPI } from '../services/api';
 import TopBar from '../components/TopBar';
 import '../styles/Students.css';
 
+const COURSES = [
+  'Basic Coding', 'Research', 'EV3', 'Rover 2',
+  'AI Steam', 'Arduino', 'IoT', 'Python Programming', 'Robotics'
+];
+
 function Students() {
   const navigate = useNavigate();
   const [students, setStudents] = useState([]);
@@ -182,7 +187,7 @@ function Students() {
                 onChange={(e) => setCourseFilter(e.target.value)}
               >
                 <option value="">All Courses</option>
-                {[...new Set(students.map(s => s.student_course).filter(Boolean))].sort().map(course => (
+                {COURSES.map(course => (
                   <option key={course} value={course}>{course}</option>
                 ))}
               </select>

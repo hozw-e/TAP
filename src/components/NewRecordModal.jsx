@@ -97,12 +97,32 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
       setError('Student name is required');
       return;
     }
+    if (!formData.birthdate) {
+      setError('Birthdate is required');
+      return;
+    }
     if (!formData.completeAddress.trim()) {
       setError('Student address is required');
       return;
     }
+    if (!formData.course.trim()) {
+      setError('Course is required');
+      return;
+    }
+    if (!formData.duration.trim()) {
+      setError('Course duration is required');
+      return;
+    }
+    if (!formData.nfcId.trim()) {
+      setError('NFC ID is required. Please scan an NFC card.');
+      return;
+    }
     if (!formData.guardianName.trim()) {
       setError('Guardian name is required');
+      return;
+    }
+    if (!formData.guardianAddress.trim()) {
+      setError('Guardian address is required');
       return;
     }
     if (!formData.guardianContact.trim()) {
@@ -180,7 +200,7 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
       <div className="modal-overlay show" onClick={onClose}>
         <div className="new-record-modal-content" onClick={(e) => e.stopPropagation()}>
           <div className="modal-header">
-            <h2 className="modal-title">New Record Modal</h2>
+            <h2 className="modal-title">Enroll new student</h2>
             <button className="modal-close-btn" onClick={onClose}>
               <i className="fas fa-times"></i>
             </button>
@@ -214,7 +234,7 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
 
                 <div className="form-row three-columns">
                   <div className="form-group">
-                    <label className="form-label">Birthdate</label>
+                    <label className="form-label">Birthdate <span style={{ color: 'red' }}>*</span></label>
                     <input
                       type="date"
                       name="birthdate"
@@ -263,7 +283,7 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
 
                 <div className="form-row two-columns">
                   <div className="form-group">
-                    <label className="form-label">Course</label>
+                    <label className="form-label">Course <span style={{ color: 'red' }}>*</span></label>
                     <input
                       type="text"
                       name="course"
@@ -274,7 +294,7 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Duration</label>
+                    <label className="form-label">Duration <span style={{ color: 'red' }}>*</span></label>
                     <input
                       type="text"
                       name="duration"
@@ -288,7 +308,7 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
 
                 <div className="form-row">
                   <div className="form-group nfc-group">
-                    <label className="form-label">NFC ID</label>
+                    <label className="form-label">NFC ID <span style={{ color: 'red' }}>*</span></label>
                     <div className="nfc-input-wrapper">
                       <input
                         type="text"
@@ -337,7 +357,7 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
 
                 <div className="form-row two-columns">
                   <div className="form-group">
-                    <label className="form-label">Complete Address</label>
+                    <label className="form-label">Complete Address <span style={{ color: 'red' }}>*</span></label>
                     <input
                       type="text"
                       name="guardianAddress"
