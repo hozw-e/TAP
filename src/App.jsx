@@ -8,6 +8,7 @@ import EditRecord from './pages/EditRecord';
 import VisitorPage from './pages/VisitorPage';
 import LandingPage from './pages/LandingPage';
 import ActivityLogs from './pages/ActivityLogs';
+import VisitorRecords from './pages/VisitorRecords';
 import { authAPI } from './services/api';
 
 function App() {
@@ -124,6 +125,15 @@ function App() {
           element={
             <ProtectedRoute>
               <Navigate to="/students" replace />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/visitor-records"
+          element={
+            <ProtectedRoute>
+              <VisitorRecords />
             </ProtectedRoute>
           }
         />

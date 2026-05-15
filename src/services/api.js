@@ -148,6 +148,22 @@ export const visitorsAPI = {
     const response = await api.post('/visitors/checkin.php', { name });
     return response.data;
   },
+
+  // Get visitor records with pagination and filters
+  list: async (filters = {}) => {
+    const params = new URLSearchParams(filters).toString();
+    const response = await api.get(`/visitors/list.php?${params}`);
+    return response.data;
+  },
+
+  // Export visitor records as PDF
+  export: async (filters = {}) => {
+    const response = await api.get('/visitors/export.php', {
+      params: filters,
+      responseType: 'blob',
+    });
+    return response.data;
+  },
 };
 
 // ============================================

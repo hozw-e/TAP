@@ -1,0 +1,325 @@
+.visitor-records-container {
+  display: flex;
+  min-height: 100vh;
+  background: #ecf0f1;
+}
+
+.visitor-records-content {
+  margin-left: 180px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+.visitor-records-content .topbar {
+  margin: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.visitor-records-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 30px;
+}
+
+.visitor-records-container .page-header {
+  margin-bottom: 20px;
+  margin-top: -10px;
+}
+
+.visitor-records-container .page-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a3a5c;
+  margin: 0;
+}
+
+/* Search Section */
+.visitor-search-section {
+  margin-bottom: 20px;
+}
+
+.visitor-search-container {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+}
+
+.visitor-search-input {
+  flex: 1;
+  padding: 14px 18px;
+  border: 2px solid #3498db;
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  font-size: 14px;
+  color: #34495e;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  font-family: inherit;
+}
+
+.visitor-search-input::placeholder {
+  color: #aab0c0;
+}
+
+.visitor-search-input:focus {
+  border-color: #2980b9;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.12);
+}
+
+.visitor-search-btn {
+  padding: 14px 18px;
+  background: #2c3e50;
+  color: white;
+  border: 2px solid #2c3e50;
+  border-radius: 0 8px 8px 0;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.visitor-search-btn:hover {
+  background: #1a252f;
+  border-color: #1a252f;
+}
+
+/* Table Section */
+.visitor-table-section {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ddd;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Filters Header */
+.visitor-filters-section {
+  background: #34495e;
+  padding: 12px 20px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.visitor-filters-section .filter-label-inline {
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+}
+
+.visitor-filters-section .date-input {
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: inherit;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  outline: none;
+  min-width: 120px;
+}
+
+.visitor-filters-section .date-input:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+}
+
+.visitor-filters-section .filter-search-btn {
+  padding: 8px 14px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.visitor-filters-section .filter-search-btn:hover:not(:disabled) {
+  background: #2980b9;
+}
+
+.visitor-filters-section .filter-search-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.visitor-filters-section .export-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #dc3545;
+  color: white;
+}
+
+.visitor-filters-section .export-btn:hover:not(:disabled) {
+  background-color: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(220, 53, 69, 0.3);
+}
+
+.visitor-filters-section .export-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Table */
+.visitor-table-wrapper {
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.visitor-records-container .loading-state,
+.visitor-records-container .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 60px 20px;
+  color: #7f8c8d;
+  text-align: center;
+  flex: 1;
+  font-size: 16px;
+}
+
+.visitor-records-container .empty-state i {
+  font-size: 64px;
+  margin-bottom: 20px;
+  opacity: 0.3;
+  color: #bdc3c7;
+}
+
+.visitor-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.visitor-table thead {
+  background: #f8f9fa;
+}
+
+.visitor-table th {
+  padding: 15px 20px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+  color: #2c3e50;
+  border-bottom: 2px solid #ddd;
+}
+
+.visitor-table td {
+  padding: 15px 20px;
+  font-size: 14px;
+  color: #2c3e50;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.visitor-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+/* Pagination */
+.visitor-records-container .pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: #f8f9fa;
+  border-top: 1px solid #e6e6e6;
+}
+
+.visitor-records-container .pagination-btn {
+  padding: 6px 14px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.visitor-records-container .pagination-btn:hover:not(:disabled) {
+  background-color: #2980b9;
+}
+
+.visitor-records-container .pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.visitor-records-container .pagination-info {
+  font-size: 12px;
+  color: #7f8c8d;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .visitor-records-main {
+    padding: 20px;
+  }
+
+  .visitor-filters-section {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .visitor-records-container .page-header h1 {
+    font-size: 24px;
+  }
+
+  .visitor-filters-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .visitor-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .visitor-table {
+    min-width: 500px;
+  }
+
+  .visitor-records-container .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+}
