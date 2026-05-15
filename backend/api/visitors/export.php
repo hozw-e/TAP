@@ -34,26 +34,32 @@ try {
     }
 
     // Filters
-    $fromDate = !empty($_GET['from_date']) ? $_GET['from_date'] : date('Y-m-d');
-    $toDate   = !empty($_GET['to_date'])   ? $_GET['to_date']   : date('Y-m-d');
+    $fromDate = !empty($_GET['from_date']) ? $_GET['from_date'] : '';
+    $toDate   = !empty($_GET['to_date'])   ? $_GET['to_date']   : '';
     $search   = isset($_GET['search'])     ? trim($_GET['search']) : '';
 
     // Build WHERE clause
     $whereConditions = [];
     $params = [];
 
-    $whereConditions[] = "date_of_visit >= :from_date";
-    $params[':from_date'] = $fromDate;
+    if ($fromDate !== '') {
+        $whereConditions[] = "date_of_visit >= :from_date";
+        $params[':from_date'] = $fromDate;
+    }
 
-    $whereConditions[] = "date_of_visit <= :to_date";
-    $params[':to_date'] = $toDate;
+    if ($toDate !== '') {
+        $whereConditions[] = "date_of_visit <= :to_date";
+        $params[':to_date'] = $toDate;
+    }
 
     if ($search !== '') {
         $whereConditions[] = "name LIKE :search";
         $params[':search'] = "%{$search}%";
     }
 
-    $whereClause = 'WHERE ' . implode(' AND ', $whereConditions);
+    $whereClause = count($whereConditions) > 0
+        ? 'WHERE ' . implode(' AND ', $whereConditions)
+        : '';
 
     // Fetch all matching records (no pagination for export)
     $query = "SELECT * FROM visitors {$whereClause} ORDER BY date_of_visit DESC, time_in DESC";

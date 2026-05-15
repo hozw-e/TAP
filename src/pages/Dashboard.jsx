@@ -29,10 +29,9 @@ function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [showLoginSuccessToast, setShowLoginSuccessToast] = useState(false);
 
-  // Date range filter
-  const todayStr = () => new Date().toISOString().split('T')[0];
-  const [dateFrom, setDateFrom] = useState(todayStr());
-  const [dateTo, setDateTo]     = useState(todayStr());
+  // Date range filter (empty = all records)
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo]     = useState('');
 
   // Type & course filters
   const [filterType, setFilterType]     = useState('All');
@@ -79,9 +78,11 @@ function Dashboard() {
       const statsResponse = await axios.get(API_STATS_URL);
       if (statsResponse.data?.success) setStats(statsResponse.data.data);
 
-      const logsResponse = await axios.get(API_LOGS_URL, {
-        params: { date_from: dateFrom, date_to: dateTo }
-      });
+      const params = {};
+      if (dateFrom) params.date_from = dateFrom;
+      if (dateTo) params.date_to = dateTo;
+
+      const logsResponse = await axios.get(API_LOGS_URL, { params });
 
       const logs = logsResponse.data?.success && Array.isArray(logsResponse.data.data)
         ? logsResponse.data.data : [];

@@ -14,10 +14,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     sendErrorResponse('Method not allowed', 405);
 }
 
-$dateFrom = isset($_GET['date_from']) ? $_GET['date_from'] : date('Y-m-d');
-$dateTo   = isset($_GET['date_to'])   ? $_GET['date_to']   : date('Y-m-d');
+$dateFrom = !empty($_GET['date_from']) ? $_GET['date_from'] : '';
+$dateTo   = !empty($_GET['date_to'])   ? $_GET['date_to']   : '';
 
-if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo)) {
+// Validate date format only if provided
+if ($dateFrom !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom)) {
+    sendErrorResponse('Invalid date format. Use YYYY-MM-DD', 400);
+}
+if ($dateTo !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo)) {
     sendErrorResponse('Invalid date format. Use YYYY-MM-DD', 400);
 }
 
@@ -28,7 +32,7 @@ try {
     }
 
     // Student attendance logs
-    $stmt = $conn->prepare("
+    $studentQuery = "
         SELECT
             a.attendance_id,
             s.student_name,
@@ -39,22 +43,50 @@ try {
             a.date
         FROM attendance_logs a
         LEFT JOIN students s ON a.student_id = s.student_id
-        WHERE a.date BETWEEN :date_from AND :date_to
-    ");
-    $stmt->execute([':date_from' => $dateFrom, ':date_to' => $dateTo]);
+    ";
+    $studentParams = [];
+
+    if ($dateFrom !== '' && $dateTo !== '') {
+        $studentQuery .= " WHERE a.date BETWEEN :date_from AND :date_to";
+        $studentParams[':date_from'] = $dateFrom;
+        $studentParams[':date_to'] = $dateTo;
+    } elseif ($dateFrom !== '') {
+        $studentQuery .= " WHERE a.date >= :date_from";
+        $studentParams[':date_from'] = $dateFrom;
+    } elseif ($dateTo !== '') {
+        $studentQuery .= " WHERE a.date <= :date_to";
+        $studentParams[':date_to'] = $dateTo;
+    }
+
+    $stmt = $conn->prepare($studentQuery);
+    $stmt->execute($studentParams);
     $studentLogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Visitor logs
-    $stmt2 = $conn->prepare("
+    $visitorQuery = "
         SELECT
             visit_id,
             name,
             time_in,
             date_of_visit AS date
         FROM visitors
-        WHERE date_of_visit BETWEEN :date_from AND :date_to
-    ");
-    $stmt2->execute([':date_from' => $dateFrom, ':date_to' => $dateTo]);
+    ";
+    $visitorParams = [];
+
+    if ($dateFrom !== '' && $dateTo !== '') {
+        $visitorQuery .= " WHERE date_of_visit BETWEEN :date_from AND :date_to";
+        $visitorParams[':date_from'] = $dateFrom;
+        $visitorParams[':date_to'] = $dateTo;
+    } elseif ($dateFrom !== '') {
+        $visitorQuery .= " WHERE date_of_visit >= :date_from";
+        $visitorParams[':date_from'] = $dateFrom;
+    } elseif ($dateTo !== '') {
+        $visitorQuery .= " WHERE date_of_visit <= :date_to";
+        $visitorParams[':date_to'] = $dateTo;
+    }
+
+    $stmt2 = $conn->prepare($visitorQuery);
+    $stmt2->execute($visitorParams);
     $visitorLogs = $stmt2->fetchAll(PDO::FETCH_ASSOC);
 
     $logs = [];
@@ -85,10 +117,10 @@ try {
         ];
     }
 
-    // Sort by date then time_in
+    // Sort by date DESC then time_in DESC (most recent first)
     usort($logs, function($a, $b) {
-        $dateCmp = strcmp($a['date'], $b['date']);
-        return $dateCmp !== 0 ? $dateCmp : strcmp($a['time_in'], $b['time_in']);
+        $dateCmp = strcmp($b['date'], $a['date']);
+        return $dateCmp !== 0 ? $dateCmp : strcmp($b['time_in'], $a['time_in']);
     });
 
     sendSuccessResponse('Attendance logs retrieved successfully', $logs);

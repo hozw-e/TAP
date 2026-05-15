@@ -113,6 +113,35 @@
   align-items: center;
 }
 
+.students-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.course-filter-select {
+  padding: 8px 12px;
+  background: #5d6d7e;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  outline: none;
+  appearance: auto;
+}
+
+.course-filter-select:hover {
+  background: #4a5a6a;
+}
+
+.course-filter-select option {
+  background: #34495e;
+  color: white;
+}
+
 .toggle-archive-btn {
   padding: 8px 16px;
   background: #5d6d7e;

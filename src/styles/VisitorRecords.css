@@ -198,17 +198,23 @@
   overflow-y: auto;
 }
 
+.visitor-table-wrapper {
+  position: relative;
+}
+
 .visitor-records-container .loading-state,
 .visitor-records-container .empty-state {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 400px;
-  padding: 60px 20px;
+  padding: 20px;
   color: #7f8c8d;
   text-align: center;
-  flex: 1;
   font-size: 16px;
 }
 

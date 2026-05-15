@@ -14,9 +14,9 @@ function VisitorRecords() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [notification, setNotification] = useState({ isOpen: false, message: '', type: 'success' });
 
-  // Filter states
-  const [fromDate, setFromDate] = useState(new Date().toISOString().split('T')[0]);
-  const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
+  // Filter states (empty = all time)
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
   // Pagination state
@@ -31,11 +31,9 @@ function VisitorRecords() {
   const fetchVisitors = async (page = 1) => {
     setIsLoading(true);
     try {
-      const params = {
-        page,
-        from_date: fromDate,
-        to_date: toDate,
-      };
+      const params = { page };
+      if (fromDate) params.from_date = fromDate;
+      if (toDate) params.to_date = toDate;
       if (searchTerm) params.search = searchTerm;
 
       const response = await api.get('/visitors/list.php', { params });
@@ -73,7 +71,9 @@ function VisitorRecords() {
     if (isExporting) return;
     setIsExporting(true);
     try {
-      const params = { from_date: fromDate, to_date: toDate };
+      const params = {};
+      if (fromDate) params.from_date = fromDate;
+      if (toDate) params.to_date = toDate;
       if (searchTerm) params.search = searchTerm;
 
       const response = await api.get('/visitors/export.php', {

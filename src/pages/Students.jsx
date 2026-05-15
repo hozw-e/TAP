@@ -17,6 +17,7 @@ function Students() {
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showArchived, setShowArchived] = useState(false);
+  const [courseFilter, setCourseFilter] = useState('');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showNewRecordModal, setShowNewRecordModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -39,12 +40,17 @@ function Students() {
   useEffect(() => {
     if (!Array.isArray(students)) return;
 
-    const filtered = students.filter(student =>
-      student.student_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (student.guardian_name && student.guardian_name.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    const filtered = students.filter(student => {
+      const matchesSearch =
+        student.student_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (student.guardian_name && student.guardian_name.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesCourse = courseFilter === '' || student.student_course === courseFilter;
+
+      return matchesSearch && matchesCourse;
+    });
     setFilteredStudents(filtered);
-  }, [searchTerm, students]);
+  }, [searchTerm, courseFilter, students]);
 
   const loadStudents = async () => {
     setIsLoading(true);
@@ -169,12 +175,24 @@ function Students() {
         <div className="students-section">
           <div className="students-header">
             <span>{showArchived ? 'Archived Students' : 'Active Students'}</span>
-            <button 
-              className="toggle-archive-btn" 
-              onClick={() => setShowArchived(!showArchived)}
-            >
-              {showArchived ? 'See Active' : 'See Archived'}
-            </button>
+            <div className="students-header-actions">
+              <select
+                className="course-filter-select"
+                value={courseFilter}
+                onChange={(e) => setCourseFilter(e.target.value)}
+              >
+                <option value="">All Courses</option>
+                {[...new Set(students.map(s => s.student_course).filter(Boolean))].sort().map(course => (
+                  <option key={course} value={course}>{course}</option>
+                ))}
+              </select>
+              <button 
+                className="toggle-archive-btn" 
+                onClick={() => setShowArchived(!showArchived)}
+              >
+                {showArchived ? 'See Active' : 'See Archived'}
+              </button>
+            </div>
           </div>
           <div className="students-body">
             {isLoading ? (
