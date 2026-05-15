@@ -125,7 +125,7 @@
   color: #34495e;
   border: none;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -133,13 +133,9 @@
   min-width: 150px;
 }
 
-.course-filter-select:hover {
-  background: #4a5a6a;
-}
-
 .course-filter-select option {
-  background: #34495e;
-  color: white;
+  background: #ffffff;
+  color: #34495e;
   padding: 8px;
   font-size: 14px;
 }
@@ -154,12 +150,6 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-}
-
-.toggle-archive-btn:hover {
-  background: #4a5a6a;
-  transform: translateY(-1px);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
 }
 
 .students-table {
