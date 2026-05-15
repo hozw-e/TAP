@@ -26,13 +26,18 @@ function ViewRecord() {
       if (student) return;
       setIsLoadingStudent(true);
       try {
-        const response = await studentsAPI.list();
-        const studentsData = Array.isArray(response?.data)
-          ? response.data
-          : Array.isArray(response?.data?.data)
-            ? response.data.data
-            : [];
-        const found = studentsData.find((item) => String(item.student_id) === String(studentId));
+        // Try active students first, then archived
+        let found = null;
+        for (const archived of [false, true]) {
+          const response = await studentsAPI.list(archived);
+          const studentsData = Array.isArray(response?.data)
+            ? response.data
+            : Array.isArray(response?.data?.data)
+              ? response.data.data
+              : [];
+          found = studentsData.find((item) => String(item.student_id) === String(studentId));
+          if (found) break;
+        }
         setStudent(found || null);
       } catch (error) {
         console.error('Error loading student:', error);
@@ -141,10 +146,9 @@ function ViewRecord() {
   };
 
   const studentStatus = useMemo(() => {
-    if (!attendanceLogs.length) return 'No Recent Logs';
-    const latest = attendanceLogs[0];
-    return latest?.time_out ? 'Inactive' : 'Active';
-  }, [attendanceLogs]);
+    if (student?.is_archived === 1 || student?.is_archived === '1' || student?.is_archived === true) return 'Inactive';
+    return 'Active';
+  }, [student]);
 
   const filteredAttendanceLogs = useMemo(() => {
     return attendanceLogs.filter((log) => {

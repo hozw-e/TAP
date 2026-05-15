@@ -257,6 +257,9 @@ function Students() {
                             </>
                           ) : (
                             <>
+                              <button className="action-btn action-btn-view" onClick={() => handleViewClick(student)} title="View Record">
+                                <i className="fas fa-eye"></i>
+                              </button>
                               <button className="action-btn action-btn-unarchive" onClick={() => handleUnarchiveClick(student)} title="Unarchive">
                                 <i className="fas fa-undo"></i>
                               </button>
