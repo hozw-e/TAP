@@ -195,7 +195,9 @@ function Dashboard() {
 
   const getSMSStatus = (log) => {
     if (log.row_type === 'visitor') return 'N/A';
-    return (log.sms_sent === true || log.sms_sent === 1) ? 'SENT' : 'FAILED TO SEND';
+    const inSent = log.sms_sent_in === true || log.sms_sent_in === 1;
+    const outSent = log.sms_sent_out === true || log.sms_sent_out === 1;
+    return (inSent || outSent) ? 'SENT' : 'FAILED TO SEND';
   };
 
   const getStatus = (log) => {

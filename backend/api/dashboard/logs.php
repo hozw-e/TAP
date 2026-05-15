@@ -39,7 +39,8 @@ try {
             s.student_course,
             a.time_in,
             a.time_out,
-            a.sms_sent,
+            a.sms_sent_in,
+            a.sms_sent_out,
             a.date
         FROM attendance_logs a
         LEFT JOIN students s ON a.student_id = s.student_id
@@ -98,7 +99,9 @@ try {
             'student_course' => $row['student_course'],
             'time_in'        => $row['time_in'],
             'time_out'       => $row['time_out'],
-            'sms_sent'       => (bool)$row['sms_sent'],
+            'sms_sent_in'    => (bool)$row['sms_sent_in'],
+            'sms_sent_out'   => (bool)$row['sms_sent_out'],
+            'sms_sent'       => (bool)($row['sms_sent_in'] || $row['sms_sent_out']),
             'date'           => $row['date'],
             'row_type'       => 'student',
         ];

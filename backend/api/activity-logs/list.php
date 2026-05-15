@@ -23,8 +23,8 @@ try {
     $limit = 10;
     $offset = ($page - 1) * $limit;
 
-    $fromDate   = !empty($_GET['from_date'])   ? $_GET['from_date']   : date('Y-m-d');
-    $toDate     = !empty($_GET['to_date'])     ? $_GET['to_date']     : date('Y-m-d');
+    $fromDate   = !empty($_GET['from_date'])   ? $_GET['from_date']   : '';
+    $toDate     = !empty($_GET['to_date'])     ? $_GET['to_date']     : '';
     $actionType = isset($_GET['action_type'])  ? trim($_GET['action_type']) : '';
     $search     = isset($_GET['search'])       ? trim($_GET['search'])      : '';
 
@@ -32,11 +32,15 @@ try {
     $whereConditions = [];
     $params = [];
 
-    $whereConditions[] = "DATE(timestamp) >= :from_date";
-    $params[':from_date'] = $fromDate;
+    if ($fromDate !== '') {
+        $whereConditions[] = "DATE(timestamp) >= :from_date";
+        $params[':from_date'] = $fromDate;
+    }
 
-    $whereConditions[] = "DATE(timestamp) <= :to_date";
-    $params[':to_date'] = $toDate;
+    if ($toDate !== '') {
+        $whereConditions[] = "DATE(timestamp) <= :to_date";
+        $params[':to_date'] = $toDate;
+    }
 
     if ($actionType !== '') {
         $whereConditions[] = "action_type = :action_type";
@@ -51,7 +55,9 @@ try {
         $params[':search_details'] = $searchTerm;
     }
 
-    $whereClause = 'WHERE ' . implode(' AND ', $whereConditions);
+    $whereClause = count($whereConditions) > 0
+        ? 'WHERE ' . implode(' AND ', $whereConditions)
+        : '';
 
     // Total count
     $countQuery = "SELECT COUNT(*) AS total FROM activity_logs {$whereClause}";

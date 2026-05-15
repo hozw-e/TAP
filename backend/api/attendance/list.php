@@ -38,6 +38,8 @@ try {
             a.date,
             a.time_in,
             a.time_out,
+            a.sms_sent_in,
+            a.sms_sent_out,
             s.student_name,
             g.guardian_name,
             g.guardian_cellnum

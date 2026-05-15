@@ -192,14 +192,14 @@ try {
                 $smsMessage = "Your child $studentName has checked out at $displayTime. - A+ Solutions Dev't Center";
                 $smsSent = $sendSMS($guardianCellnum, $smsMessage);
 
-                // Update sms_sent in attendance record
+                // Update sms_sent_out in attendance record
                 $stmt = $conn->prepare("
                     UPDATE attendance_logs
-                    SET sms_sent = :sms_sent
+                    SET sms_sent_out = :sms_sent_out
                     WHERE attendance_id = :attendance_id
                 ");
                 $stmt->execute([
-                    ':sms_sent'      => $smsSent ? 1 : 0,
+                    ':sms_sent_out'  => $smsSent ? 1 : 0,
                     ':attendance_id' => $openRecord['attendance_id'],
                 ]);
             }
@@ -223,15 +223,15 @@ try {
                 $smsMessage = "Your child $studentName has checked in at $displayTime. - A+ Solutions Dev't Center";
                 $smsSent = $sendSMS($guardianCellnum, $smsMessage);
 
-                // Update sms_sent in attendance record
+                // Update sms_sent_in in attendance record
                 $lastInsertId = $conn->lastInsertId();
                 $stmt = $conn->prepare("
                     UPDATE attendance_logs
-                    SET sms_sent = :sms_sent
+                    SET sms_sent_in = :sms_sent_in
                     WHERE attendance_id = :attendance_id
                 ");
                 $stmt->execute([
-                    ':sms_sent'      => $smsSent ? 1 : 0,
+                    ':sms_sent_in'   => $smsSent ? 1 : 0,
                     ':attendance_id' => $lastInsertId,
                 ]);
             }

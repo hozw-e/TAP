@@ -13,8 +13,8 @@ function ActivityLogs() {
   const [notification, setNotification] = useState({ isOpen: false, message: '', type: 'success' });
 
   // Filter states
-  const [fromDate, setFromDate] = useState(new Date().toISOString().split('T')[0]);
-  const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const [actionType, setActionType] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -42,11 +42,9 @@ function ActivityLogs() {
   const fetchLogs = async (page = 1) => {
     setIsLoading(true);
     try {
-      const params = {
-        page,
-        from_date: fromDate,
-        to_date: toDate,
-      };
+      const params = { page };
+      if (fromDate) params.from_date = fromDate;
+      if (toDate) params.to_date = toDate;
       if (actionType) params.action_type = actionType;
 
       const response = await api.get('/activity-logs/list.php', { params });

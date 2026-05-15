@@ -299,29 +299,81 @@ function ViewRecord() {
                         <tr>
                           <th>Date</th>
                           <th>Time In</th>
+                          <th>SMS Notification</th>
                           <th>Time Out</th>
+                          <th>SMS Notification</th>
                           <th>Status</th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredAttendanceLogs.map((log, index) => {
                           const status = getLogStatus(log);
+                          const timeInSms = log.time_in
+                            ? (log.sms_sent_in === true || log.sms_sent_in === 1) ? 'SENT' : 'FAILED'
+                            : null;
+                          const timeOutSms = log.time_out
+                            ? (log.sms_sent_out === true || log.sms_sent_out === 1) ? 'SENT' : 'FAILED'
+                            : null;
                           return (
                             <tr key={`${log.attendance_id || 'log'}-${index}`}>
                               <td>{formatDate(log.attendanceDate)}</td>
                               <td>{formatTime(log.time_in)}</td>
+                              <td>
+                                {timeInSms ? (
+                                  <span
+                                    className="log-badge"
+                                    style={{
+                                      backgroundColor: timeInSms === 'SENT' ? '#2196f3' : '#f44336',
+                                      color: '#fff',
+                                      fontWeight: 600,
+                                      borderRadius: '12px',
+                                      padding: '2px 12px',
+                                      display: 'inline-block',
+                                      minWidth: '60px',
+                                      textAlign: 'center',
+                                      fontSize: '11px',
+                                    }}
+                                  >
+                                    {timeInSms}
+                                  </span>
+                                ) : (
+                                  <span style={{ color: '#aaa' }}>--</span>
+                                )}
+                              </td>
                               <td>{log.time_out ? formatTime(log.time_out) : '--'}</td>
+                              <td>
+                                {timeOutSms ? (
+                                  <span
+                                    className="log-badge"
+                                    style={{
+                                      backgroundColor: timeOutSms === 'SENT' ? '#2196f3' : '#f44336',
+                                      color: '#fff',
+                                      fontWeight: 600,
+                                      borderRadius: '12px',
+                                      padding: '2px 12px',
+                                      display: 'inline-block',
+                                      minWidth: '60px',
+                                      textAlign: 'center',
+                                      fontSize: '11px',
+                                    }}
+                                  >
+                                    {timeOutSms}
+                                  </span>
+                                ) : (
+                                  <span style={{ color: '#aaa' }}>--</span>
+                                )}
+                              </td>
                               <td>
                                 <span
                                   className="log-badge"
                                   style={{
                                     backgroundColor:
                                       status === 'Present'
-                                        ? '#4caf50' // green
+                                        ? '#4caf50'
                                         : status === 'Absent'
-                                          ? '#f44336' // red
+                                          ? '#f44336'
                                           : status === 'No Time Out'
-                                            ? '#ffeb3b' // yellow
+                                            ? '#ffeb3b'
                                             : '#e0e0e0',
                                     color:
                                       status === 'No Time Out'
