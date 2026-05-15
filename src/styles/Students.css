@@ -121,8 +121,8 @@
 
 .course-filter-select {
   padding: 8px 16px;
-  background: #5d6d7e;
-  color: white;
+  background: #ffffff;
+  color: #34495e;
   border: none;
   border-radius: 6px;
   font-size: 14px;
@@ -146,8 +146,8 @@
 
 .toggle-archive-btn {
   padding: 8px 16px;
-  background: #5d6d7e;
-  color: white;
+  background: #ffffff;
+  color: #34495e;
   border: none;
   border-radius: 6px;
   font-size: 13px;
