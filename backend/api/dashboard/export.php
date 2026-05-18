@@ -7,21 +7,41 @@
 date_default_timezone_set('Asia/Manila');
 
 require_once '../../config/database.php';
+require_once '../../utils/cors.php';
 require_once '../../utils/session.php';
 require_once '../../utils/activity-logger.php';
 
-$dateFrom    = isset($_GET['date_from']) ? $_GET['date_from'] : date('Y-m-d');
-$dateTo      = isset($_GET['date_to'])   ? $_GET['date_to']   : date('Y-m-d');
+$dateFrom    = isset($_GET['date_from']) && $_GET['date_from'] !== '' ? $_GET['date_from'] : '';
+$dateTo      = isset($_GET['date_to']) && $_GET['date_to'] !== ''   ? $_GET['date_to']   : '';
 $filterType  = isset($_GET['type'])      ? $_GET['type']      : 'All';
 $filterCourse = isset($_GET['course'])   ? $_GET['course']    : 'All';
 
-if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo)) {
+// Validate date format if provided
+if ($dateFrom !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom)) {
+    http_response_code(400);
+    exit('Invalid date format.');
+}
+if ($dateTo !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo)) {
     http_response_code(400);
     exit('Invalid date format.');
 }
 
 $conn = getDBConnection();
 if (!$conn) { http_response_code(500); exit('Database connection failed.'); }
+
+// If no dates provided, get the full range from the database
+if ($dateFrom === '' || $dateTo === '') {
+    $rangeStmt = $conn->query("
+        SELECT MIN(earliest) AS min_date, MAX(latest) AS max_date FROM (
+            SELECT MIN(date) AS earliest, MAX(date) AS latest FROM attendance_logs
+            UNION ALL
+            SELECT MIN(date_of_visit) AS earliest, MAX(date_of_visit) AS latest FROM visitors
+        ) combined
+    ");
+    $range = $rangeStmt->fetch(PDO::FETCH_ASSOC);
+    if ($dateFrom === '') $dateFrom = $range['min_date'] ?? date('Y-m-d');
+    if ($dateTo === '') $dateTo = $range['max_date'] ?? date('Y-m-d');
+}
 
 // Build student query
 $studentWhere = "a.date BETWEEN :date_from AND :date_to";
@@ -211,7 +231,7 @@ logActivity(
     'EXPORT',
     'ATTENDANCE',
     'Attendance Report',
-    "Exported attendance report ($dateFrom to $dateTo, Type: $filterType, Course: $filterCourse)"
+    "Attendance exported ($dateFrom to $dateTo)"
 );
 
 header('Content-Type: application/pdf');

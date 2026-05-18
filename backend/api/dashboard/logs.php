@@ -9,6 +9,10 @@ header('Content-Type: application/json');
 require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
+require_once '../../utils/session.php';
+
+// Check admin authentication
+requireAdminAuth();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     sendErrorResponse('Method not allowed', 405);
@@ -130,6 +134,6 @@ try {
 
 } catch (PDOException $e) {
     error_log("Dashboard Logs Error: " . $e->getMessage());
-    sendErrorResponse('Failed to retrieve attendance logs: ' . $e->getMessage(), 500);
+    sendErrorResponse('Failed to retrieve attendance logs', 500);
 }
 ?>

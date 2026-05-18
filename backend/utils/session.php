@@ -3,10 +3,15 @@
  * Session Utility Functions
  */
 
-// Configure session for cross-domain use on Railway
+// Configure session for cross-domain use
 if (session_status() === PHP_SESSION_NONE) {
-    ini_set('session.cookie_samesite', 'None');
-    ini_set('session.cookie_secure', '1');
+    // Detect if running over HTTPS
+    $isSecure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+             || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+             || (!empty($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
+
+    ini_set('session.cookie_samesite', $isSecure ? 'None' : 'Lax');
+    ini_set('session.cookie_secure', $isSecure ? '1' : '0');
     ini_set('session.cookie_httponly', '1');
     session_start();
 }

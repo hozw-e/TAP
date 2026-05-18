@@ -100,7 +100,7 @@ try {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => 'Error fetching activity logs: ' . $e->getMessage()
+        'message' => 'Error fetching activity logs'
     ]);
 }
 ?>

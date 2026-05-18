@@ -125,10 +125,16 @@ function Students() {
     }
   };
 
-  // Calculate total hours (placeholder - you can implement actual logic)
+  // Calculate total hours from backend total_seconds
   const calculateTotalHours = (student) => {
-    // TODO: Calculate from attendance_logs
-    return '0 hours';
+    const totalSeconds = parseInt(student.total_seconds) || 0;
+    const totalHours = Math.floor(totalSeconds / 3600);
+    const totalMinutes = Math.floor((totalSeconds % 3600) / 60);
+    
+    if (totalHours === 0 && totalMinutes === 0) return '0 hours';
+    if (totalHours === 0) return `${totalMinutes} mins`;
+    if (totalMinutes === 0) return `${totalHours} hours`;
+    return `${totalHours} hrs ${totalMinutes} mins`;
   };
 
   const showNotification = (action) => {

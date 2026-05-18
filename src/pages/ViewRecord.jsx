@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import LogoutModal from '../components/LogoutModal';
 import { attendanceAPI, studentsAPI } from '../services/api';
+import api from '../services/api';
 import '../styles/Students.css';
 import '../styles/ViewRecordModal.css';
 import TopBar from '../components/TopBar';
@@ -174,20 +175,33 @@ function ViewRecord() {
     return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (!student) return;
 
-    // Build query parameters
-    const params = new URLSearchParams({
-      student_id: student.student_id,
-      date_from: filterFrom || '',
-      date_to: filterTo || ''
-    });
+    try {
+      const response = await api.get('/students/export_record.php', {
+        params: {
+          student_id: student.student_id,
+          date_from: filterFrom || '',
+          date_to: filterTo || '',
+          status: filterStatus || 'All'
+        },
+        responseType: 'blob',
+      });
 
-    // Use the API base URL from environment
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-    const exportUrl = `${API_BASE_URL}/students/export_record.php?${params.toString()}`;
-    window.open(exportUrl, '_blank');
+      // Create a download link from the blob
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `student_attendance_${student.student_id}_${filterFrom}_to_${filterTo}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+    }
   };
 
   return (

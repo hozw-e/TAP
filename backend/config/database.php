@@ -4,6 +4,7 @@ define('DB_NAME', getenv('DB_NAME') ?: 'apdc_attendance');
 define('DB_USER', getenv('DB_USER') ?: 'root');
 define('DB_PASS', getenv('DB_PASS') ?: '');
 define('DB_PORT', getenv('DB_PORT') ?: '3306');
+define('SMS_API_TOKEN', getenv('SMS_API_TOKEN') ?: '');
 
 // Set PHP timezone to Asia/Manila
 date_default_timezone_set('Asia/Manila');

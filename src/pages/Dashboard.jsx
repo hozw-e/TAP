@@ -2,17 +2,12 @@ import { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import LogoutModal from '../components/LogoutModal';
 import Notification from '../components/Notification';
-import axios from 'axios';
+import api from '../services/api';
 import '../styles/Dashboard.css';
 import TopBar from '../components/TopBar';
 import { useLocation, useNavigate } from 'react-router-dom';
 import introJs from 'intro.js';
 import 'intro.js/introjs.css';
-
-const BASE = import.meta.env.VITE_API_BASE_URL;
-const API_STATS_URL = `${BASE}/dashboard/stats.php`;
-const API_LOGS_URL  = `${BASE}/dashboard/logs.php`;
-const API_EXPORT_URL = `${BASE}/dashboard/export.php`;
 
 const COURSES = [
   'Basic Coding', 'Research', 'EV3', 'Rover 2',
@@ -106,14 +101,14 @@ function Dashboard() {
   const loadDashboardData = async () => {
     setIsLoading(true);
     try {
-      const statsResponse = await axios.get(API_STATS_URL);
+      const statsResponse = await api.get('/dashboard/stats.php');
       if (statsResponse.data?.success) setStats(statsResponse.data.data);
 
       const params = {};
       if (dateFrom) params.date_from = dateFrom;
       if (dateTo) params.date_to = dateTo;
 
-      const logsResponse = await axios.get(API_LOGS_URL, { params });
+      const logsResponse = await api.get('/dashboard/logs.php', { params });
 
       const logs = logsResponse.data?.success && Array.isArray(logsResponse.data.data)
         ? logsResponse.data.data : [];
@@ -144,15 +139,34 @@ function Dashboard() {
 
   const handleFilter = () => loadDashboardData();
 
-  const handleExport = () => {
-    const params = new URLSearchParams({
-      date_from: dateFrom,
-      date_to: dateTo,
-      type: filterType,
-      course: filterCourse,
-      _t: String(Date.now()),
-    });
-    window.open(`${API_EXPORT_URL}?${params.toString()}`, '_blank');
+  const handleExport = async () => {
+    try {
+      const params = {
+        type: filterType,
+        course: filterCourse,
+      };
+      if (dateFrom) params.date_from = dateFrom;
+      if (dateTo) params.date_to = dateTo;
+
+      const response = await api.get('/dashboard/export.php', {
+        params,
+        responseType: 'blob',
+      });
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const fromLabel = dateFrom || 'all';
+      const toLabel = dateTo || 'latest';
+      link.download = `attendance_${fromLabel}_to_${toLabel}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+    }
   };
 
   const startTour = () => {

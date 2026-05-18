@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { nfcAPI } from '../services/api';
 
 /**
@@ -8,20 +8,16 @@ import { nfcAPI } from '../services/api';
  */
 export function useNFCScanner(isScanning, onScan) {
   const [isPolling, setIsPolling] = useState(false);
-  const [lastUID, setLastUID] = useState(null);
+  const lastUIDRef = useRef(null);
   const intervalRef = useRef(null);
+  const onScanRef = useRef(onScan);
 
+  // Keep the callback ref up to date
   useEffect(() => {
-    if (isScanning) {
-      startPolling();
-    } else {
-      stopPolling();
-    }
+    onScanRef.current = onScan;
+  }, [onScan]);
 
-    return () => stopPolling();
-  }, [isScanning]);
-
-  const startPolling = () => {
+  const startPolling = useCallback(() => {
     if (intervalRef.current) return; // Already polling
 
     setIsPolling(true);
@@ -34,11 +30,11 @@ export function useNFCScanner(isScanning, onScan) {
           const { uid, unassigned } = response.data;
 
           // Only trigger if it's a new UID
-          if (uid !== lastUID) {
-            setLastUID(uid);
+          if (uid !== lastUIDRef.current) {
+            lastUIDRef.current = uid;
 
-            if (onScan) {
-              onScan(uid, unassigned);
+            if (onScanRef.current) {
+              onScanRef.current(uid, unassigned);
             }
 
             // Mark scan as consumed so it isn't picked up again
@@ -49,16 +45,26 @@ export function useNFCScanner(isScanning, onScan) {
         console.error('NFC polling error:', error);
       }
     }, 500);
-  };
+  }, []);
 
-  const stopPolling = () => {
+  const stopPolling = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
     setIsPolling(false);
-    setLastUID(null);
-  };
+    lastUIDRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    if (isScanning) {
+      startPolling();
+    } else {
+      stopPolling();
+    }
+
+    return () => stopPolling();
+  }, [isScanning, startPolling, stopPolling]);
 
   return {
     isPolling,

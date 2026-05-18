@@ -4,18 +4,15 @@
  * GET /api/dashboard/stats.php
  */
 
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
-
 require_once '../../config/database.php';
+require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
+require_once '../../utils/session.php';
+
+header('Content-Type: application/json');
+
+// Check admin authentication
+requireAdminAuth();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     sendErrorResponse('Method not allowed', 405);
@@ -75,9 +72,9 @@ try {
 
 } catch (PDOException $e) {
     error_log("Dashboard Stats Error: " . $e->getMessage());
-    sendErrorResponse('Failed to retrieve stats: ' . $e->getMessage(), 500);
+    sendErrorResponse('Failed to retrieve stats', 500);
 } catch (Exception $e) {
     error_log("Dashboard Stats Error: " . $e->getMessage());
-    sendErrorResponse('Server error: ' . $e->getMessage(), 500);
+    sendErrorResponse('Server error', 500);
 }
 ?>

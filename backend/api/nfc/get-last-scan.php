@@ -11,6 +11,10 @@
 require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
+require_once '../../utils/session.php';
+
+// Check admin authentication
+requireAdminAuth();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     sendErrorResponse('Method not allowed', 405);
@@ -51,6 +55,6 @@ try {
 
 } catch (PDOException $e) {
     error_log("Get Last Scan Error: " . $e->getMessage());
-    sendErrorResponse('Failed to get last scan: ' . $e->getMessage(), 500);
+    sendErrorResponse('Failed to get last scan', 500);
 }
 ?>

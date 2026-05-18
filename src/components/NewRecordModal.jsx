@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { studentsAPI, guardiansAPI } from '../services/api';
+import { studentsAPI, guardiansAPI, nfcAPI } from '../services/api';
 import ConfirmModal from './ConfirmModal';
 import { useNFCScanner } from '../hooks/useNFCScanner';
 import '../styles/NewRecordModal.css';
-import axios from 'axios';
 
 const COURSES = [
   'Basic Coding', 'Research', 'EV3', 'Rover 2',
@@ -153,7 +152,7 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
     if (formData.nfcId) {
       const studentId = studentResponse.data.student_id;
       try {
-        await axios.post('http://localhost/apdc/backend/api/nfc/assign.php', {
+        await nfcAPI.assign({
           student_id: studentId,
           uid: formData.nfcId
         });

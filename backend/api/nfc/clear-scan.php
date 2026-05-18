@@ -10,6 +10,10 @@
 require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
+require_once '../../utils/session.php';
+
+// Check admin authentication
+requireAdminAuth();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendErrorResponse('Method not allowed', 405);
@@ -32,6 +36,6 @@ try {
 
 } catch (PDOException $e) {
     error_log("Clear Scan Error: " . $e->getMessage());
-    sendErrorResponse('Failed to clear scans: ' . $e->getMessage(), 500);
+    sendErrorResponse('Failed to clear scans', 500);
 }
 ?>

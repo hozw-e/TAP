@@ -1,9 +1,7 @@
 <?php
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
-
-// Start session
-session_start();
+require_once '../../utils/session.php';
 
 $isLoggedIn = isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
 

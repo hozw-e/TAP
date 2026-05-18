@@ -112,7 +112,7 @@ try {
         'EXPORT',
         'VISITOR',
         'Visitor Records Report',
-        "Exported visitor records ($fromDate to $toDate)"
+        "Visitors exported ($fromDate to $toDate)"
     );
 
     header('Content-Type: application/pdf');
@@ -125,7 +125,7 @@ try {
     header('Content-Type: application/json');
     echo json_encode([
         'success' => false,
-        'message' => 'Error exporting visitor records: ' . $e->getMessage()
+        'message' => 'Error exporting visitor records'
     ]);
 }
 ?>

@@ -45,11 +45,25 @@ try {
             g.guardian_name,
             g.guardian_address,
             g.guardian_cellnum,
-            n.uid AS nfc_uid
+            n.uid AS nfc_uid,
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN a.time_in IS NOT NULL AND a.time_out IS NOT NULL
+                        THEN TIMESTAMPDIFF(SECOND, a.time_in, a.time_out)
+                        ELSE 0
+                    END
+                ), 0
+            ) AS total_seconds
         FROM students s
         LEFT JOIN guardians g ON s.guardian_id = g.guardian_id
         LEFT JOIN nfc_tags n ON s.student_id = n.student_id
+        LEFT JOIN attendance_logs a ON s.student_id = a.student_id
         WHERE s.is_archived = :is_archived
+        GROUP BY s.student_id, s.guardian_id, s.student_name, s.student_birthdate,
+                 s.age, s.student_address, s.student_cellnum, s.student_course,
+                 s.course_duration, s.is_archived, s.created_at,
+                 g.guardian_name, g.guardian_address, g.guardian_cellnum, n.uid
         ORDER BY s.student_name ASC
     ");
     

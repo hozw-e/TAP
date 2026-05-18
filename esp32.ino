@@ -299,51 +299,50 @@ void sendToBackend(String uid) {
     Serial.println("   " + response);
     Serial.println();
     
-    // Parse response
-    if (response.indexOf("TIME IN") >= 0 || response.indexOf("entered") >= 0) {
+    // Parse JSON response from backend
+    if (response.indexOf("\"action\":\"check_in\"") >= 0) {
       Serial.println("╔════════════════════════════════╗");
       Serial.println("║       💚 WELCOME!              ║");
       Serial.println("║       TIME IN RECORDED         ║");
       Serial.println("╚════════════════════════════════╝");
       playSuccessSound();
     } 
-    else if (response.indexOf("TIME OUT") >= 0 || response.indexOf("left") >= 0) {
+    else if (response.indexOf("\"action\":\"check_out\"") >= 0) {
       Serial.println("╔════════════════════════════════╗");
       Serial.println("║    💙 SEE YOU LATER!           ║");
       Serial.println("║     TIME OUT RECORDED          ║");
       Serial.println("╚════════════════════════════════╝");
       playSuccessSound();
     }
-    else if (response.indexOf("error_unassigned") >= 0 || response.indexOf("Unregistered") >= 0) {
+    else if (response.indexOf("\"action\":\"check_out_denied\"") >= 0 || response.indexOf("\"status\":\"denied\"") >= 0) {
+      Serial.println("╔════════════════════════════════╗");
+      Serial.println("║    ⏰ TOO SOON                 ║");
+      Serial.println("║   Wait before checking out!    ║");
+      Serial.println("╚════════════════════════════════╝");
+      playFailSound();
+    }
+    else if (response.indexOf("\"status\":\"error_unassigned\"") >= 0) {
       Serial.println("╔════════════════════════════════╗");
       Serial.println("║      ⚠️  UNREGISTERED CARD     ║");
       Serial.println("║   Card not assigned!           ║");
       Serial.println("╚════════════════════════════════╝");
       playFailSound();
     }
-    else if (response.indexOf("unassigned") >= 0) {
+    else if (response.indexOf("\"status\":\"unassigned\"") >= 0) {
       Serial.println("╔════════════════════════════════╗");
       Serial.println("║      📋 UNASSIGNED CARD        ║");
       Serial.println("║   Ready for assignment!        ║");
       Serial.println("╚════════════════════════════════╝");
       playAssignReadySound();
     }
-    else if (response.indexOf("already completed") >= 0) {
+    else if (response.indexOf("\"success\":false") >= 0) {
       Serial.println("╔════════════════════════════════╗");
-      Serial.println("║    ⏰ ALREADY COMPLETED        ║");
-      Serial.println("║   Done for today!              ║");
-      Serial.println("╚════════════════════════════════╝");
-      playFailSound();
-    }
-    else if (response.indexOf("No active admin") >= 0 || response.indexOf("not logged in") >= 0) {
-      Serial.println("╔════════════════════════════════╗");
-      Serial.println("║    🔒 ADMIN NOT LOGGED IN      ║");
-      Serial.println("║   Please login first!          ║");
+      Serial.println("║       ✗ SERVER ERROR           ║");
       Serial.println("╚════════════════════════════════╝");
       playFailSound();
     }
     else {
-      Serial.println("   ✓ Attendance recorded!");
+      Serial.println("   ✓ Scan processed!");
       playSuccessSound();
     }
   } else {

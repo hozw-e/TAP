@@ -152,6 +152,16 @@ function VisitorRecords() {
     });
   };
 
+  // Format time for display
+  const formatTime = (timeStr) => {
+    if (!timeStr) return '-';
+    const [h, m] = timeStr.split(':');
+    const hour = parseInt(h);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${m} ${ampm}`;
+  };
+
   // Fetch on mount
   useEffect(() => {
     fetchVisitors(1);
@@ -188,6 +198,7 @@ function VisitorRecords() {
           <div className="visitor-table-section">
             {/* Filters Header */}
             <div className="visitor-filters-section">
+              <span className="visitor-filters-title">Visitor Attendance Logs</span>
               <label className="filter-label-inline">From</label>
               <input
                 type="date"
@@ -234,6 +245,7 @@ function VisitorRecords() {
                       <th>No.</th>
                       <th>Name</th>
                       <th>Date of Visit</th>
+                      <th>Time In</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -242,6 +254,7 @@ function VisitorRecords() {
                         <td>{(pagination.current_page - 1) * 10 + index + 1}</td>
                         <td>{visitor.name}</td>
                         <td>{formatDate(visitor.date_of_visit)}</td>
+                        <td>{formatTime(visitor.time_in)}</td>
                       </tr>
                     ))}
                   </tbody>

@@ -120,6 +120,13 @@
   justify-content: flex-end;
 }
 
+.visitor-filters-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  margin-right: auto;
+}
+
 .visitor-filters-section .filter-label-inline {
   font-size: 13px;
   font-weight: 600;

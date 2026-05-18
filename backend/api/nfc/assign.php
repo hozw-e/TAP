@@ -12,6 +12,9 @@ require_once '../../utils/response.php';
 require_once '../../utils/session.php';
 require_once '../../utils/activity-logger.php';
 
+// Check admin authentication
+requireAdminAuth();
+
 // Only allow POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendErrorResponse('Method not allowed', 405);
@@ -106,6 +109,6 @@ try {
     
 } catch (PDOException $e) {
     error_log("Assign NFC Error: " . $e->getMessage());
-    sendErrorResponse('Failed to assign NFC tag: ' . $e->getMessage(), 500);
+    sendErrorResponse('Failed to assign NFC tag', 500);
 }
 ?>

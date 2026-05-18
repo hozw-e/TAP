@@ -182,7 +182,7 @@ logActivity(
     'EXPORT',
     'ACTIVITY_LOGS',
     'Activity Logs Report',
-    "Exported activity logs ($fromDate to $toDate" . ($actionType !== '' ? ", Action: $actionType" : '') . ")"
+    "Activity logs exported ($fromDate to $toDate)"
 );
 
 header('Content-Type: application/pdf');

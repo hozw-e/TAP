@@ -12,6 +12,10 @@
 require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
+require_once '../../utils/session.php';
+
+// Check admin authentication
+requireAdminAuth();
 
 // Only allow POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
