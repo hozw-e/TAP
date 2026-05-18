@@ -272,14 +272,14 @@
   width: 100%;
   border: 1px solid #d6dce8;
   border-radius: 4px;
-  background: #fff;
+  background: #edf2f8;
   font-size: 13px;
   color: #2f3f58;
   padding: 8px 10px;
 }
 
 .edit-record-page .info-item input {
-  background: #edf2f8;
+  background: #ffffff;
 }
 
 .edit-record-page .info-item input:read-only {
