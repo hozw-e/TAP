@@ -9,10 +9,6 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 
-// ============================================
-// CONFIGURATION - CHANGE THESE!
-// ============================================
-
 // WiFi Credentials
 const char* WIFI_SSID = "Hozwe";        // Change to your WiFi name
 const char* WIFI_PASSWORD = "12345678"; // Change to your WiFi password
@@ -118,12 +114,6 @@ void setup() {
   Serial.println("Testing MFRC522...");
   mfrc522.PCD_Init();
   delay(100);
-
-/*  
-  byte version = mfrc522.PCD_ReadRegister(mfrc522.VersionReg);
-  Serial.print("Version register raw value: 0x");
-  Serial.println(version, HEX);
-*/
   
 // 0x91 or 0x92 = genuine MFRC522
 // 0x88 = clone (still works)

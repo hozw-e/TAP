@@ -5,6 +5,11 @@ import { useNFCScanner } from '../hooks/useNFCScanner';
 import '../styles/NewRecordModal.css';
 import axios from 'axios';
 
+const COURSES = [
+  'Basic Coding', 'Research', 'EV3', 'Rover 2',
+  'AI Steam', 'Arduino', 'IoT', 'Python Programming', 'Robotics'
+];
+
 function NewRecordModal({ isOpen, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     studentName: '',
@@ -284,14 +289,18 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
                 <div className="form-row two-columns">
                   <div className="form-group">
                     <label className="form-label">Course <span style={{ color: 'red' }}>*</span></label>
-                    <input
-                      type="text"
+                    <select
                       name="course"
                       className="form-input"
                       value={formData.course}
                       onChange={handleChange}
                       disabled={isLoading}
-                    />
+                    >
+                      <option value="">Select a course</option>
+                      {COURSES.map(course => (
+                        <option key={course} value={course}>{course}</option>
+                      ))}
+                    </select>
                   </div>
                   <div className="form-group">
                     <label className="form-label">Duration <span style={{ color: 'red' }}>*</span></label>
