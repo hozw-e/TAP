@@ -120,7 +120,7 @@
 
 .form-input {
   padding: 10px 12px;
-  border: 1.5px solid #bbb;
+  border: 1.5px solid #121212;
   border-radius: 6px;
   font-size: 14px;
   outline: none;
@@ -136,6 +136,10 @@
   background: #f8f9fa;
   color: #95a5a6;
   cursor: not-allowed;
+}
+
+select.form-input {
+  height: 50px;
 }
 
 .form-input[readonly] {
