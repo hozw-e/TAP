@@ -420,42 +420,67 @@
 /* Pagination - compact row at bottom-right of the logs card */
 .logs-section .pagination {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   gap: 12px;
-  padding: 12px 20px;
+  padding: 16px 20px;
   background: #f8f9fa;
-  border-top: 1px solid #e6e6e6;
+  border-top: 1px solid #ecf0f1;
   flex-shrink: 0;
 }
 
-.logs-section .pagination-btn {
-  padding: 6px 14px;
-  background-color: #3498db;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.logs-section .pagination-info {
+  font-size: 13px;
+  color: #7f8c8d;
+  font-weight: 500;
 }
 
-.logs-section .pagination-btn:hover:not(:disabled) {
-  background-color: #2980b9;
+.logs-section .pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.logs-section .pagination-btn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  color: #34495e;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.logs-section .pagination-btn:hover:not(:disabled):not(.active) {
+  background: #ecf0f1;
+  border-color: #bdc3c7;
+}
+
+.logs-section .pagination-btn.active {
+  background: #34495e;
+  color: #fff;
+  border-color: #34495e;
 }
 
 .logs-section .pagination-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
-.logs-section .pagination-info {
-  font-size: 12px;
+.logs-section .pagination-ellipsis {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
   color: #7f8c8d;
-  font-weight: 500;
 }
 
 /* Floating Help Button */

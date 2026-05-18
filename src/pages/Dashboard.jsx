@@ -44,6 +44,37 @@ function Dashboard() {
   // Live clock
   const [clock, setClock] = useState('');
 
+  // Pagination helpers
+  const totalPages = Math.ceil(filteredLogs.length / ITEMS_PER_PAGE);
+  const indexOfFirstRecord = (currentPage - 1) * ITEMS_PER_PAGE;
+  const indexOfLastRecord = currentPage * ITEMS_PER_PAGE;
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  };
+
   // Load on mount
   useEffect(() => {
     loadDashboardData();
@@ -329,27 +360,38 @@ function Dashboard() {
           {/* Pagination - bottom-right of the logs card */}
           {filteredLogs.length > ITEMS_PER_PAGE && (
             <div className="pagination">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="pagination-btn"
-              >
-                Previous
-              </button>
               <span className="pagination-info">
-                Page {currentPage} of {Math.ceil(filteredLogs.length / ITEMS_PER_PAGE)} ({filteredLogs.length} total)
+                Showing {indexOfFirstRecord + 1}-{Math.min(indexOfLastRecord, filteredLogs.length)} of {filteredLogs.length} records
               </span>
-              <button
-                onClick={() =>
-                  setCurrentPage((p) =>
-                    Math.min(Math.ceil(filteredLogs.length / ITEMS_PER_PAGE), p + 1)
+              <div className="pagination-controls">
+                <button
+                  className="pagination-btn"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <i className="fas fa-chevron-left"></i>
+                </button>
+                {getPageNumbers().map((page, index) => (
+                  page === '...' ? (
+                    <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+                  ) : (
+                    <button
+                      key={page}
+                      className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </button>
                   )
-                }
-                disabled={currentPage === Math.ceil(filteredLogs.length / ITEMS_PER_PAGE)}
-                className="pagination-btn"
-              >
-                Next
-              </button>
+                ))}
+                <button
+                  className="pagination-btn"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+              </div>
             </div>
           )}
         </div>
