@@ -1,14 +1,33 @@
 .students-layout {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
   background: #f5f5f5;
+  overflow: hidden;
 }
 
 .main-content {
   margin-left: 180px;
   flex: 1;
   padding: 30px;
-  padding-bottom: 50px; 
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+.main-content .page-header {
+  flex-shrink: 0;
+}
+
+.main-content .topbar {
+  flex-shrink: 0;
+  position: relative;
+  margin-left: -30px;
+  margin-right: -30px;
+  margin-top: -30px;
+  margin-bottom: 30px;
+  width: calc(100% + 60px);
 }
 
 /* Search and Add Section */
@@ -16,6 +35,7 @@
   display: flex;
   gap: 15px;
   margin-bottom: 20px;
+  flex-shrink: 0;
 }
 
 .search-container {
@@ -89,17 +109,18 @@
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  min-height: calc(100vh - 250px); /* Makes it extend down */
+  flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .students-body {
   padding: 0;
   flex: 1;
-  min-height: 400px;
-  overflow: visible;
-  position: relative; /* Add this */
+  overflow-y: auto;
+  position: relative;
+  min-height: 0;
 }
 
 .students-header {
@@ -159,6 +180,9 @@
 
 .students-table thead {
   background: #ecf0f1;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .students-table th {

@@ -27,6 +27,34 @@ function VisitorRecords() {
     per_page: 10
   });
 
+  // Pagination page numbers
+  const getPageNumbers = () => {
+    const totalPages = pagination.total_pages;
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  };
+
   // Fetch visitor records
   const fetchVisitors = async (page = 1) => {
     setIsLoading(true);
@@ -224,23 +252,39 @@ function VisitorRecords() {
             {/* Pagination */}
             {pagination.total_pages > 1 && (
               <div className="pagination">
-                <button
-                  onClick={() => fetchVisitors(currentPage - 1)}
-                  disabled={currentPage === 1 || isLoading}
-                  className="pagination-btn"
-                >
-                  Previous
-                </button>
                 <span className="pagination-info">
-                  Page {pagination.current_page} of {pagination.total_pages} ({pagination.total_count} total)
+                  Showing {(pagination.current_page - 1) * pagination.per_page + 1}-{Math.min(pagination.current_page * pagination.per_page, pagination.total_count)} of {pagination.total_count} records
                 </span>
-                <button
-                  onClick={() => fetchVisitors(currentPage + 1)}
-                  disabled={currentPage === pagination.total_pages || isLoading}
-                  className="pagination-btn"
-                >
-                  Next
-                </button>
+                <div className="pagination-controls">
+                  <button
+                    className="pagination-btn"
+                    onClick={() => fetchVisitors(currentPage - 1)}
+                    disabled={currentPage === 1 || isLoading}
+                  >
+                    <i className="fas fa-chevron-left"></i>
+                  </button>
+                  {getPageNumbers().map((page, index) => (
+                    page === '...' ? (
+                      <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+                    ) : (
+                      <button
+                        key={page}
+                        className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+                        onClick={() => fetchVisitors(page)}
+                        disabled={isLoading}
+                      >
+                        {page}
+                      </button>
+                    )
+                  ))}
+                  <button
+                    className="pagination-btn"
+                    onClick={() => fetchVisitors(currentPage + 1)}
+                    disabled={currentPage === pagination.total_pages || isLoading}
+                  >
+                    <i className="fas fa-chevron-right"></i>
+                  </button>
+                </div>
               </div>
             )}
           </div>
