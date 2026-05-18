@@ -212,10 +212,6 @@ function Login({ setIsAuthenticated }) {
         type="success"
       />
       <div className="login-page">
-        {/* Floating animated gears */}
-        {[...Array(8)].map((_, i) => (
-          <img key={i} src="/gear.png" alt="" className={`gear gear-${i + 1}`} />
-        ))}
 
         <div className="login-container">
           {/* Logo */}

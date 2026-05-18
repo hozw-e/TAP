@@ -215,7 +215,7 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
                   </div>
                 </div>
 
-                <div className="form-row three-columns">
+                <div className="form-row two-columns">
                   <div className="form-group">
                     <label className="form-label">Birthdate <span style={{ color: 'red' }}>*</span></label>
                     <input
@@ -225,17 +225,6 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
                       value={formData.birthdate}
                       onChange={handleChange}
                       disabled={isLoading}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Age</label>
-                    <input
-                      type="text"
-                      name="age"
-                      className="form-input"
-                      value={formData.age}
-                      disabled
-                      style={{ color: '#2c3e50' }}
                     />
                   </div>
                   <div className="form-group">
