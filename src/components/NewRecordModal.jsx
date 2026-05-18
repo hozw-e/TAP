@@ -14,7 +14,6 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     studentName: '',
     birthdate: '',
-    age: '',
     contactNumber: '',
     completeAddress: '',
     course: '',
@@ -45,7 +44,6 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
       setFormData({
         studentName: '',
         birthdate: '',
-        age: '',
         contactNumber: '',
         completeAddress: '',
         course: '',
@@ -61,33 +59,13 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    console.log('FormData updated:', formData); // Debugging log
-  }, [formData]);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    if (name === 'birthdate' && value) {
-      const today = new Date();
-      const birthDate = new Date(value);
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-      }
-      console.log('Birthdate:', value, 'Age:', age); // Debugging log
-      setFormData(prev => ({
-        ...prev,
-        birthdate: value,
-        age: age >= 0 ? String(age) : ''
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleScanNFC = () => {
