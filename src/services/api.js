@@ -117,6 +117,13 @@ export const nfcAPI = {
     return response.data;
   },
 
+  // Set scanner mode ('assign' or 'attendance')
+  // Controls how the ESP32 responds to unassigned cards
+  setMode: async (mode) => {
+    const response = await api.post('/nfc/set-mode.php', { mode });
+    return response.data;
+  },
+
   // Poll for the latest unconsumed scan from temp_nfc_scans
   // Called by useNFCScanner every 500ms while scanning is active
   getLastScan: async () => {

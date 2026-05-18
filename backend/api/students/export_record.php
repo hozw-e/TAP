@@ -7,6 +7,8 @@
 date_default_timezone_set('Asia/Manila');
 
 require_once '../../config/database.php';
+require_once '../../utils/session.php';
+require_once '../../utils/activity-logger.php';
 require_once '../../lib/fpdf.php';
 
 $studentId = isset($_GET['student_id']) ? $_GET['student_id'] : null;
@@ -138,6 +140,15 @@ if (empty($logs)) {
 }
 
 $filename = 'student_attendance_' . $studentId . '_' . $dateFrom . '_to_' . $dateTo . '.pdf';
+
+// Log the export activity
+logActivity(
+    'EXPORT',
+    'STUDENT',
+    $student['student_name'],
+    "Exported attendance record for student (ID: $studentId, $dateFrom to $dateTo)"
+);
+
 header('Content-Type: application/pdf');
 header('Content-Disposition: attachment; filename="' . $filename . '"');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');

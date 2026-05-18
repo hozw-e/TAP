@@ -7,6 +7,8 @@
 date_default_timezone_set('Asia/Manila');
 
 require_once '../../config/database.php';
+require_once '../../utils/session.php';
+require_once '../../utils/activity-logger.php';
 
 $dateFrom    = isset($_GET['date_from']) ? $_GET['date_from'] : date('Y-m-d');
 $dateTo      = isset($_GET['date_to'])   ? $_GET['date_to']   : date('Y-m-d');
@@ -203,6 +205,15 @@ if (empty($logs)) {
 }
 
 $filename = 'attendance_' . $dateFrom . '_to_' . $dateTo . '.pdf';
+
+// Log the export activity
+logActivity(
+    'EXPORT',
+    'ATTENDANCE',
+    'Attendance Report',
+    "Exported attendance report ($dateFrom to $dateTo, Type: $filterType, Course: $filterCourse)"
+);
+
 header('Content-Type: application/pdf');
 header('Content-Disposition: attachment; filename="' . $filename . '"');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');

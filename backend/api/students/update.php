@@ -18,6 +18,7 @@ require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
 require_once '../../utils/session.php';
+require_once '../../utils/activity-logger.php';
 
 // Check admin authentication
 requireAdminAuth();
@@ -95,6 +96,14 @@ try {
         ':duration'     => $courseDuration,
         ':student_id'   => $studentId
     ]);
+
+    // Log the activity
+    logActivity(
+        'UPDATE',
+        'STUDENT',
+        $studentName,
+        "Updated student record (ID: $studentId)"
+    );
 
     sendSuccessResponse('Student updated successfully', [
         'student_id'       => $studentId,

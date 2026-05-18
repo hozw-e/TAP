@@ -262,21 +262,49 @@ try {
             'message'      => $actionMessage,
         ]);
     } else {
-        // Not assigned - ready for assignment
-        // Store action result in temp_nfc_scans
-        $resultData = json_encode([
-            'status' => 'unassigned',
-            'uid' => $uid,
-            'message' => 'NFC tag stored for assignment'
-        ]);
-        $stmtUpdate = $conn->prepare("UPDATE temp_nfc_scans SET action_result = :result WHERE id = :id");
-        $stmtUpdate->execute([':result' => $resultData, ':id' => $scanInsertId]);
+        // Not assigned — check scanner mode to determine response
+        $scannerMode = 'attendance'; // default
+        try {
+            $modeStmt = $conn->query("SELECT mode FROM scanner_mode WHERE id = 1 LIMIT 1");
+            $modeRow = $modeStmt->fetch(PDO::FETCH_ASSOC);
+            if ($modeRow) {
+                $scannerMode = $modeRow['mode'];
+            }
+        } catch (Exception $e) {
+            // Table might not exist yet, default to attendance
+        }
 
-        sendSuccessResponse('NFC tag scanned successfully', [
-            'status' => 'unassigned',
-            'uid' => $uid,
-            'message' => 'NFC tag stored for assignment'
-        ]);
+        if ($scannerMode === 'assign') {
+            // Assignment mode — card is expected to be unassigned
+            $resultData = json_encode([
+                'status' => 'unassigned',
+                'uid' => $uid,
+                'message' => 'NFC tag stored for assignment'
+            ]);
+            $stmtUpdate = $conn->prepare("UPDATE temp_nfc_scans SET action_result = :result WHERE id = :id");
+            $stmtUpdate->execute([':result' => $resultData, ':id' => $scanInsertId]);
+
+            sendSuccessResponse('NFC tag scanned successfully', [
+                'status' => 'unassigned',
+                'uid' => $uid,
+                'message' => 'NFC tag stored for assignment'
+            ]);
+        } else {
+            // Attendance mode — unassigned card is an error
+            $resultData = json_encode([
+                'status' => 'error_unassigned',
+                'uid' => $uid,
+                'message' => 'Unregistered card'
+            ]);
+            $stmtUpdate = $conn->prepare("UPDATE temp_nfc_scans SET action_result = :result WHERE id = :id");
+            $stmtUpdate->execute([':result' => $resultData, ':id' => $scanInsertId]);
+
+            sendSuccessResponse('Unregistered NFC card', [
+                'status' => 'error_unassigned',
+                'uid' => $uid,
+                'message' => 'Unregistered card'
+            ]);
+        }
     }
     
 } catch (PDOException $e) {

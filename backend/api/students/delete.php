@@ -65,7 +65,7 @@ try {
     }
     
     // Log the activity
-    logActivity($conn, 'student_deleted', 'Student permanently deleted: ' . $student['student_name'], $studentId);
+    logActivity('DELETE', 'STUDENT', $student['student_name'], 'Student permanently deleted (ID: ' . $studentId . ')');
     
     sendSuccessResponse('Student and related records deleted successfully', [
         'student_id' => $studentId

@@ -30,6 +30,8 @@ function Students() {
   const [showUnarchiveModal, setShowUnarchiveModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 10;
   
   // Notification state
   const [notification, setNotification] = useState({
@@ -55,7 +57,46 @@ function Students() {
       return matchesSearch && matchesCourse;
     });
     setFilteredStudents(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   }, [searchTerm, courseFilter, students]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredStudents.length / recordsPerPage);
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentRecords = filteredStudents.slice(indexOfFirstRecord, indexOfLastRecord);
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  };
 
   const loadStudents = async () => {
     setIsLoading(true);
@@ -220,6 +261,7 @@ function Students() {
                 ) : null}
               </div>
             ) : (
+              <>
               <table className="students-table">
                 <thead>
                   <tr>
@@ -233,7 +275,7 @@ function Students() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredStudents.map((student) => (
+                  {currentRecords.map((student) => (
                     <tr key={student.student_id}>
                       <td>{student.student_name}</td>
                       <td>{student.student_course || '-'}</td>
@@ -274,6 +316,43 @@ function Students() {
                   ))}
                 </tbody>
               </table>
+              {totalPages > 1 && (
+                <div className="pagination">
+                  <span className="pagination-info">
+                    Showing {indexOfFirstRecord + 1}-{Math.min(indexOfLastRecord, filteredStudents.length)} of {filteredStudents.length} records
+                  </span>
+                  <div className="pagination-controls">
+                    <button
+                      className="pagination-btn"
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      <i className="fas fa-chevron-left"></i>
+                    </button>
+                    {getPageNumbers().map((page, index) => (
+                      page === '...' ? (
+                        <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+                      ) : (
+                        <button
+                          key={page}
+                          className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+                          onClick={() => handlePageChange(page)}
+                        >
+                          {page}
+                        </button>
+                      )
+                    ))}
+                    <button
+                      className="pagination-btn"
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      <i className="fas fa-chevron-right"></i>
+                    </button>
+                  </div>
+                </div>
+              )}
+              </>
             )}
           </div>
         </div>

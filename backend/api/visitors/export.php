@@ -10,6 +10,7 @@ date_default_timezone_set('Asia/Manila');
 require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/session.php';
+require_once '../../utils/activity-logger.php';
 require_once '../../lib/fpdf.php';
 
 // Check if admin is logged in
@@ -106,6 +107,14 @@ try {
     }
 
     // Output PDF
+    // Log the export activity
+    logActivity(
+        'EXPORT',
+        'VISITOR',
+        'Visitor Records Report',
+        "Exported visitor records ($fromDate to $toDate)"
+    );
+
     header('Content-Type: application/pdf');
     header('Content-Disposition: attachment; filename="visitor_records_' . $fromDate . '_to_' . $toDate . '.pdf"');
     $pdf->Output('D', 'visitor_records_' . $fromDate . '_to_' . $toDate . '.pdf');

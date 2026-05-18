@@ -55,6 +55,14 @@ void playSuccessSound() {
   delay(10);
 }
 
+void playAssignReadySound() {
+  // Single neutral tone - card acknowledged, ready for assignment
+  buzzerTone(800, 200);
+  delay(10);
+  buzzerTone(800, 200);
+  delay(10);
+}
+
 void playFailSound() {
   // Long first beep then short low drop - clearly different from success
   buzzerTone(400, 500);
@@ -306,12 +314,19 @@ void sendToBackend(String uid) {
       Serial.println("╚════════════════════════════════╝");
       playSuccessSound();
     }
-    else if (response.indexOf("unassigned") >= 0 || response.indexOf("not found") >= 0 || response.indexOf("unknown") >= 0) {
+    else if (response.indexOf("error_unassigned") >= 0 || response.indexOf("Unregistered") >= 0) {
       Serial.println("╔════════════════════════════════╗");
-      Serial.println("║      ⚠️  UNASSIGNED CARD       ║");
-      Serial.println("║   Card not registered!         ║");
+      Serial.println("║      ⚠️  UNREGISTERED CARD     ║");
+      Serial.println("║   Card not assigned!           ║");
       Serial.println("╚════════════════════════════════╝");
       playFailSound();
+    }
+    else if (response.indexOf("unassigned") >= 0) {
+      Serial.println("╔════════════════════════════════╗");
+      Serial.println("║      📋 UNASSIGNED CARD        ║");
+      Serial.println("║   Ready for assignment!        ║");
+      Serial.println("╚════════════════════════════════╝");
+      playAssignReadySound();
     }
     else if (response.indexOf("already completed") >= 0) {
       Serial.println("╔════════════════════════════════╗");

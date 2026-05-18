@@ -9,6 +9,7 @@ date_default_timezone_set('Asia/Manila');
 require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/session.php';
+require_once '../../utils/activity-logger.php';
 
 if (!isAdminLoggedIn()) {
     http_response_code(401);
@@ -175,6 +176,15 @@ if (empty($logs)) {
 }
 
 $filename = 'activity_logs_' . $fromDate . '_to_' . $toDate . '.pdf';
+
+// Log the export activity
+logActivity(
+    'EXPORT',
+    'ACTIVITY_LOGS',
+    'Activity Logs Report',
+    "Exported activity logs ($fromDate to $toDate" . ($actionType !== '' ? ", Action: $actionType" : '') . ")"
+);
+
 header('Content-Type: application/pdf');
 header('Content-Disposition: attachment; filename="' . $filename . '"');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');

@@ -9,6 +9,8 @@
 require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
+require_once '../../utils/session.php';
+require_once '../../utils/activity-logger.php';
 
 // Only allow POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -82,6 +84,20 @@ try {
     } catch (Exception $e) {
         error_log("Temp scan update failed (this is OK): " . $e->getMessage());
     }
+    
+    // Get student name for logging
+    $stmtName = $conn->prepare("SELECT student_name FROM students WHERE student_id = :id");
+    $stmtName->execute([':id' => $studentId]);
+    $studentRow = $stmtName->fetch(PDO::FETCH_ASSOC);
+    $studentName = $studentRow ? $studentRow['student_name'] : "Student #$studentId";
+    
+    // Log the activity
+    logActivity(
+        'NFC_ASSIGN',
+        'STUDENT',
+        $studentName,
+        "NFC tag ($uid) assigned to student (ID: $studentId)"
+    );
     
     sendSuccessResponse($message, [
         'student_id' => $studentId,

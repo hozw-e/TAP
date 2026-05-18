@@ -28,6 +28,13 @@ function EditRecordModal({ isOpen, onClose, onSuccess, student }) {
   const handleNFCScan = async (uid) => {
     setNfcScanning(false); // Stop polling after successful scan
 
+    // Reset mode back to attendance
+    try {
+      await nfcAPI.setMode('attendance');
+    } catch (err) {
+      console.error('Failed to reset scanner mode:', err);
+    }
+
     try {
       const response = await nfcAPI.assign({
         student_id: student.student_id,
@@ -46,8 +53,16 @@ function EditRecordModal({ isOpen, onClose, onSuccess, student }) {
 
   const { isPolling } = useNFCScanner(nfcScanning, handleNFCScan);
 
-  const handleScanNFC = () => {
-    setNfcScanning(prev => !prev);
+  const handleScanNFC = async () => {
+    const newScanning = !nfcScanning;
+    setNfcScanning(newScanning);
+
+    // Tell backend which mode the scanner is in
+    try {
+      await nfcAPI.setMode(newScanning ? 'assign' : 'attendance');
+    } catch (err) {
+      console.error('Failed to set scanner mode:', err);
+    }
   };
 
   useEffect(() => {
@@ -80,6 +95,12 @@ function EditRecordModal({ isOpen, onClose, onSuccess, student }) {
       });
       setError('');
       setShowConfirm(false);
+    }
+
+    // Reset scanner mode to attendance when modal closes
+    if (!isOpen && nfcScanning) {
+      setNfcScanning(false);
+      nfcAPI.setMode('attendance').catch(() => {});
     }
   }, [isOpen, student]);
 
