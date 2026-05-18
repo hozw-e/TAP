@@ -140,6 +140,7 @@
 
 .form-input[readonly] {
   background: #f8f9fa;
+  color: #2c3e50;
 }
 
 /* NFC Group */

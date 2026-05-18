@@ -256,7 +256,8 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
                       name="age"
                       className="form-input"
                       value={formData.age}
-                      readOnly
+                      disabled
+                      style={{ color: '#2c3e50' }}
                     />
                   </div>
                   <div className="form-group">
