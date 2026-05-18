@@ -118,17 +118,23 @@
   margin-bottom: 6px;
 }
 
-.form-input {
+.form-input,
+input.form-input,
+select.form-input,
+textarea.form-input {
   padding: 10px 12px;
-  border: 2px solid #888;
+  border: 1.5px solid #b0b8d1 !important;
   border-radius: 6px;
   font-size: 14px;
   outline: none;
   transition: all 0.3s ease;
+  background: #fff;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .form-input:focus {
-  border-color: #667eea;
+  border-color: #667eea !important;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -139,7 +145,7 @@
 }
 
 select.form-input {
-  height: 50px;
+  height: 44px;
 }
 
 .form-input[readonly] {

@@ -90,6 +90,8 @@
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border: 1px solid #dce1e6;
+  display: flex;
+  flex-direction: column;
 }
 
 .logs-header {
@@ -153,7 +155,10 @@
 .logs-body {
   padding: 0;
   position: relative;
-  min-height: 350px;
+  min-height: 280px;
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: auto;
 }
 
 /* Logs Table */
@@ -418,9 +423,10 @@
   justify-content: flex-end;
   align-items: center;
   gap: 12px;
-  padding: 10px 16px;
+  padding: 12px 20px;
   background: #f8f9fa;
   border-top: 1px solid #e6e6e6;
+  flex-shrink: 0;
 }
 
 .logs-section .pagination-btn {
