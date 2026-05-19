@@ -4,17 +4,12 @@
  * GET /api/students/export_record.php?student_id=...&date_from=...&date_to=...&status=...
  */
 
-// Start output buffering to prevent any stray whitespace from included files
-// from corrupting the PDF binary output.
-ob_start();
-
 date_default_timezone_set('Asia/Manila');
 
 require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/session.php';
 require_once '../../utils/activity-logger.php';
-require_once '../../lib/fpdf.php';
 
 $studentId = isset($_GET['student_id']) ? $_GET['student_id'] : null;
 $dateFrom  = isset($_GET['date_from']) ? $_GET['date_from'] : date('Y-m-d');
@@ -142,6 +137,8 @@ function formatTimeDisplay(?string $time): string {
     return sprintf('%d:%s %s', $h % 12 ?: 12, $m, $ampm);
 }
 
+require_once '../../lib/fpdf.php';
+
 class StudentAttendancePDF extends FPDF {
     public string $studentName = '';
     public string $studentCourse = '';
@@ -213,12 +210,15 @@ if (empty($allLogs)) {
     $pageWidth = $pdf->GetPageWidth();
     $leftMargin = ($pageWidth - $tableWidth) / 2;
     
+    $fill = false;
     foreach ($allLogs as $i => $row) {
+        $bgR = $fill ? 235 : 255;
+        $pdf->SetFillColor($bgR, $bgR, $bgR);
         $pdf->SetX($leftMargin);
-        $pdf->Cell(12, 8, $i+1, 1, 0, 'C');
-        $pdf->Cell(38, 8, formatDisplayDate($row['date']), 1, 0, 'C');
-        $pdf->Cell(38, 8, formatTimeDisplay($row['time_in']), 1, 0, 'C');
-        $pdf->Cell(38, 8, formatTimeDisplay($row['time_out']), 1, 0, 'C');
+        $pdf->Cell(12, 8, $i+1, 1, 0, 'C', $fill);
+        $pdf->Cell(38, 8, formatDisplayDate($row['date']), 1, 0, 'C', $fill);
+        $pdf->Cell(38, 8, formatTimeDisplay($row['time_in']), 1, 0, 'C', $fill);
+        $pdf->Cell(38, 8, formatTimeDisplay($row['time_out']), 1, 0, 'C', $fill);
         
         // Status cell with color
         $status = $row['status'];
@@ -229,9 +229,21 @@ if (empty($allLogs)) {
         } elseif ($status === 'No Time Out') {
             $pdf->SetTextColor(200, 150, 0);
         }
-        $pdf->Cell(38, 8, $status, 1, 1, 'C');
+        $pdf->Cell(38, 8, $status, 1, 1, 'C', $fill);
         $pdf->SetTextColor(0, 0, 0);
+        $fill = !$fill;
     }
+
+    // Total row
+    $pdf->SetX($leftMargin);
+    $pdf->SetFont('Arial', 'B', 9);
+    $pdf->SetFillColor(21, 61, 99);
+    $pdf->SetTextColor(255, 255, 255);
+    $pdf->Cell(12, 8, '',              1, 0, 'C', true);
+    $pdf->Cell(38, 8, 'TOTAL RECORDS', 1, 0, 'L', true);
+    $pdf->Cell(38, 8, count($allLogs), 1, 0, 'C', true);
+    $pdf->Cell(38, 8, '',              1, 0, 'C', true);
+    $pdf->Cell(38, 8, '',              1, 1, 'C', true);
 }
 
 $filename = 'student_attendance_' . $studentId . '_' . $dateFrom . '_to_' . $dateTo . '.pdf';
@@ -244,15 +256,10 @@ logActivity(
     "Student record exported ($dateFrom to $dateTo)"
 );
 
-// Clean any stray output from included files (trailing whitespace after ?> tags)
-// This prevents PDF corruption.
-if (ob_get_level()) {
-    ob_end_clean();
-}
-
 header('Content-Type: application/pdf');
 header('Content-Disposition: attachment; filename="' . $filename . '"');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('Expires: 0');
 $pdf->Output('D', $filename);
+?>
