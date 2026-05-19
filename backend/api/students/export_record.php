@@ -1,7 +1,7 @@
 <?php
 /**
  * Export Student Attendance PDF (ViewRecord)
- * GET /api/students/export_record.php?student_id=...&date_from=...&date_to=...
+ * GET /api/students/export_record.php?student_id=...&date_from=...&date_to=...&status=All
  */
 
 date_default_timezone_set('Asia/Manila');
@@ -15,6 +15,7 @@ require_once '../../lib/fpdf.php';
 $studentId = isset($_GET['student_id']) ? $_GET['student_id'] : null;
 $dateFrom  = isset($_GET['date_from']) ? $_GET['date_from'] : date('Y-m-d');
 $dateTo    = isset($_GET['date_to'])   ? $_GET['date_to']   : date('Y-m-d');
+$statusFilter = isset($_GET['status']) ? $_GET['status'] : 'All';
 
 if (!$studentId || !preg_match('/^\d+$/', $studentId)) {
     http_response_code(400);
@@ -28,8 +29,8 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom) || !preg_match('/^\d{4}-\d{2
 $conn = getDBConnection();
 if (!$conn) { http_response_code(500); exit('Database connection failed.'); }
 
-// Fetch student info
-$stmt = $conn->prepare("SELECT student_name, student_course FROM students WHERE student_id = :student_id");
+// Fetch student info including created_at for enrollment date
+$stmt = $conn->prepare("SELECT student_name, student_course, created_at FROM students WHERE student_id = :student_id");
 $stmt->execute([':student_id' => $studentId]);
 $student = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$student) {
@@ -37,7 +38,7 @@ if (!$student) {
     exit('Student not found.');
 }
 
-// Fetch attendance logs
+// Fetch attendance logs in the date range
 $stmt2 = $conn->prepare("
     SELECT date, time_in, time_out
     FROM attendance_logs
@@ -51,14 +52,74 @@ $stmt2->execute([
 ]);
 $logs = $stmt2->fetchAll(PDO::FETCH_ASSOC);
 
+// Build a map of dates that have actual attendance logs
+$logsByDate = [];
+foreach ($logs as $log) {
+    $logsByDate[$log['date']][] = $log;
+}
+
+// Determine enrollment date
+$enrollmentDate = $student['created_at'] ? date('Y-m-d', strtotime($student['created_at'])) : null;
+
+// Generate all dates in range (Mon-Sat only), starting from enrollment if applicable
+$allRecords = [];
+$currentDate = new DateTime($dateFrom);
+$endDate = new DateTime($dateTo);
+
+while ($currentDate <= $endDate) {
+    $dateStr = $currentDate->format('Y-m-d');
+    $dayOfWeek = (int)$currentDate->format('w'); // 0=Sun, 6=Sat
+
+    // Only include Mon-Sat and dates on or after enrollment
+    if ($dayOfWeek !== 0 && (!$enrollmentDate || $dateStr >= $enrollmentDate)) {
+        if (isset($logsByDate[$dateStr])) {
+            // Has actual attendance records for this date
+            foreach ($logsByDate[$dateStr] as $log) {
+                $status = 'Absent';
+                if ($log['time_in'] && $log['time_out']) {
+                    $status = 'Present';
+                } elseif ($log['time_in'] && !$log['time_out']) {
+                    $status = 'No Time Out';
+                }
+                $allRecords[] = [
+                    'date' => $log['date'],
+                    'time_in' => $log['time_in'],
+                    'time_out' => $log['time_out'],
+                    'status' => $status,
+                ];
+            }
+        } else {
+            // No attendance log for this date = Absent
+            $allRecords[] = [
+                'date' => $dateStr,
+                'time_in' => null,
+                'time_out' => null,
+                'status' => 'Absent',
+            ];
+        }
+    }
+
+    $currentDate->modify('+1 day');
+}
+
+// Apply status filter
+if ($statusFilter !== 'All') {
+    $allRecords = array_filter($allRecords, function($record) use ($statusFilter) {
+        return $record['status'] === $statusFilter;
+    });
+    $allRecords = array_values($allRecords);
+}
+
 function formatDisplayDate(string $date): string {
     return date('m/d/Y', strtotime($date));
 }
 function formatTimeDisplay(?string $time): string {
-    if (!$time) return 'N/A';
-    [$h, $m] = explode(':', $time);
-    $h = (int)$h; $ampm = $h >= 12 ? 'PM' : 'AM';
-    return sprintf('%d:%02d %s', $h % 12 ?: 12, $m, $ampm);
+    if (!$time) return '--';
+    $parts = explode(':', $time);
+    $h = (int)$parts[0];
+    $m = $parts[1];
+    $ampm = $h >= 12 ? 'PM' : 'AM';
+    return sprintf('%d:%s %s', $h % 12 ?: 12, $m, $ampm);
 }
 
 class StudentAttendancePDF extends FPDF {
@@ -66,6 +127,7 @@ class StudentAttendancePDF extends FPDF {
     public string $studentCourse = '';
     public string $dateFrom = '';
     public string $dateTo = '';
+    public string $statusFilter = 'All';
 
     function Header() {
         // Company header - centered
@@ -83,11 +145,15 @@ class StudentAttendancePDF extends FPDF {
         $this->Cell(0, 7, $this->studentName, 0, 1, 'C');
         $this->Cell(0, 7, $this->studentCourse, 0, 1, 'C');
         $this->SetFont('Arial', 'B', 10);
-        $this->Cell(0, 6, 'From ' . $this->dateFrom . '   To ' . $this->dateTo, 0, 1, 'C');
+        $filterLabel = 'From ' . $this->dateFrom . '   To ' . $this->dateTo;
+        if ($this->statusFilter !== 'All') {
+            $filterLabel .= '   Status: ' . $this->statusFilter;
+        }
+        $this->Cell(0, 6, $filterLabel, 0, 1, 'C');
         $this->Ln(3);
         
         // Calculate table width and center position
-        $tableWidth = 126; // 12 + 38 + 38 + 38
+        $tableWidth = 164; // 12 + 38 + 38 + 38 + 38
         $pageWidth = $this->GetPageWidth();
         $leftMargin = ($pageWidth - $tableWidth) / 2;
         $this->SetX($leftMargin);
@@ -99,7 +165,8 @@ class StudentAttendancePDF extends FPDF {
         $this->Cell(12, 8, '#', 1, 0, 'C', true);
         $this->Cell(38, 8, 'Date', 1, 0, 'C', true);
         $this->Cell(38, 8, 'Time In', 1, 0, 'C', true);
-        $this->Cell(38, 8, 'Time Out', 1, 1, 'C', true);
+        $this->Cell(38, 8, 'Time Out', 1, 0, 'C', true);
+        $this->Cell(38, 8, 'Status', 1, 1, 'C', true);
         $this->SetTextColor(0, 0, 0);
     }
     function Footer() {
@@ -117,26 +184,43 @@ $pdf->studentName = $student['student_name'];
 $pdf->studentCourse = $student['student_course'];
 $pdf->dateFrom = formatDisplayDate($dateFrom);
 $pdf->dateTo = formatDisplayDate($dateTo);
+$pdf->statusFilter = $statusFilter;
 $pdf->SetMargins(14, 14, 14);
 $pdf->SetAutoPageBreak(true, 18);
 $pdf->AddPage($pageOrientation, $pageSize);
 $pdf->SetFont('Arial', '', 9);
 
-if (empty($logs)) {
+if (empty($allRecords)) {
     $pdf->SetTextColor(150, 150, 150);
     $pdf->Cell(0, 12, 'No records found for the selected filters.', 0, 1, 'C');
 } else {
     // Calculate table width and center position
-    $tableWidth = 126; // 12 + 38 + 38 + 38
+    $tableWidth = 164; // 12 + 38 + 38 + 38 + 38
     $pageWidth = $pdf->GetPageWidth();
     $leftMargin = ($pageWidth - $tableWidth) / 2;
     
-    foreach ($logs as $i => $row) {
+    foreach ($allRecords as $i => $row) {
         $pdf->SetX($leftMargin);
-        $pdf->Cell(12, 8, $i+1, 1, 0, 'C');
+        $pdf->Cell(12, 8, $i + 1, 1, 0, 'C');
         $pdf->Cell(38, 8, formatDisplayDate($row['date']), 1, 0, 'C');
         $pdf->Cell(38, 8, formatTimeDisplay($row['time_in']), 1, 0, 'C');
-        $pdf->Cell(38, 8, formatTimeDisplay($row['time_out']), 1, 1, 'C');
+        $pdf->Cell(38, 8, formatTimeDisplay($row['time_out']), 1, 0, 'C');
+        
+        // Status cell with color
+        $status = $row['status'];
+        if ($status === 'Present') {
+            $pdf->SetFillColor(76, 175, 80);
+            $pdf->SetTextColor(255, 255, 255);
+        } elseif ($status === 'Absent') {
+            $pdf->SetFillColor(244, 67, 54);
+            $pdf->SetTextColor(255, 255, 255);
+        } elseif ($status === 'No Time Out') {
+            $pdf->SetFillColor(255, 235, 59);
+            $pdf->SetTextColor(51, 51, 51);
+        }
+        $pdf->Cell(38, 8, $status, 1, 1, 'C', true);
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->SetFillColor(255, 255, 255);
     }
 }
 
@@ -147,7 +231,7 @@ logActivity(
     'EXPORT',
     'STUDENT',
     $student['student_name'],
-    "Exported attendance record for student (ID: $studentId, $dateFrom to $dateTo)"
+    "Exported attendance record for student (ID: $studentId, $dateFrom to $dateTo, Status: $statusFilter)"
 );
 
 header('Content-Type: application/pdf');
