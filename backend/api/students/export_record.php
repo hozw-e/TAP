@@ -6,6 +6,7 @@
 
 date_default_timezone_set('Asia/Manila');
 
+require_once '../../utils/cors.php';
 require_once '../../config/database.php';
 require_once '../../utils/session.php';
 require_once '../../utils/activity-logger.php';
