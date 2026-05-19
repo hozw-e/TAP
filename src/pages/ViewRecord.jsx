@@ -21,6 +21,9 @@ function ViewRecord() {
   const [filterTo, setFilterTo] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [isLoadingStudent, setIsLoadingStudent] = useState(!location.state?.student);
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const logsPerPage = 10;
 
   useEffect(() => {
     const loadStudent = async () => {
@@ -159,6 +162,42 @@ function ViewRecord() {
       return true;
     });
   }, [attendanceLogs, filterFrom, filterTo, filterStatus]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterFrom, filterTo, filterStatus]);
+
+  const totalPages = Math.ceil(filteredAttendanceLogs.length / logsPerPage);
+  const paginatedLogs = useMemo(() => {
+    const start = (currentPage - 1) * logsPerPage;
+    return filteredAttendanceLogs.slice(start, start + logsPerPage);
+  }, [filteredAttendanceLogs, currentPage]);
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'No date';
@@ -326,7 +365,7 @@ function ViewRecord() {
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredAttendanceLogs.map((log, index) => {
+                        {paginatedLogs.map((log, index) => {
                           const status = getLogStatus(log);
                           const timeInSms = log.time_in
                             ? (log.sms_sent_in === true || log.sms_sent_in === 1) ? 'SENT' : 'FAILED'
@@ -417,6 +456,43 @@ function ViewRecord() {
                     </table>
                   )}
                 </div>
+                {/* Sticky Pagination Footer */}
+                {totalPages > 1 && (
+                  <div className="view-logs-pagination">
+                    <span className="pagination-info">
+                      Showing {(currentPage - 1) * logsPerPage + 1}-{Math.min(currentPage * logsPerPage, filteredAttendanceLogs.length)} of {filteredAttendanceLogs.length} records
+                    </span>
+                    <div className="pagination-controls">
+                      <button
+                        className="pagination-btn"
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                      >
+                        <i className="fas fa-chevron-left"></i>
+                      </button>
+                      {getPageNumbers().map((page, index) => (
+                        page === '...' ? (
+                          <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+                        ) : (
+                          <button
+                            key={page}
+                            className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+                            onClick={() => setCurrentPage(page)}
+                          >
+                            {page}
+                          </button>
+                        )
+                      ))}
+                      <button
+                        className="pagination-btn"
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                      >
+                        <i className="fas fa-chevron-right"></i>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

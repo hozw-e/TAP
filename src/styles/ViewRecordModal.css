@@ -81,6 +81,8 @@
   border: 1px solid #e4e7ee;
   border-radius: 10px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .view-logs-header {
@@ -350,4 +352,70 @@
 
 .view-profile-stats .status.no-recent-logs {
   color: #8b95a4;
+}
+
+/* Sticky Pagination Footer */
+.view-logs-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-top: 1px solid #ecf0f1;
+  background: #f8f9fa;
+  flex-shrink: 0;
+}
+
+.view-logs-pagination .pagination-info {
+  font-size: 13px;
+  color: #7f8c8d;
+  font-weight: 500;
+}
+
+.view-logs-pagination .pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.view-logs-pagination .pagination-btn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  color: #34495e;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.view-logs-pagination .pagination-btn:hover:not(:disabled):not(.active) {
+  background: #ecf0f1;
+  border-color: #bdc3c7;
+}
+
+.view-logs-pagination .pagination-btn.active {
+  background: #34495e;
+  color: #fff;
+  border-color: #34495e;
+}
+
+.view-logs-pagination .pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.view-logs-pagination .pagination-ellipsis {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: #7f8c8d;
 }
