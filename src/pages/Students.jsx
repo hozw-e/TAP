@@ -267,7 +267,6 @@ function Students() {
                 ) : null}
               </div>
             ) : (
-              <>
               <table className="students-table">
                 <thead>
                   <tr>
@@ -322,45 +321,44 @@ function Students() {
                   ))}
                 </tbody>
               </table>
-              {totalPages > 1 && (
-                <div className="pagination">
-                  <span className="pagination-info">
-                    Showing {indexOfFirstRecord + 1}-{Math.min(indexOfLastRecord, filteredStudents.length)} of {filteredStudents.length} records
-                  </span>
-                  <div className="pagination-controls">
-                    <button
-                      className="pagination-btn"
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                    >
-                      <i className="fas fa-chevron-left"></i>
-                    </button>
-                    {getPageNumbers().map((page, index) => (
-                      page === '...' ? (
-                        <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
-                      ) : (
-                        <button
-                          key={page}
-                          className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
-                          onClick={() => handlePageChange(page)}
-                        >
-                          {page}
-                        </button>
-                      )
-                    ))}
-                    <button
-                      className="pagination-btn"
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                    >
-                      <i className="fas fa-chevron-right"></i>
-                    </button>
-                  </div>
-                </div>
-              )}
-              </>
             )}
           </div>
+          {totalPages > 1 && (
+            <div className="pagination">
+              <span className="pagination-info">
+                Showing {indexOfFirstRecord + 1}-{Math.min(indexOfLastRecord, filteredStudents.length)} of {filteredStudents.length} records
+              </span>
+              <div className="pagination-controls">
+                <button
+                  className="pagination-btn"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <i className="fas fa-chevron-left"></i>
+                </button>
+                {getPageNumbers().map((page, index) => (
+                  page === '...' ? (
+                    <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+                  ) : (
+                    <button
+                      key={page}
+                      className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+                      onClick={() => handlePageChange(page)}
+                    >
+                      {page}
+                    </button>
+                  )
+                ))}
+                <button
+                  className="pagination-btn"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
