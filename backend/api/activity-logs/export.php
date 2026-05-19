@@ -6,10 +6,11 @@
 
 date_default_timezone_set('Asia/Manila');
 
-require_once '../../config/database.php';
 require_once '../../utils/cors.php';
+require_once '../../config/database.php';
 require_once '../../utils/session.php';
 require_once '../../utils/activity-logger.php';
+require_once '../../lib/fpdf.php';
 
 if (!isAdminLoggedIn()) {
     http_response_code(401);
@@ -29,42 +30,32 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fromDate) || !preg_match('/^\d{4}-\d{2
     exit;
 }
 
-try {
-    $conn = getDBConnection();
-    if (!$conn) { throw new Exception('Database connection failed'); }
+$conn = getDBConnection();
+if (!$conn) { http_response_code(500); exit('Database connection failed.'); }
 
-    $whereConditions = [
-        'DATE(timestamp) >= :from_date',
-        'DATE(timestamp) <= :to_date',
-    ];
-    $params = [
-        ':from_date' => $fromDate,
-        ':to_date'   => $toDate,
-    ];
+$whereConditions = [
+    'DATE(timestamp) >= :from_date',
+    'DATE(timestamp) <= :to_date',
+];
+$params = [
+    ':from_date' => $fromDate,
+    ':to_date'   => $toDate,
+];
 
-    if ($actionType !== '') {
-        $whereConditions[] = 'action_type = :action_type';
-        $params[':action_type'] = $actionType;
-    }
-
-    $whereClause = 'WHERE ' . implode(' AND ', $whereConditions);
-
-    $query = "SELECT * FROM activity_logs {$whereClause} ORDER BY timestamp DESC";
-    $stmt  = $conn->prepare($query);
-    foreach ($params as $key => $value) {
-        $stmt->bindValue($key, $value);
-    }
-    $stmt->execute();
-    $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (Exception $e) {
-    error_log('Activity Logs Export Error: ' . $e->getMessage());
-    http_response_code(500);
-    header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'message' => 'Error fetching activity logs']);
-    exit;
+if ($actionType !== '') {
+    $whereConditions[] = 'action_type = :action_type';
+    $params[':action_type'] = $actionType;
 }
 
-require_once '../../lib/fpdf.php';
+$whereClause = 'WHERE ' . implode(' AND ', $whereConditions);
+
+$query = "SELECT * FROM activity_logs {$whereClause} ORDER BY timestamp DESC";
+$stmt  = $conn->prepare($query);
+foreach ($params as $key => $value) {
+    $stmt->bindValue($key, $value);
+}
+$stmt->execute();
+$logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 function alDisplayDate(string $date): string {
     return date('m/d/Y', strtotime($date));
@@ -175,8 +166,8 @@ if (empty($logs)) {
     $pdf->Cell(82, 8, '',              1, 1, 'C', true);
 }
 
-$fromLabel = $dateFrom !== '' ? $dateFrom : 'all';
-$toLabel = $dateTo !== '' ? $dateTo : 'latest';
+$fromLabel = $fromDate !== '' ? $fromDate : 'all';
+$toLabel = $toDate !== '' ? $toDate : 'latest';
 $filename = 'activity_logs_' . $fromLabel . '_to_' . $toLabel . '.pdf';
 
 // Log the export activity
@@ -193,4 +184,3 @@ header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('Expires: 0');
 $pdf->Output('D', $filename);
-?>

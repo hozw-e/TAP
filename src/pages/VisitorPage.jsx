@@ -91,7 +91,7 @@ function VisitorPage() {
             } else if (status === 'denied') {
               const remainingTime = required_time - time_since_checkin;
               setDeniedModal({ show: true, name: student_name, remainingTime });
-            } else if (status === 'unassigned') {
+            } else if (status === 'unassigned' || status === 'error_unassigned') {
               setUnassignedModal({ show: true });
             }
 

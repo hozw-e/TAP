@@ -302,36 +302,36 @@ void sendToBackend(String uid) {
     // Parse JSON response from backend
     if (response.indexOf("\"action\":\"check_in\"") >= 0) {
       Serial.println("╔════════════════════════════════╗");
-      Serial.println("║       💚 WELCOME!              ║");
+      Serial.println("║            WELCOME!            ║");
       Serial.println("║       TIME IN RECORDED         ║");
       Serial.println("╚════════════════════════════════╝");
       playSuccessSound();
     } 
     else if (response.indexOf("\"action\":\"check_out\"") >= 0) {
       Serial.println("╔════════════════════════════════╗");
-      Serial.println("║    💙 SEE YOU LATER!           ║");
-      Serial.println("║     TIME OUT RECORDED          ║");
+      Serial.println("║        SEE YOU LATER!          ║");
+      Serial.println("║       TIME OUT RECORDED        ║");
       Serial.println("╚════════════════════════════════╝");
       playSuccessSound();
     }
     else if (response.indexOf("\"action\":\"check_out_denied\"") >= 0 || response.indexOf("\"status\":\"denied\"") >= 0) {
       Serial.println("╔════════════════════════════════╗");
-      Serial.println("║    ⏰ TOO SOON                 ║");
+      Serial.println("║            TOO SOON            ║");
       Serial.println("║   Wait before checking out!    ║");
       Serial.println("╚════════════════════════════════╝");
       playFailSound();
     }
     else if (response.indexOf("\"status\":\"error_unassigned\"") >= 0) {
       Serial.println("╔════════════════════════════════╗");
-      Serial.println("║      ⚠️  UNREGISTERED CARD     ║");
-      Serial.println("║   Card not assigned!           ║");
+      Serial.println("║        UNREGISTERED CARD       ║");
+      Serial.println("║        Card not assigned!      ║");
       Serial.println("╚════════════════════════════════╝");
       playFailSound();
     }
     else if (response.indexOf("\"status\":\"unassigned\"") >= 0) {
       Serial.println("╔════════════════════════════════╗");
-      Serial.println("║      📋 UNASSIGNED CARD        ║");
-      Serial.println("║   Ready for assignment!        ║");
+      Serial.println("║       UNASSIGNED CARD          ║");
+      Serial.println("║     Ready for assignment!      ║");
       Serial.println("╚════════════════════════════════╝");
       playAssignReadySound();
     }
@@ -347,7 +347,7 @@ void sendToBackend(String uid) {
     }
   } else {
     Serial.println("┌────────────────────────────────┐");
-    Serial.println("│       ✗ ERROR                  │");
+    Serial.println("│           ✗ ERROR              │");
     Serial.println("└────────────────────────────────┘");
     Serial.print("   HTTP Error Code: ");
     Serial.println(httpResponseCode);
