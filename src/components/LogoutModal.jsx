@@ -11,7 +11,7 @@ function LogoutModal({ isOpen, onClose }) {
       onClose();
       sessionStorage.setItem('showLoggedOutToast', 'true');
       setTimeout(() => {
-        navigate('/');
+        navigate('/login');
         window.location.reload();
       }, 1500);
     } catch (error) {
