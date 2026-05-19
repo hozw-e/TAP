@@ -187,7 +187,6 @@
 .students-table {
   width: 100%;
   border-collapse: collapse;
-  flex: 1;
 }
 
 .students-table thead {
