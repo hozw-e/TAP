@@ -196,7 +196,9 @@ if (empty($visitors)) {
     $pdf->Cell(42, 8, '',                1, 1, 'C', true);
 }
 
-$filename = 'visitor_records_' . $fromDate . '_to_' . $toDate . '.pdf';
+$fromLabel = $fromDate !== '' ? $fromDate : 'all';
+$toLabel = $toDate !== '' ? $toDate : 'latest';
+$filename = 'visitor_records_' . $fromLabel . '_to_' . $toLabel . '.pdf';
 
 // Log the export activity
 logActivity(

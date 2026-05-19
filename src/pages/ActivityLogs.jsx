@@ -115,7 +115,9 @@ function ActivityLogs() {
       );
       const link = document.createElement('a');
       link.href = url;
-      link.download = `activity_logs_${fromDate}_to_${toDate}.pdf`;
+      const fromLabel = fromDate || 'all';
+      const toLabel = toDate || 'latest';
+      link.download = `activity_logs_${fromLabel}_to_${toLabel}.pdf`;
       document.body.appendChild(link);
       link.click();
       link.remove();

@@ -175,7 +175,9 @@ if (empty($logs)) {
     $pdf->Cell(82, 8, '',              1, 1, 'C', true);
 }
 
-$filename = 'activity_logs_' . $fromDate . '_to_' . $toDate . '.pdf';
+$fromLabel = $dateFrom !== '' ? $dateFrom : 'all';
+$toLabel = $dateTo !== '' ? $dateTo : 'latest';
+$filename = 'activity_logs_' . $fromLabel . '_to_' . $toLabel . '.pdf';
 
 // Log the export activity
 logActivity(

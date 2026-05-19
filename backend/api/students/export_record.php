@@ -224,7 +224,9 @@ if (empty($allRecords)) {
     }
 }
 
-$filename = 'student_attendance_' . $studentId . '_' . $dateFrom . '_to_' . $dateTo . '.pdf';
+$fromLabel = $dateFrom !== '' ? $dateFrom : 'all';
+$toLabel = $dateTo !== '' ? $dateTo : 'latest';
+$filename = 'student_attendance_' . $studentId . '_' . $fromLabel . '_to_' . $toLabel . '.pdf';
 
 // Log the export activity
 logActivity(

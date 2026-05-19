@@ -194,7 +194,9 @@ function ViewRecord() {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `student_attendance_${student.student_id}_${filterFrom}_to_${filterTo}.pdf`;
+      const fromLabel = filterFrom || 'all';
+      const toLabel = filterTo || 'latest';
+      link.download = `student_attendance_${student.student_id}_${fromLabel}_to_${toLabel}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

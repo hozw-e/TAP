@@ -13,6 +13,8 @@ require_once '../../utils/activity-logger.php';
 
 $dateFrom    = isset($_GET['date_from']) && $_GET['date_from'] !== '' ? $_GET['date_from'] : '';
 $dateTo      = isset($_GET['date_to']) && $_GET['date_to'] !== ''   ? $_GET['date_to']   : '';
+$originalFromEmpty = ($dateFrom === '');
+$originalToEmpty = ($dateTo === '');
 $filterType  = isset($_GET['type'])      ? $_GET['type']      : 'All';
 $filterCourse = isset($_GET['course'])   ? $_GET['course']    : 'All';
 
@@ -224,7 +226,9 @@ if (empty($logs)) {
     $pdf->Cell(33, 8, '',                    1, 1, 'C', true);
 }
 
-$filename = 'attendance_' . $dateFrom . '_to_' . $dateTo . '.pdf';
+$fromLabel = $originalFromEmpty ? 'all' : $dateFrom;
+$toLabel = $originalToEmpty ? 'latest' : $dateTo;
+$filename = 'attendance_' . $fromLabel . '_to_' . $toLabel . '.pdf';
 
 // Log the export activity
 logActivity(
