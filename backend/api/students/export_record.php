@@ -4,6 +4,10 @@
  * GET /api/students/export_record.php?student_id=...&date_from=...&date_to=...&status=...
  */
 
+// Start output buffering to prevent any stray whitespace from included files
+// from corrupting the PDF binary output.
+ob_start();
+
 date_default_timezone_set('Asia/Manila');
 
 require_once '../../config/database.php';
@@ -239,6 +243,12 @@ logActivity(
     $student['student_name'],
     "Student record exported ($dateFrom to $dateTo)"
 );
+
+// Clean any stray output from included files (trailing whitespace after ?> tags)
+// This prevents PDF corruption.
+if (ob_get_level()) {
+    ob_end_clean();
+}
 
 header('Content-Type: application/pdf');
 header('Content-Disposition: attachment; filename="' . $filename . '"');
