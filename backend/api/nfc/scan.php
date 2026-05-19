@@ -83,7 +83,7 @@ try {
         // SMS helper — sends via iProg SMS API
         // -----------------------------------------------
         $sendSMS = function(string $rawNumber, string $message) {
-            $apiToken = defined('SMS_API_TOKEN') ? SMS_API_TOKEN : (getenv('SMS_API_TOKEN') ?: '');
+            $apiToken = '67fc73769b9ced49cfa661c6382c5bfa0d7e5449';
 
             // Convert 09XXXXXXXXX → 639XXXXXXXXX
             $number = $rawNumber;
