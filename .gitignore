@@ -15,8 +15,7 @@ dist
 .env
 .env.local
 
-# Database credentials
-backend/config/database.php
+# Database credentials (database.php now uses env vars, safe to commit)
 apdc_attendance.sql
 
 # Database backups
