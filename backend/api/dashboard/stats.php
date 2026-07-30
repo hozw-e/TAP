@@ -44,9 +44,9 @@ try {
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     $presentStudents = (int)$result['present'];
 
-    // Present visitors today (checked in today)
+    // Present visitors today (checked in but not yet checked out)
     $stmt = $conn->prepare("
-        SELECT COUNT(*) as present FROM visitors WHERE date_of_visit = :today
+        SELECT COUNT(*) as present FROM visitors WHERE date_of_visit = :today AND time_out IS NULL
     ");
     $stmt->execute([':today' => $today]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -65,9 +65,11 @@ try {
     $enrolledToday = (int)$result['enrolled'];
 
     sendSuccessResponse('Dashboard stats retrieved successfully', [
-        'totalStudents' => $totalStudents,
-        'presentToday'  => $presentToday,
-        'enrolledToday' => $enrolledToday
+        'totalStudents'   => $totalStudents,
+        'presentToday'    => $presentToday,
+        'presentStudents' => $presentStudents,
+        'presentVisitors' => $presentVisitors,
+        'enrolledToday'   => $enrolledToday
     ]);
 
 } catch (PDOException $e) {

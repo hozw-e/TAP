@@ -73,6 +73,7 @@ try {
             visit_id,
             name,
             time_in,
+            time_out,
             date_of_visit AS date
         FROM visitors
     ";
@@ -117,8 +118,10 @@ try {
             'student_name'   => $row['name'],
             'student_course' => null,
             'time_in'        => $row['time_in'],
-            'time_out'       => null,
+            'time_out'       => $row['time_out'],
             'sms_sent'       => null,
+            'sms_sent_in'    => false,
+            'sms_sent_out'   => false,
             'date'           => $row['date'],
             'row_type'       => 'visitor',
         ];

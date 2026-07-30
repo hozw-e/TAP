@@ -68,50 +68,63 @@ try {
         sendErrorResponse('Guardian not found', 404);
     }
     
-    // Insert student with new fields
-    $stmt = $conn->prepare("
-        INSERT INTO students (
-            guardian_id, 
-            student_name, 
-            student_birthdate, 
-            age, 
-            student_address, 
-            student_cellnum, 
-            student_course, 
-            course_duration
-        ) 
-        VALUES (
-            :guardian_id, 
-            :name, 
-            :birthdate, 
-            :age, 
-            :address, 
-            :cellnum, 
-            :course, 
-            :duration
-        )
-    ");
+    // Wrap insertion in a transaction so a failure does not persist a partial record
+    $conn->beginTransaction();
     
-    $stmt->execute([
-        'guardian_id' => $guardianId,
-        'name' => $studentName,
-        'birthdate' => $studentBirthdate,
-        'age' => $age,
-        'address' => $studentAddress,
-        'cellnum' => $studentCellnum,
-        'course' => $studentCourse,
-        'duration' => $courseDuration
-    ]);
-    
-    $studentId = $conn->lastInsertId();
-    
-    // Log the activity
-    logActivity(
-        'CREATE',
-        'STUDENT',
-        $studentName,
-        "Created student record (ID: $studentId, Course: " . ($studentCourse ?? 'N/A') . ")"
-    );
+    try {
+        // Insert student with remaining_sessions initialized to 4
+        $stmt = $conn->prepare("
+            INSERT INTO students (
+                guardian_id, 
+                student_name, 
+                student_birthdate, 
+                age, 
+                student_address, 
+                student_cellnum, 
+                student_course, 
+                course_duration,
+                remaining_sessions
+            ) 
+            VALUES (
+                :guardian_id, 
+                :name, 
+                :birthdate, 
+                :age, 
+                :address, 
+                :cellnum, 
+                :course, 
+                :duration,
+                :remaining_sessions
+            )
+        ");
+        
+        $stmt->execute([
+            'guardian_id' => $guardianId,
+            'name' => $studentName,
+            'birthdate' => $studentBirthdate,
+            'age' => $age,
+            'address' => $studentAddress,
+            'cellnum' => $studentCellnum,
+            'course' => $studentCourse,
+            'duration' => $courseDuration,
+            'remaining_sessions' => 4
+        ]);
+        
+        $studentId = $conn->lastInsertId();
+        
+        // Log the activity
+        logActivity(
+            'CREATE',
+            'STUDENT',
+            $studentName,
+            "Created student record (ID: $studentId, Course: " . ($studentCourse ?? 'N/A') . ")"
+        );
+        
+        $conn->commit();
+    } catch (Exception $e) {
+        $conn->rollBack();
+        throw $e;
+    }
     
     sendSuccessResponse('Student created successfully', [
         'student_id' => $studentId,
@@ -122,7 +135,8 @@ try {
         'student_address' => $studentAddress,
         'student_cellnum' => $studentCellnum,
         'student_course' => $studentCourse,
-        'course_duration' => $courseDuration
+        'course_duration' => $courseDuration,
+        'remaining_sessions' => 4
     ]);
     
 } catch (PDOException $e) {

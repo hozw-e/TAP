@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
+import ConnectionStatus from './ConnectionStatus';
 import '../styles/TopBar.css';
 
-function TopBar() {
+function TopBar({ connectionState, onRetryConnection }) {
   const [clock, setClock] = useState('');
 
   useEffect(() => {
@@ -25,6 +26,12 @@ function TopBar() {
 
   return (
     <div className="topbar">
+      {connectionState && (
+        <ConnectionStatus
+          connectionState={connectionState}
+          onRetry={onRetryConnection}
+        />
+      )}
       <span className="topbar-clock">{clock}</span>
     </div>
   );

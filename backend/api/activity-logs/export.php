@@ -19,35 +19,48 @@ if (!isAdminLoggedIn()) {
     exit;
 }
 
-$fromDate   = !empty($_GET['from_date'])  ? $_GET['from_date']  : date('Y-m-d');
-$toDate     = !empty($_GET['to_date'])    ? $_GET['to_date']    : date('Y-m-d');
+$fromDate   = !empty($_GET['from_date'])  ? $_GET['from_date']  : '';
+$toDate     = !empty($_GET['to_date'])    ? $_GET['to_date']    : '';
 $actionType = isset($_GET['action_type']) ? trim($_GET['action_type']) : '';
 
-if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fromDate) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $toDate)) {
+// Validate date formats only when provided
+if ($fromDate !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fromDate)) {
     http_response_code(400);
     header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'message' => 'Invalid date format']);
+    echo json_encode(['success' => false, 'message' => 'Invalid from_date format']);
+    exit;
+}
+if ($toDate !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $toDate)) {
+    http_response_code(400);
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => 'Invalid to_date format']);
     exit;
 }
 
 $conn = getDBConnection();
 if (!$conn) { http_response_code(500); exit('Database connection failed.'); }
 
-$whereConditions = [
-    'DATE(timestamp) >= :from_date',
-    'DATE(timestamp) <= :to_date',
-];
-$params = [
-    ':from_date' => $fromDate,
-    ':to_date'   => $toDate,
-];
+$whereConditions = [];
+$params = [];
+
+if ($fromDate !== '') {
+    $whereConditions[] = 'DATE(timestamp) >= :from_date';
+    $params[':from_date'] = $fromDate;
+}
+
+if ($toDate !== '') {
+    $whereConditions[] = 'DATE(timestamp) <= :to_date';
+    $params[':to_date'] = $toDate;
+}
 
 if ($actionType !== '') {
     $whereConditions[] = 'action_type = :action_type';
     $params[':action_type'] = $actionType;
 }
 
-$whereClause = 'WHERE ' . implode(' AND ', $whereConditions);
+$whereClause = count($whereConditions) > 0
+    ? 'WHERE ' . implode(' AND ', $whereConditions)
+    : '';
 
 $query = "SELECT * FROM activity_logs {$whereClause} ORDER BY timestamp DESC";
 $stmt  = $conn->prepare($query);
@@ -119,8 +132,8 @@ class ActivityLogsPDF extends FPDF {
 $filterInfo = $actionType !== '' ? 'Filter: Action = ' . $actionType : '';
 
 $pdf = new ActivityLogsPDF('L', 'mm', 'A4');
-$pdf->dateFrom   = alDisplayDate($fromDate);
-$pdf->dateTo     = alDisplayDate($toDate);
+$pdf->dateFrom   = $fromDate !== '' ? alDisplayDate($fromDate) : 'All';
+$pdf->dateTo     = $toDate !== '' ? alDisplayDate($toDate) : 'Latest';
 $pdf->filterInfo = $filterInfo;
 $pdf->SetMargins(10, 12, 10);
 $pdf->SetAutoPageBreak(true, 18);
@@ -171,11 +184,13 @@ $toLabel = $toDate !== '' ? $toDate : 'latest';
 $filename = 'activity_logs_' . $fromLabel . '_to_' . $toLabel . '.pdf';
 
 // Log the export activity
+$logFrom = $fromDate !== '' ? $fromDate : 'all';
+$logTo = $toDate !== '' ? $toDate : 'latest';
 logActivity(
     'EXPORT',
     'ACTIVITY_LOGS',
     'Activity Logs Report',
-    "Activity logs exported ($fromDate to $toDate)"
+    "Activity logs exported ($logFrom to $logTo)"
 );
 
 header('Content-Type: application/pdf');

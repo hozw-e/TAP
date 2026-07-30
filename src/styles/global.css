@@ -24,3 +24,271 @@ button {
 input {
   font-family: inherit;
 }
+
+/* ===== Unified Table Styles ===== */
+/* Dark header bar above tables */
+.students-header,
+.logs-header,
+.filters-section,
+.visitor-filters-section {
+  background: #34495e;
+  color: white;
+  padding: 15px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+/* Buttons inside dark header bars */
+.students-header button,
+.students-header select,
+.logs-header button,
+.logs-header select,
+.logs-header input,
+.filters-section button,
+.filters-section select,
+.filters-section input,
+.visitor-filters-section button,
+.visitor-filters-section select,
+.visitor-filters-section input {
+  font-size: 12px;
+  padding: 6px 12px;
+  height: 30px;
+  box-sizing: border-box;
+}
+
+/* Unified header search/filter button (blue icon button) */
+.students-header .filter-search-btn,
+.logs-header .refresh-btn,
+.filters-section .filter-search-btn,
+.visitor-filters-section .filter-search-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.students-header .filter-search-btn:hover:not(:disabled),
+.logs-header .refresh-btn:hover:not(:disabled),
+.filters-section .filter-search-btn:hover:not(:disabled),
+.visitor-filters-section .filter-search-btn:hover:not(:disabled) {
+  background: #2980b9;
+}
+
+/* Unified header export button (red) */
+.students-header .export-btn,
+.logs-header .export-btn,
+.filters-section .export-btn,
+.visitor-filters-section .export-btn {
+  background-color: #e53935;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  text-transform: none;
+  letter-spacing: normal;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.students-header .export-btn:hover:not(:disabled),
+.logs-header .export-btn:hover:not(:disabled),
+.filters-section .export-btn:hover:not(:disabled),
+.visitor-filters-section .export-btn:hover:not(:disabled) {
+  background-color: #c62828;
+}
+
+.students-header .export-btn:disabled,
+.logs-header .export-btn:disabled,
+.filters-section .export-btn:disabled,
+.visitor-filters-section .export-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Table subheader (thead) */
+.students-table thead,
+.logs-table thead,
+.visitor-table thead {
+  background: #ecf0f1;
+}
+
+.students-table th,
+.logs-table th,
+.visitor-table th {
+  padding: 14px 15px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2c3e50;
+  text-transform: none;
+  letter-spacing: normal;
+  border-bottom: 2px solid #ddd;
+}
+
+/* Table body cells */
+.students-table td,
+.logs-table td,
+.visitor-table td,
+.view-logs-table td {
+  font-size: 12px;
+  padding: 12px 15px;
+  color: #2c3e50;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+/* ===== Unified Page Title ===== */
+.page-header {
+  margin-bottom: 20px;
+  margin-top: -10px;
+  flex-shrink: 0;
+}
+
+.page-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+}
+
+/* ===== Unified Table Container ===== */
+.students-section,
+.activity-logs-container .logs-section,
+.visitor-table-section {
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== Unified Pagination ===== */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-top: 1px solid #ecf0f1;
+  background: #f8f9fa;
+  flex-shrink: 0;
+}
+
+.pagination-info {
+  font-size: 13px;
+  color: #7f8c8d;
+  font-weight: 500;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pagination-btn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  color: #34495e;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.pagination-btn:hover:not(:disabled):not(.active) {
+  background: #ecf0f1;
+  border-color: #bdc3c7;
+}
+
+.pagination-btn.active {
+  background: #34495e;
+  color: #fff;
+  border-color: #34495e;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination-ellipsis {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: #7f8c8d;
+}
+
+/* ===== Unified ViewRecord/EditRecord Table ===== */
+.view-logs-table thead {
+  background: #ecf0f1;
+}
+
+.view-logs-table th {
+  padding: 14px 15px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2c3e50;
+  border-bottom: 2px solid #ddd;
+}
+
+/* ===== Unified TopBar ===== */
+.topbar {
+  height: 55px;
+  background: #ffffff;
+  border-bottom: 1px solid #e4e7ee;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 0 28px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  flex-shrink: 0;
+}
+
+/* ===== Admin Layout (shared across all admin pages) ===== */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #ecf0f1;
+}
+
+.admin-content {
+  margin-left: 180px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+.admin-content-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 30px;
+  overflow-y: auto;
+}

@@ -1,18 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
-import LogoutModal from '../components/LogoutModal';
+import AdminLayout from '../components/AdminLayout';
+import AnomalyHistory from '../components/AnomalyHistory';
 import { attendanceAPI, studentsAPI } from '../services/api';
 import api from '../services/api';
 import '../styles/Students.css';
 import '../styles/ViewRecordModal.css';
-import TopBar from '../components/TopBar';
 
 function ViewRecord() {
   const { studentId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [student, setStudent] = useState(location.state?.student || null);
   const [attendanceLogs, setAttendanceLogs] = useState([]);
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
@@ -246,10 +244,7 @@ function ViewRecord() {
   };
 
   return (
-    <div className="students-layout">
-      <Sidebar onLogoutClick={() => setShowLogoutModal(true)} />
-      <div className="main-content">
-        <TopBar />
+    <AdminLayout className="students-layout">
         {isLoadingStudent ? (
           <div className="loading-spinner">
             <div className="spinner"></div>
@@ -494,13 +489,13 @@ function ViewRecord() {
                   </div>
                 )}
               </div>
+
+              {/* Anomaly Detection History */}
+              <AnomalyHistory studentId={parseInt(studentId, 10)} />
             </div>
           </div>
         )}
-      </div>
-
-      <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
-    </div>
+    </AdminLayout>
   );
 }
 

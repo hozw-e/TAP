@@ -34,12 +34,22 @@ function Sidebar({ onLogoutClick }) {
       </div>
 
       <div
+        className={`nav-item ${isActive('/student-logs') ? 'active' : ''}`}
+        onClick={() => navigate('/student-logs')}
+      >
+        <i className="fas fa-book"></i>
+        <span>Attendance Logs</span>
+      </div>
+
+      <div
         className={`nav-item ${isVisitorRecordRoute ? 'active' : ''}`}
         onClick={() => navigate('/visitor-records')}
       >
         <i className="fas fa-clipboard-list"></i>
-        <span>Visitor Record</span>
+        <span>Visitor Logs</span>
       </div>
+
+      <hr className="sidebar-divider" />
 
       <div
         className={`nav-item ${isActive('/activity-logs') ? 'active' : ''}`}
@@ -50,11 +60,19 @@ function Sidebar({ onLogoutClick }) {
       </div>
 
       <div
+        className={`nav-item ${isActive('/course-schedules') ? 'active' : ''}`}
+        onClick={() => navigate('/course-schedules')}
+      >
+        <i className="fas fa-calendar-alt"></i>
+        <span>Course Schedules</span>
+      </div>
+
+      <div
         className={`nav-item ${isActive('/visitor') ? 'active' : ''}`}
         onClick={() => navigate('/visitor')}
       >
         <i className="fas fa-door-open"></i>
-        <span>Visitor's Login</span>
+        <span>Login Panel</span>
       </div>
 
       {/* Bottom section */}

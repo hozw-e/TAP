@@ -1,0 +1,51 @@
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.connection-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.connection-dot--green {
+  background-color: #38a169;
+  box-shadow: 0 0 4px rgba(56, 161, 105, 0.5);
+}
+
+.connection-dot--red {
+  background-color: #e53e3e;
+  box-shadow: 0 0 4px rgba(229, 62, 62, 0.5);
+}
+
+.connection-status-label {
+  white-space: nowrap;
+}
+
+.connection-status-retry {
+  margin-left: 4px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background-color: #3182ce;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.connection-status-retry:hover {
+  background-color: #2b6cb0;
+}
+
+.connection-status-retry:focus-visible {
+  outline: 2px solid #3182ce;
+  outline-offset: 2px;
+}

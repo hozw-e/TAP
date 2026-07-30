@@ -1,0 +1,216 @@
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* Schedule Modal */
+.schedule-modal {
+  background: #fff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.schedule-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.schedule-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a3a5c;
+}
+
+.schedule-modal-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #7f8c8d;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.schedule-modal-close:hover {
+  background: #ecf0f1;
+  color: #2c3e50;
+}
+
+/* Form */
+.schedule-modal-form {
+  padding: 24px;
+}
+
+.schedule-form-error {
+  background: #fdeaea;
+  color: #c0392b;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  border: 1px solid #f5c6cb;
+}
+
+.schedule-form-group {
+  margin-bottom: 16px;
+}
+
+.schedule-form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #34495e;
+  margin-bottom: 6px;
+}
+
+.schedule-form-group select,
+.schedule-form-group input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #b0b8d1;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #34495e;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.schedule-form-group select:focus,
+.schedule-form-group input:focus {
+  border-color: #4a6fa5;
+  box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.12);
+}
+
+.schedule-form-row {
+  display: flex;
+  gap: 16px;
+}
+
+.schedule-form-row .schedule-form-group {
+  flex: 1;
+}
+
+/* Modal Buttons */
+.schedule-modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.schedule-btn-cancel {
+  padding: 10px 20px;
+  background: #ecf0f1;
+  color: #34495e;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.schedule-btn-cancel:hover {
+  background: #dfe6e9;
+}
+
+.schedule-btn-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.schedule-btn-submit {
+  padding: 10px 20px;
+  background: #34495e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.schedule-btn-submit:hover {
+  background: #2c3e50;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(52, 73, 94, 0.3);
+}
+
+.schedule-btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Days Checkbox Group */
+.days-checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.day-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 6px 12px;
+  border: 1.5px solid #dce1ea;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #5a6a7e;
+  transition: all 0.2s ease;
+  user-select: none;
+  background: #f8f9fb;
+  line-height: 1;
+}
+
+.day-checkbox-label:hover {
+  border-color: #4a6fa5;
+  background: #eef3fa;
+}
+
+.day-checkbox-label input[type="checkbox"] {
+  width: auto;
+  height: auto;
+  margin: 0;
+  margin-right: 8px;
+  accent-color: #34495e;
+  cursor: pointer;
+  flex-shrink: 0;
+  vertical-align: middle;
+  position: relative;
+  top: 0;
+}
+
+.day-checkbox-label input[type="checkbox"]:checked + span {
+  font-weight: 600;
+  color: #1a3a5c;
+}
+
+.day-checkbox-label:has(input:checked) {
+  border-color: #4a6fa5;
+  background: #e8f0fc;
+}

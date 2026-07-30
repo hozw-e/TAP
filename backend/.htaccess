@@ -1,2 +1,7 @@
 Options -Indexes
 RewriteEngine On
+
+# Notification service config
+SetEnv MESSENGER_PAGE_ACCESS_TOKEN "PASTE_YOUR_TOKEN_HERE"
+SetEnv VIBER_BOT_AUTH_TOKEN "PASTE_YOUR_TOKEN_HERE"
+SetEnv NOTIFICATION_CHANNEL_ORDER "messenger,viber"

@@ -1,0 +1,277 @@
+/* AnomalyConfig Settings Page */
+.anomaly-config {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.anomaly-config-loading {
+  text-align: center;
+  padding: 48px 0;
+  color: #7f8c8d;
+  font-size: 14px;
+}
+
+/* Header */
+.anomaly-config-header {
+  margin-bottom: 28px;
+}
+
+.anomaly-config-header h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a3a5c;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.anomaly-config-header h2 i {
+  color: #4a6fa5;
+  font-size: 18px;
+}
+
+.anomaly-config-description {
+  margin: 0;
+  font-size: 13px;
+  color: #7f8c8d;
+}
+
+/* Notification */
+.anomaly-config-notification {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+.anomaly-config-notification--success {
+  background: #eafaf1;
+  color: #27ae60;
+  border: 1px solid #a3e4bc;
+}
+
+.anomaly-config-notification--error {
+  background: #fdeaea;
+  color: #c0392b;
+  border: 1px solid #f5c6cb;
+}
+
+/* Form Sections */
+.anomaly-config-section {
+  margin-bottom: 24px;
+  padding: 20px;
+  background: #f8f9fb;
+  border-radius: 10px;
+  border: 1px solid #ecf0f1;
+}
+
+.anomaly-config-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #34495e;
+  margin-bottom: 4px;
+}
+
+.anomaly-config-hint {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: #95a5a6;
+}
+
+/* Threshold Controls */
+.anomaly-config-threshold-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.anomaly-config-slider {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #dce1ea;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.anomaly-config-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #4a6fa5;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(74, 111, 165, 0.3);
+  transition: transform 0.15s ease;
+}
+
+.anomaly-config-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.anomaly-config-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: #4a6fa5;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(74, 111, 165, 0.3);
+}
+
+/* Number Input */
+.anomaly-config-number-input {
+  width: 80px;
+  padding: 8px 12px;
+  border: 1.5px solid #b0b8d1;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #34495e;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  font-family: inherit;
+}
+
+.anomaly-config-number-input:focus {
+  border-color: #4a6fa5;
+  box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.12);
+}
+
+.anomaly-config-number-input.input-error {
+  border-color: #e74c3c;
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+}
+
+/* Window Controls */
+.anomaly-config-window-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.anomaly-config-unit {
+  font-size: 13px;
+  color: #7f8c8d;
+  font-weight: 500;
+}
+
+/* Validation Error */
+.anomaly-config-error {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #e74c3c;
+  font-weight: 500;
+}
+
+/* Pattern Toggles */
+.anomaly-config-patterns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.anomaly-config-pattern-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1.5px solid #dce1ea;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #5a6a7e;
+  transition: all 0.2s ease;
+  user-select: none;
+  background: #fff;
+}
+
+.anomaly-config-pattern-toggle:hover {
+  border-color: #4a6fa5;
+  background: #eef3fa;
+}
+
+.anomaly-config-pattern-toggle.active {
+  border-color: #4a6fa5;
+  background: #e8f0fc;
+  color: #1a3a5c;
+  font-weight: 600;
+}
+
+.anomaly-config-pattern-toggle input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+  accent-color: #4a6fa5;
+  cursor: pointer;
+}
+
+.anomaly-config-pattern-toggle i {
+  font-size: 14px;
+  color: #4a6fa5;
+  width: 16px;
+  text-align: center;
+}
+
+/* Save Button */
+.anomaly-config-actions {
+  margin-top: 28px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.anomaly-config-save-btn {
+  padding: 12px 28px;
+  background: #34495e;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.anomaly-config-save-btn:hover:not(:disabled) {
+  background: #2c3e50;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(52, 73, 94, 0.3);
+}
+
+.anomaly-config-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .anomaly-config {
+    padding: 16px;
+  }
+
+  .anomaly-config-patterns {
+    grid-template-columns: 1fr;
+  }
+
+  .anomaly-config-threshold-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .anomaly-config-number-input {
+    width: 100%;
+  }
+}

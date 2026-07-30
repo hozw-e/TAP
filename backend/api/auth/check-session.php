@@ -10,7 +10,8 @@ if ($isLoggedIn) {
         'logged_in' => true,
         'admin_id' => $_SESSION['admin_id'] ?? null,
         'admin_name' => $_SESSION['admin_name'] ?? null,
-        'username' => $_SESSION['username'] ?? null
+        'username' => $_SESSION['username'] ?? null,
+        'session_token' => session_id(),
     ]);
 } else {
     sendSuccessResponse('No active session', [

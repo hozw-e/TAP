@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
-import TopBar from '../components/TopBar';
-import LogoutModal from '../components/LogoutModal';
+import AdminLayout from '../components/AdminLayout';
 import Notification from '../components/Notification';
 import '../styles/ActivityLogs.css';
 import api, { activityLogsAPI } from '../services/api';
@@ -32,9 +30,14 @@ function ActivityLogs() {
     { value: 'CREATE', label: 'Create' },
     { value: 'UPDATE', label: 'Update' },
     { value: 'DELETE', label: 'Delete' },
+    { value: 'ARCHIVE', label: 'Archive' },
+    { value: 'UNARCHIVE', label: 'Unarchive' },
     { value: 'LOGIN', label: 'Login' },
     { value: 'LOGOUT', label: 'Logout' },
     { value: 'NFC_ASSIGN', label: 'NFC Assignment' },
+    { value: 'SET_MODE', label: 'Set Mode' },
+    { value: 'CHECK_IN', label: 'Check In' },
+    { value: 'CHECK_OUT', label: 'Check Out' },
     { value: 'EXPORT', label: 'Export' }
   ];
 
@@ -140,9 +143,6 @@ function ActivityLogs() {
     }, 3000);
   };
 
-  // Logout modal state
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-
   // Fetch logs on component mount
   useEffect(() => {
     fetchLogs(1);
@@ -171,12 +171,22 @@ function ActivityLogs() {
         return 'badge-update';
       case 'DELETE':
         return 'badge-delete';
+      case 'ARCHIVE':
+        return 'badge-archive';
+      case 'UNARCHIVE':
+        return 'badge-unarchive';
       case 'LOGIN':
         return 'badge-login';
       case 'LOGOUT':
         return 'badge-logout';
       case 'NFC_ASSIGN':
         return 'badge-nfc';
+      case 'SET_MODE':
+        return 'badge-nfc';
+      case 'CHECK_IN':
+        return 'badge-checkin';
+      case 'CHECK_OUT':
+        return 'badge-checkout';
       case 'EXPORT':
         return 'badge-export';
       default:
@@ -185,11 +195,7 @@ function ActivityLogs() {
   };
 
   return (
-    <div className="activity-logs-container">
-      <Sidebar onLogoutClick={() => setShowLogoutModal(true)} />
-      <div className="activity-logs-content">
-        <TopBar />
-        <div className="activity-logs-main">
+    <AdminLayout className="activity-logs-container">
           <div className="page-header">
             <h1>Activity Logs</h1>
           </div>
@@ -321,10 +327,6 @@ function ActivityLogs() {
               </div>
             )}
           </div>
-        </div>
-      </div>
-
-      <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
 
       <Notification
         isOpen={notification.isOpen}
@@ -332,7 +334,7 @@ function ActivityLogs() {
         message={notification.message}
         type={notification.type}
       />
-    </div>
+    </AdminLayout>
   );
 }
 

@@ -6,13 +6,11 @@ import '../styles/VisitorPage.css';
 function VisitorPage() {
   const navigate = useNavigate();
   const [visitorName, setVisitorName] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
 
   // Welcome/Farewell modal (NFC tap)
   const [modal, setModal] = useState({ show: false, type: '', name: '' });
 
-  // Manual login modal (typed name)
-  const [manualLoginModal, setManualLoginModal] = useState({ show: false, name: '' });
+
   
   // Already tapped in modal (check-out denied)
   const [deniedModal, setDeniedModal] = useState({ show: false, name: '', remainingTime: 0 });
@@ -28,9 +26,22 @@ function VisitorPage() {
   const [adminLoading, setAdminLoading] = useState(false);
   const [showAdminPassword, setShowAdminPassword] = useState(false);
 
+  // Student card modal (NFC tap of a student card in visitor mode)
+  const [studentCardModal, setStudentCardModal] = useState({ show: false });
+
+  // Name required modal (NFC tap with empty name)
+  const [nameRequiredModal, setNameRequiredModal] = useState({ show: false });
+
+  // Tap ID reminder modal (when user presses Enter)
+  const [tapReminderModal, setTapReminderModal] = useState({ show: false });
+
+  // Already checked in modal
+  const [alreadyCheckedInModal, setAlreadyCheckedInModal] = useState({ show: false, name: '' });
+
   // NFC polling
   const intervalRef = useRef(null);
   const lastUIDRef  = useRef(null);
+  const visitorNameRef = useRef('');
 
   // Auto-dismiss NFC modal after 3 seconds
   useEffect(() => {
@@ -40,13 +51,7 @@ function VisitorPage() {
     }
   }, [modal.show]);
 
-  // Auto-dismiss manual login modal after 3 seconds
-  useEffect(() => {
-    if (manualLoginModal.show) {
-      const timer = setTimeout(() => setManualLoginModal({ show: false, name: '' }), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [manualLoginModal.show]);
+
   
   // Auto-dismiss denied modal after 5 seconds
   useEffect(() => {
@@ -64,12 +69,53 @@ function VisitorPage() {
     }
   }, [unassignedModal.show]);
 
-  // Start NFC polling on mount — clear stale scans first to prevent ghost logs
+  // Auto-dismiss student card modal after 4 seconds
   useEffect(() => {
+    if (studentCardModal.show) {
+      const timer = setTimeout(() => setStudentCardModal({ show: false }), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [studentCardModal.show]);
+
+  // Auto-dismiss name required modal after 4 seconds
+  useEffect(() => {
+    if (nameRequiredModal.show) {
+      const timer = setTimeout(() => setNameRequiredModal({ show: false }), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [nameRequiredModal.show]);
+
+  // Auto-dismiss tap reminder modal after 4 seconds
+  useEffect(() => {
+    if (tapReminderModal.show) {
+      const timer = setTimeout(() => setTapReminderModal({ show: false }), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [tapReminderModal.show]);
+
+  // Auto-dismiss already checked in modal after 4 seconds
+  useEffect(() => {
+    if (alreadyCheckedInModal.show) {
+      const timer = setTimeout(() => setAlreadyCheckedInModal({ show: false, name: '' }), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [alreadyCheckedInModal.show]);
+
+  // Keep visitorNameRef in sync with visitorName state
+  useEffect(() => {
+    visitorNameRef.current = visitorName;
+  }, [visitorName]);
+
+  // Set scanner mode to 'visitor' on mount, restore to 'attendance' on unmount
+  useEffect(() => {
+    nfcAPI.setMode('visitor').catch(err => console.error('Failed to set visitor mode:', err));
     nfcAPI.clearScan().finally(() => {
       startPolling();
     });
-    return () => stopPolling();
+    return () => {
+      stopPolling();
+      nfcAPI.setMode('attendance').catch(err => console.error('Failed to restore attendance mode:', err));
+    };
   }, []);
 
   const startPolling = () => {
@@ -85,13 +131,50 @@ function VisitorPage() {
 
             // get-last-scan.php only returns fully processed scans,
             // so we can use the result directly without calling scan.php again
-            const { status, action, student_name, time_since_checkin, required_time } = response.data;
+            const { status, action, student_name, time_since_checkin, required_time, uid: scannedUid, name: scannedVisitorName } = response.data;
+
             if (status === 'assigned') {
+              // Student card scanned in attendance mode (shouldn't happen in visitor mode, but handle gracefully)
               setModal({ show: true, type: action === 'check_in' ? 'welcome' : 'farewell', name: student_name });
             } else if (status === 'denied') {
               const remainingTime = required_time - time_since_checkin;
               setDeniedModal({ show: true, name: student_name, remainingTime });
-            } else if (status === 'unassigned' || status === 'error_unassigned') {
+            } else if (status === 'student_card') {
+              // Student card tapped in visitor mode — show error
+              setStudentCardModal({ show: true });
+            } else if (status === 'visitor_checkout') {
+              // Visitor checked out via scan.php inline logic
+              try {
+                const checkoutResponse = await visitorsAPI.checkoutNFC(scannedUid);
+                const checkoutName = (checkoutResponse.data && checkoutResponse.data.name) || scannedVisitorName || 'Visitor';
+                setModal({ show: true, type: 'farewell', name: checkoutName });
+              } catch (err) {
+                // Fallback: show farewell with whatever name we have
+                setModal({ show: true, type: 'farewell', name: scannedVisitorName || 'Visitor' });
+              }
+            } else if (status === 'unassigned') {
+              // Unassigned tag in visitor mode — need to check if name is filled
+              const currentName = visitorNameRef.current.trim();
+              if (!currentName) {
+                // Show "enter name first" error
+                setNameRequiredModal({ show: true });
+              } else {
+                // Call checkinNFC with the name from the input field
+                try {
+                  const checkinResponse = await visitorsAPI.checkinNFC(currentName, scannedUid);
+                  if (checkinResponse.success && checkinResponse.data) {
+                    if (checkinResponse.data.created === true) {
+                      setModal({ show: true, type: 'welcome', name: currentName });
+                      setVisitorName(''); // Clear input
+                    } else if (checkinResponse.data.status === 'already_checked_in') {
+                      setAlreadyCheckedInModal({ show: true, name: currentName });
+                    }
+                  }
+                } catch (err) {
+                  console.error('NFC check-in error:', err);
+                }
+              }
+            } else if (status === 'error_unassigned') {
               setUnassignedModal({ show: true });
             }
 
@@ -115,24 +198,7 @@ function VisitorPage() {
     }
   };
 
-  const handleVisitorSubmit = async (e) => {
-    e.preventDefault();
-    if (!visitorName.trim()) return;
-    setIsLoading(true);
-    try {
-      const response = await visitorsAPI.checkin(visitorName.trim());
-      if (response.success) {
-        setManualLoginModal({ show: true, name: visitorName.trim() });
-        setVisitorName('');
-        // Broadcast event for dashboard to refresh
-        localStorage.setItem('visitorCheckin', Date.now().toString());
-      }
-    } catch (err) {
-      console.error('Visitor check-in error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
 
   const handleBackClick = () => {
     setAdminError('');
@@ -173,20 +239,24 @@ function VisitorPage() {
       {/* Main content */}
       <div className="visitor-content">
         <h1 className="visitor-title">Welcome to A+ Center!</h1>
-        <p className="visitor-subtitle">Please tap your <strong>NFC</strong> or enter your name to login</p>
+        <p className="visitor-subtitle">Please enter your name and tap your <strong>NFC</strong> card to check in</p>
 
-        <form className="visitor-form" onSubmit={handleVisitorSubmit}>
+        <form className="visitor-form" onSubmit={(e) => e.preventDefault()}>
           <input
             type="text"
             className="visitor-input"
             placeholder="Type your name here..."
             value={visitorName}
             onChange={(e) => setVisitorName(e.target.value)}
-            disabled={isLoading}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                if (visitorName.trim()) {
+                  setTapReminderModal({ show: true });
+                }
+              }
+            }}
           />
-          <button type="submit" className="visitor-submit-btn" disabled={isLoading || !visitorName.trim()}>
-            <i className="fas fa-arrow-right"></i>
-          </button>
         </form>
 
         {/* NFC Reader Status */}
@@ -221,28 +291,7 @@ function VisitorPage() {
         </div>
       )}
 
-      {/* Manual Login Modal (Typed Name) */}
-      {manualLoginModal.show && (
-        <div className="visitor-modal-overlay">
-          <div className="visitor-modal manual-login-modal">
-            <div className="visitor-modal-icon manual-login-icon">
-              <i className="fas fa-check-circle"></i>
-              <p>Login successful</p>
-            </div>
-            <h2>Welcome, {manualLoginModal.name}!</h2>
-            <p className="visitor-modal-timestamp">
-              {new Date().toLocaleString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </p>
-          </div>
-        </div>
-      )}
+
 
       {/* Already Tapped In Modal (Check-out Denied) */}
       {deniedModal.show && (
@@ -276,6 +325,70 @@ function VisitorPage() {
             <h2>NFC not assigned</h2>
             <p className="unassigned-message">
               Please ask the admin personnel for assistance. Your NFC ID may not have been registered to your name.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Student Card Error Modal */}
+      {studentCardModal.show && (
+        <div className="visitor-modal-overlay">
+          <div className="visitor-modal unassigned-modal">
+            <div className="visitor-modal-icon denied-icon">
+              <i className="fas fa-exclamation-triangle"></i>
+              <p>Wrong card type</p>
+            </div>
+            <h2>This card is not a visitor card</h2>
+            <p className="unassigned-message">
+              This NFC card is assigned to a student. Please use an unassigned visitor card instead.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Name Required Modal */}
+      {nameRequiredModal.show && (
+        <div className="visitor-modal-overlay">
+          <div className="visitor-modal unassigned-modal">
+            <div className="visitor-modal-icon">
+              <i className="fas fa-info-circle"></i>
+              <p>Name required</p>
+            </div>
+            <h2>Please enter your name first</h2>
+            <p className="unassigned-message">
+              Type your name in the input field above, then tap your NFC card again to check in.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Tap Visitor ID Reminder Modal */}
+      {tapReminderModal.show && (
+        <div className="visitor-modal-overlay">
+          <div className="visitor-modal unassigned-modal">
+            <div className="visitor-modal-icon">
+              <i className="fas fa-id-card"></i>
+              <p>Tap required</p>
+            </div>
+            <h2>Please tap your Visitor ID to login</h2>
+            <p className="unassigned-message">
+              Place your NFC visitor card on the reader to complete check-in.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Already Checked In Modal */}
+      {alreadyCheckedInModal.show && (
+        <div className="visitor-modal-overlay">
+          <div className="visitor-modal unassigned-modal">
+            <div className="visitor-modal-icon">
+              <i className="fas fa-check-circle"></i>
+              <p>Already checked in</p>
+            </div>
+            <h2>You are already checked in</h2>
+            <p className="unassigned-message">
+              {alreadyCheckedInModal.name}, you have already checked in today. Tap again when you are ready to leave.
             </p>
           </div>
         </div>

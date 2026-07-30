@@ -1,0 +1,117 @@
+/* Anomaly Toast Notification Styles */
+
+.anomaly-toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 5000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 80vh;
+  overflow-y: auto;
+  pointer-events: none;
+}
+
+.anomaly-toast-item {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border-left: 4px solid #e74c3c;
+  min-width: 320px;
+  max-width: 400px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateX(400px);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  pointer-events: auto;
+}
+
+.anomaly-toast-item.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.anomaly-toast-item:hover {
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2);
+}
+
+/* Toast Icon */
+.anomaly-toast-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fdecea;
+  color: #e74c3c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+/* Toast Content */
+.anomaly-toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.anomaly-toast-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.anomaly-toast-student {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.anomaly-toast-pattern {
+  font-size: 12px;
+  font-weight: 500;
+  color: #e74c3c;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.anomaly-toast-description {
+  font-size: 13px;
+  color: #5a6c7d;
+  line-height: 1.4;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Close Button */
+.anomaly-toast-close {
+  background: none;
+  border: none;
+  color: #95a5a6;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.anomaly-toast-close:hover {
+  background: #f0f0f0;
+  color: #2c3e50;
+}

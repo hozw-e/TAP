@@ -42,6 +42,7 @@ try {
             s.course_duration,
             s.is_archived,
             s.created_at,
+            COALESCE(s.remaining_sessions, 0) AS remaining_sessions,
             g.guardian_name,
             g.guardian_address,
             g.guardian_cellnum,
@@ -62,7 +63,7 @@ try {
         WHERE s.is_archived = :is_archived
         GROUP BY s.student_id, s.guardian_id, s.student_name, s.student_birthdate,
                  s.age, s.student_address, s.student_cellnum, s.student_course,
-                 s.course_duration, s.is_archived, s.created_at,
+                 s.course_duration, s.is_archived, s.created_at, s.remaining_sessions,
                  g.guardian_name, g.guardian_address, g.guardian_cellnum, n.uid
         ORDER BY s.student_name ASC
     ");

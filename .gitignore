@@ -18,3 +18,21 @@ dist
 # Database credentials
 backend/config/database.php
 apdc_attendance.sql
+
+# Database backups
+db_backup/
+
+# One-time utility scripts
+hash-admin-passwords.php
+fix_import.php
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.hypothesis/
+
+# IDE / Editor
+.vscode/
+.kiro/

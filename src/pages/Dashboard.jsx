@@ -1,13 +1,23 @@
-import { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
-import LogoutModal from '../components/LogoutModal';
+import { useState, useEffect, useCallback } from 'react';
+import AdminLayout from '../components/AdminLayout';
 import Notification from '../components/Notification';
-import api from '../services/api';
+import VisitTrendGraph from '../components/VisitTrendGraph';
+import AtRiskPanel from '../components/AtRiskPanel';
+import AnomalyToastContainer from '../components/AnomalyToast';
+import { useWebSocket } from '../hooks/useWebSocket';
+import { useAnomalyAlerts } from '../hooks/useAnomalyAlerts';
+import api, { dashboardAPI } from '../services/api';
 import '../styles/Dashboard.css';
-import TopBar from '../components/TopBar';
 import { useLocation, useNavigate } from 'react-router-dom';
 import introJs from 'intro.js';
 import 'intro.js/introjs.css';
+
+/**
+ * Get session token from sessionStorage for WebSocket authentication.
+ */
+function getSessionToken() {
+  return sessionStorage.getItem('session_token') || '';
+}
 
 const COURSES = [
   'Basic Coding', 'Research', 'EV3', 'Rover 2',
@@ -17,14 +27,15 @@ const COURSES = [
 function Dashboard() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [stats, setStats] = useState({ totalStudents: 0, presentToday: 0, enrolledToday: 0 });
+  const [stats, setStats] = useState({ totalStudents: 0, presentToday: 0, presentStudents: 0, presentVisitors: 0, enrolledToday: 0 });
   const [attendanceLogs, setAttendanceLogs] = useState([]);
   const [filteredLogs, setFilteredLogs] = useState([]);
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  
   const [isLoading, setIsLoading] = useState(true);
   const [showLoginSuccessToast, setShowLoginSuccessToast] = useState(false);
 
-  // Date range filter (empty = all records)
+  // Date range filter - default to today
+  const today = new Date().toISOString().split('T')[0];
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo]     = useState('');
 
@@ -33,8 +44,99 @@ function Dashboard() {
   const [filterCourse, setFilterCourse] = useState('All');
 
   // Pagination
-  const ITEMS_PER_PAGE = 5;
+  const ITEMS_PER_PAGE = 10;
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Trend graph state
+  const [trendData, setTrendData] = useState([]);
+  const [trendFilter, setTrendFilter] = useState('All');
+  const [trendLoading, setTrendLoading] = useState(true);
+  const [trendError, setTrendError] = useState(null);
+
+  // Absent students state
+  const [absentData, setAbsentData] = useState({ absent_students: [], total_expected: 0, total_absent: 0 });
+  const [absentLoading, setAbsentLoading] = useState(true);
+
+  // Today's schedules state
+  const [schedulesToday, setSchedulesToday] = useState([]);
+  const [schedulesLoading, setSchedulesLoading] = useState(true);
+
+  // --- Real-time WebSocket integration ---
+  const sessionToken = getSessionToken();
+  const { connectionState, lastMessage, retryConnection } = useWebSocket(sessionToken);
+  const { alerts, dismissAlert } = useAnomalyAlerts(lastMessage);
+
+  // Anomaly engine availability state
+  const [engineAvailable, setEngineAvailable] = useState(true);
+
+  // Toast alerts queue (new alerts shown as toasts then cleared)
+  const [toastAlerts, setToastAlerts] = useState([]);
+
+  // Handle attendance_event messages — prepend to logs, update presence, remove from absent
+  useEffect(() => {
+    if (!lastMessage || lastMessage.type !== 'attendance_event') return;
+    const event = lastMessage.data;
+    if (!event) return;
+
+    // Prepend to attendance logs (maintain max page consistency)
+    setAttendanceLogs(prev => {
+      const newLog = {
+        attendance_id: `rt-${Date.now()}`,
+        row_type: 'student',
+        student_id: event.student_id,
+        student_name: event.student_name,
+        student_course: event.course || '',
+        time_in: event.action === 'check_in' ? event.timestamp?.split('T')[1]?.substring(0, 8) || '' : '',
+        time_out: event.action === 'check_out' ? event.timestamp?.split('T')[1]?.substring(0, 8) || '' : '',
+        attendance_flag: event.attendance_flag,
+        msg_channel: null,
+        msg_success: null,
+        msg_out_success: null,
+      };
+      return [newLog, ...prev];
+    });
+
+    // Update presence count
+    setStats(prev => {
+      const presentStudents = event.action === 'check_in'
+        ? prev.presentStudents + 1
+        : Math.max(0, prev.presentStudents - 1);
+      return { ...prev, presentStudents };
+    });
+
+    // Remove from absent list if check_in
+    if (event.action === 'check_in') {
+      setAbsentData(prev => {
+        const updatedAbsent = prev.absent_students.filter(
+          s => s.student_id !== event.student_id
+        );
+        return {
+          ...prev,
+          absent_students: updatedAbsent,
+          total_absent: updatedAbsent.length,
+        };
+      });
+    }
+  }, [lastMessage]);
+
+  // Handle anomaly_alert messages — add toast notifications
+  useEffect(() => {
+    if (!lastMessage || lastMessage.type !== 'anomaly_alert') return;
+    const alertData = lastMessage.data;
+    if (!alertData) return;
+
+    setToastAlerts(prev => [alertData, ...prev]);
+  }, [lastMessage]);
+
+  // Handle engine_status messages
+  useEffect(() => {
+    if (!lastMessage || lastMessage.type !== 'engine_status') return;
+    setEngineAvailable(lastMessage.data?.available ?? true);
+  }, [lastMessage]);
+
+  const handleToastDismiss = useCallback((idx) => {
+    setToastAlerts(prev => prev.filter((_, i) => i !== idx));
+  }, []);
 
   // Live clock
   const [clock, setClock] = useState('');
@@ -75,6 +177,63 @@ function Dashboard() {
     loadDashboardData();
   }, []);
 
+  // Load trend data on mount
+  useEffect(() => {
+    const loadTrend = async () => {
+      setTrendLoading(true);
+      setTrendError(null);
+      try {
+        const response = await dashboardAPI.getTrend();
+        if (response.success && Array.isArray(response.data)) {
+          setTrendData(response.data);
+        } else {
+          setTrendError('Failed to load trend data');
+        }
+      } catch (err) {
+        setTrendError('Data unavailable');
+      } finally {
+        setTrendLoading(false);
+      }
+    };
+    loadTrend();
+  }, []);
+
+  // Load absent students on mount
+  useEffect(() => {
+    const loadAbsent = async () => {
+      setAbsentLoading(true);
+      try {
+        const response = await dashboardAPI.getAbsentToday();
+        if (response.success) {
+          setAbsentData(response.data);
+        }
+      } catch (err) {
+        console.error('Failed to load absent data:', err);
+      } finally {
+        setAbsentLoading(false);
+      }
+    };
+    loadAbsent();
+  }, []);
+
+  // Load today's schedules on mount
+  useEffect(() => {
+    const loadSchedules = async () => {
+      setSchedulesLoading(true);
+      try {
+        const response = await dashboardAPI.getSchedulesToday();
+        if (response.success && Array.isArray(response.data)) {
+          setSchedulesToday(response.data);
+        }
+      } catch (err) {
+        console.error('Failed to load schedules:', err);
+      } finally {
+        setSchedulesLoading(false);
+      }
+    };
+    loadSchedules();
+  }, []);
+
   // Listen for visitor check-in event (from VisitorPage)
   useEffect(() => {
     const handler = () => {
@@ -104,9 +263,8 @@ function Dashboard() {
       const statsResponse = await api.get('/dashboard/stats.php');
       if (statsResponse.data?.success) setStats(statsResponse.data.data);
 
-      const params = {};
-      if (dateFrom) params.date_from = dateFrom;
-      if (dateTo) params.date_to = dateTo;
+      // Always fetch today's logs for the dashboard
+      const params = { date_from: today, date_to: today };
 
       const logsResponse = await api.get('/dashboard/logs.php', { params });
 
@@ -183,25 +341,24 @@ function Dashboard() {
       </div>`;
     };
 
+    const totalSteps = 14;
+
     intro.setOptions({
       steps: [
-        { intro: buildIntro(1, 17, 'Welcome to Dashboard!|This is your main control center for monitoring attendance and system activity. Let me show you around!') },
-        { element: '.stats-grid', intro: buildIntro(2, 17, 'Statistics Overview|These cards give you a quick snapshot of your facility\'s current status at a glance.') },
-        { element: '.stat-card:nth-child(1)', intro: buildIntro(3, 17, 'Total Enrollees|Shows the total number of students registered in the system.') },
-        { element: '.stat-card:nth-child(2)', intro: buildIntro(4, 17, 'Present Students|Displays how many students are currently inside the facility right now.') },
-        { element: '.stat-card:nth-child(3)', intro: buildIntro(5, 17, 'Newcomers Today|Shows the number of students who enrolled today.') },
-        { element: '.logs-section', intro: buildIntro(6, 17, 'Attendance Logs|This section displays all attendance records including check-in/check-out times, duration, and SMS notifications.') },
-        { element: '.date-picker:nth-of-type(1)', intro: buildIntro(7, 17, 'From Date|Select the start date to filter attendance logs. Default is today\'s date.') },
-        { element: '.date-picker:nth-of-type(2)', intro: buildIntro(8, 17, 'To Date|Select the end date for your date range filter. Default is today\'s date.') },
-        { element: '.filter-select:nth-of-type(1)', intro: buildIntro(9, 17, 'Type Filter|Filter records by type: view All records, only Students, or only Visitors.') },
-        { element: '.filter-select:nth-of-type(2)', intro: buildIntro(10, 17, 'Course Filter|Filter students by their enrolled course. This is disabled when viewing Visitors.') },
-        { element: '.refresh-btn', intro: buildIntro(11, 17, 'Search Button|Click here to apply your selected date range and filters to the attendance logs.') },
-        { element: '.logs-table', intro: buildIntro(12, 17, 'Attendance Table|View detailed attendance information: Name, Time In, Time Out, Duration, SMS Notification status, and current Status.') },
-        { element: '.sms-badge', intro: buildIntro(13, 17, 'SMS Notifications|Shows SMS status: SENT (blue) means guardian was notified, FAILED TO SEND (red) means notification failed, N/A (gray) for visitors.') },
-        { element: '.status-badge', intro: buildIntro(14, 17, 'Status Indicators|PRESENT (green) = student is in facility, LEFT (orange) = student has checked out, VISITOR (blue) = visitor entry.') },
-        { element: '.export-btn', intro: buildIntro(15, 17, 'Export PDF|Generate and download a PDF report of the filtered attendance data for your records.') },
-        { element: '.sidebar', intro: buildIntro(16, 17, 'Navigation Menu|Use the sidebar to navigate to Students management, Activity Logs, and other sections of the system.') },
-        { element: '.help-float-btn', intro: buildIntro(17, 17, 'Help Button|Click this button anytime to restart this tour and get help with the dashboard features. That\'s it! You\'re all set!') }
+        { intro: buildIntro(1, totalSteps, 'Welcome to Dashboard!|This is your main control center for monitoring attendance and system activity. Let me show you around!') },
+        { element: '.dashboard-col-left', intro: buildIntro(2, totalSteps, 'Overview Panel|The left side shows your key statistics, attendance trends, and quick-glance info panels.') },
+        { element: '.stats-grid', intro: buildIntro(3, totalSteps, 'Statistics Cards|These cards give you a quick snapshot of your facility\'s current status.') },
+        { element: '.stat-card:nth-child(1)', intro: buildIntro(4, totalSteps, 'Total Students|Shows the total number of students registered in the system.') },
+        { element: '.stat-card:nth-child(2)', intro: buildIntro(5, totalSteps, 'Students Present|Displays how many students are currently inside the facility right now.') },
+        { element: '.stat-card:nth-child(3)', intro: buildIntro(6, totalSteps, 'Visitors Present|Shows the number of visitors currently checked in at the facility.') },
+        { element: '.visit-trend-container', intro: buildIntro(7, totalSteps, 'Visit Trend Graph|Visualizes attendance patterns over time. Use the filter to view All, Students only, or Visitors only.') },
+        { element: '.compact-panels', intro: buildIntro(8, totalSteps, 'Info Panels|These panels show today\'s absent students and scheduled classes so you can quickly see who\'s missing and what\'s coming up.') },
+        { element: '.compact-panel:nth-child(1)', intro: buildIntro(9, totalSteps, 'Expected But Absent|Lists students who have a scheduled class today but haven\'t checked in yet. Helps you track attendance gaps in real time.') },
+        { element: '.compact-panel:nth-child(2)', intro: buildIntro(10, totalSteps, 'Today\'s Schedules|Shows all courses scheduled for today with their start times. Live classes are highlighted with a pulsing dot, and past classes are dimmed.') },
+        { element: '.logs-section', intro: buildIntro(11, totalSteps, 'Attendance Logs|Today\'s attendance records showing Name, Time In, SMS notification status, Time Out, and Out SMS status.') },
+        { element: '.logs-table', intro: buildIntro(12, totalSteps, 'Logs Table|Each row shows a student or visitor entry. The colored dot indicates student (purple) or visitor (blue). SMS columns show notification status for check-in and check-out.') },
+        { element: '.sidebar', intro: buildIntro(13, totalSteps, 'Navigation Menu|Use the sidebar to navigate to Student Records, Attendance Logs, Visitor Logs, Activity Logs, Course Schedules, and the Login Panel.') },
+        { element: '.help-float-btn', intro: buildIntro(14, totalSteps, 'Help Button|Click this button anytime to restart this tour and review the dashboard features. That\'s it! You\'re all set!') }
       ],
       showProgress: false,
       showBullets: false,
@@ -228,6 +385,34 @@ function Dashboard() {
     } catch { return '---'; }
   };
 
+  const formatScheduleTime = (timeStr) => {
+    if (!timeStr) return '';
+    const [h, m] = timeStr.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`;
+  };
+
+  const isSchedulePast = (endTime) => {
+    if (!endTime) return false;
+    const now = new Date();
+    const [h, m] = endTime.split(':').map(Number);
+    const endDate = new Date();
+    endDate.setHours(h, m, 0, 0);
+    return now > endDate;
+  };
+
+  const isScheduleOngoing = (startTime, endTime) => {
+    if (!startTime || !endTime) return false;
+    const now = new Date();
+    const [sh, sm] = startTime.split(':').map(Number);
+    const [eh, em] = endTime.split(':').map(Number);
+    const start = new Date();
+    start.setHours(sh, sm, 0, 0);
+    const end = new Date();
+    end.setHours(eh, em, 0, 0);
+    return now >= start && now <= end;
+  };
+
   const calculateDuration = (timeIn, timeOut) => {
     if (!timeIn || !timeOut) return '---';
     try {
@@ -238,11 +423,15 @@ function Dashboard() {
     } catch { return '---'; }
   };
 
-  const getSMSStatus = (log) => {
+  const getNotificationStatus = (log) => {
     if (log.row_type === 'visitor') return 'N/A';
-    const inSent = log.sms_sent_in === true || log.sms_sent_in === 1;
-    const outSent = log.sms_sent_out === true || log.sms_sent_out === 1;
-    return (inSent || outSent) ? 'SENT' : 'FAILED TO SEND';
+    if (log.msg_channel && log.msg_success) {
+      return 'SMS';
+    }
+    if (log.msg_success === 0 || log.msg_success === false) {
+      return 'FAILED';
+    }
+    return 'N/A';
   };
 
   const getStatus = (log) => {
@@ -258,12 +447,7 @@ function Dashboard() {
   }, [location.pathname, location.state, navigate]);
 
   return (
-    <div className="dashboard-layout">
-      <Sidebar onLogoutClick={() => setShowLogoutModal(true)} />
-      <div className="main-content">
-
-        <TopBar />
-
+    <AdminLayout className="dashboard-layout" connectionState={connectionState} onRetryConnection={retryConnection}>
         {/* Header */}
         <div className="page-header">
           <div>
@@ -271,162 +455,228 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="stats-grid">
-          {[
-            { label: 'Enrollees', value: stats.totalStudents, sub: 'Total Students' },
-            { label: 'Present', value: stats.presentToday, sub: 'Currently In Facility' },
-            { label: 'Newcomers', value: stats.enrolledToday, sub: 'Enrolled Today' },
-          ].map((s) => (
-            <div className="stat-card" key={s.label}>
-              <div className="stat-card-title">{s.label}</div>
-              <div className="stat-card-figure">
-                <div className="stat-card-value">{s.value}</div>
-                <div className="stat-card-label">{s.sub}</div>
-              </div>
+        {/* Two-column dashboard layout */}
+        <div className="dashboard-columns">
+          {/* Left column: Stats + Trend Graph */}
+          <div className="dashboard-col-left">
+            {/* Stats */}
+            <div className="stats-grid">
+              {[
+                { label: 'Total Students', value: stats.totalStudents },
+                { label: 'Students Present', value: stats.presentStudents },
+                { label: 'Visitors Present', value: stats.presentVisitors },
+              ].map((s) => (
+                <div className="stat-card" key={s.label}>
+                  <div className="stat-card-value">{s.value}</div>
+                  <div className="stat-card-label">{s.label}</div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* Attendance Logs */}
-        <div className="logs-section">
-          <div className="logs-header">
-            <span>Attendance Logs</span>
-            <div className="logs-controls">
-              <label className="filter-label">From</label>
-              <input type="date" className="date-picker" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
-              <label className="filter-label">To</label>
-              <input type="date" className="date-picker" value={dateTo} onChange={e => setDateTo(e.target.value)} />
+            {/* Visit Trend Graph */}
+            <VisitTrendGraph
+              data={trendData}
+              filter={trendFilter}
+              onFilterChange={setTrendFilter}
+              isLoading={trendLoading}
+              error={trendError}
+            />
 
-              {/* Type filter */}
-              <select className="filter-select" value={filterType} onChange={e => setFilterType(e.target.value)}>
-                <option value="All">All Types</option>
-                <option value="Student">Student</option>
-                <option value="Visitor">Visitor</option>
-              </select>
-
-              {/* Course filter */}
-              <select
-                className="filter-select"
-                value={filterCourse}
-                onChange={e => setFilterCourse(e.target.value)}
-                disabled={filterType === 'Visitor'}
-              >
-                <option value="All">All Courses</option>
-                {COURSES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-
-              <button className="refresh-btn" onClick={handleFilter}>
-                <i className="fas fa-search"></i>
-              </button>
-            </div>
-          </div>
-
-          <div className="logs-body">
-            {isLoading ? (
-              <div className="empty-state">
-                <div className="spinner"></div>
-                <p>Loading attendance logs...</p>
-              </div>
-            ) : filteredLogs.length === 0 ? (
-              <div className="empty-state">
-                <i className="fas fa-clipboard-list"></i>
-                <p>No attendance logs for this date.</p>
-              </div>
-            ) : (
-              <table className="logs-table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Time In</th>
-                    <th>Time Out</th>
-                    <th>Duration</th>
-                    <th>SMS Notification</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredLogs
-                    .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
-                    .map((log) => (
-                    <tr key={`${log.row_type}-${log.attendance_id}`}>
-                      <td>{log.student_name || 'Unknown'}</td>
-                      <td>{formatTime(log.time_in)}</td>
-                      <td>{log.row_type === 'visitor' ? 'N/A' : formatTime(log.time_out)}</td>
-                      <td>{log.row_type === 'visitor' ? 'N/A' : calculateDuration(log.time_in, log.time_out)}</td>
-                      <td>
-                        <span className={`sms-badge ${log.row_type === 'visitor' ? 'sms-na' : getSMSStatus(log) === 'SENT' ? 'sms-sent' : 'sms-failed'}`}>
-                          {getSMSStatus(log)}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={`status-badge ${log.row_type === 'visitor' ? 'status-visitor' : getStatus(log) === 'PRESENT' ? 'status-present' : 'status-left'}`}>
-                          {getStatus(log)}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-
-          {/* Pagination - bottom-right of the logs card */}
-          {filteredLogs.length > ITEMS_PER_PAGE && (
-            <div className="pagination">
-              <span className="pagination-info">
-                Showing {indexOfFirstRecord + 1}-{Math.min(indexOfLastRecord, filteredLogs.length)} of {filteredLogs.length} records
-              </span>
-              <div className="pagination-controls">
-                <button
-                  className="pagination-btn"
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                >
-                  <i className="fas fa-chevron-left"></i>
-                </button>
-                {getPageNumbers().map((page, index) => (
-                  page === '...' ? (
-                    <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+            {/* Compact Info Panels */}
+            <div className="compact-panels">
+              {/* Absent Students */}
+              <div className="compact-panel">
+                <div className="compact-panel-title">
+                  <i className="fas fa-user-clock"></i>
+                  <span>Expected But Absent</span>
+                  {!absentLoading && (
+                    <span className="compact-badge absent-badge">{absentData.total_absent}</span>
+                  )}
+                </div>
+                <div className="compact-panel-content">
+                  {absentLoading ? (
+                    <span className="compact-loading">Loading...</span>
+                  ) : absentData.absent_students.length === 0 ? (
+                    <span className="compact-empty">
+                      {absentData.total_expected > 0 ? 'All present ✓' : 'No classes today'}
+                    </span>
                   ) : (
-                    <button
-                      key={page}
-                      className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
-                      onClick={() => setCurrentPage(page)}
-                    >
-                      {page}
-                    </button>
-                  )
-                ))}
-                <button
-                  className="pagination-btn"
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  <i className="fas fa-chevron-right"></i>
-                </button>
+                    <div className="compact-tags">
+                      {absentData.absent_students.slice(0, 8).map((student) => (
+                        <span key={student.student_id} className="compact-tag absent-tag">
+                          {student.student_name}
+                        </span>
+                      ))}
+                      {absentData.absent_students.length > 8 && (
+                        <span className="compact-tag more-tag">+{absentData.absent_students.length - 8} more</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Today's Schedules */}
+              <div className="compact-panel">
+                <div className="compact-panel-title">
+                  <i className="fas fa-calendar-day"></i>
+                  <span>Today's Schedules</span>
+                  {!schedulesLoading && (
+                    <span className="compact-badge schedule-badge">{schedulesToday.length}</span>
+                  )}
+                </div>
+                <div className="compact-panel-content">
+                  {schedulesLoading ? (
+                    <span className="compact-loading">Loading...</span>
+                  ) : schedulesToday.length === 0 ? (
+                    <span className="compact-empty">No classes today</span>
+                  ) : (
+                    <div className="compact-tags">
+                      {schedulesToday.map((sched) => (
+                        <span
+                          key={sched.schedule_id}
+                          className={`compact-tag schedule-tag ${isScheduleOngoing(sched.start_time, sched.end_time) ? 'tag-live' : ''} ${isSchedulePast(sched.end_time) ? 'tag-past' : ''}`}
+                        >
+                          {sched.course_name}
+                          <span className="tag-time">{formatScheduleTime(sched.start_time)}</span>
+                          {isScheduleOngoing(sched.start_time, sched.end_time) && <span className="tag-live-dot"></span>}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Bottom row */}
-        <div className="bottom-row">
-          <button className="export-btn" onClick={handleExport}>
-            <i className="fas fa-file-pdf"></i> Export PDF
-          </button>
-        </div>
+            {/* Engine Unavailable Indicator */}
+            {!engineAvailable && (
+              <div className="engine-unavailable-indicator" role="alert">
+                <i className="fas fa-exclamation-circle"></i>
+                <span>Anomaly detection is temporarily unavailable</span>
+              </div>
+            )}
 
-      </div>
+            {/* At-Risk Students Panel */}
+            <AtRiskPanel alerts={alerts} />
+          </div>
+
+          {/* Right column: Attendance Logs */}
+          <div className="dashboard-col-right">
+            <div className="logs-section">
+              <div className="logs-header">
+                <span>Attendance Logs</span>
+              </div>
+
+              <div className="logs-body">
+                {isLoading ? (
+                  <div className="empty-state">
+                    <div className="spinner"></div>
+                    <p>Loading attendance logs...</p>
+                  </div>
+                ) : filteredLogs.length === 0 ? (
+                  <div className="empty-state">
+                    <i className="fas fa-users empty-people-icon"></i>
+                    <p>No records yet</p>
+                  </div>
+                ) : (
+                  <table className="logs-table">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>In</th>
+                        <th>SMS</th>
+                        <th>Out</th>
+                        <th>SMS</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredLogs
+                        .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                        .map((log) => (
+                        <tr key={`${log.row_type}-${log.attendance_id}`}>
+                          <td>
+                            <div className="log-name-cell">
+                              <span className={`log-type-indicator ${log.row_type === 'visitor' ? 'type-visitor' : 'type-student'}`}></span>
+                              {log.student_name || 'Unknown'}
+                            </div>
+                          </td>
+                          <td>{formatTime(log.time_in)}</td>
+                          <td>
+                            <span className={`sms-dot ${
+                              log.row_type === 'visitor' ? 'dot-na' :
+                              getNotificationStatus(log) === 'SMS' ? 'dot-sent' :
+                              getNotificationStatus(log) === 'FAILED' ? 'dot-failed' : 'dot-na'
+                            }`}>
+                              {log.row_type === 'visitor' ? 'N/A' :
+                                getNotificationStatus(log) === 'SMS' ? 'Sent' :
+                                getNotificationStatus(log) === 'FAILED' ? 'Failed' : 'N/A'}
+                            </span>
+                          </td>
+                          <td>{formatTime(log.time_out)}</td>
+                          <td>
+                            <span className={`sms-dot ${
+                              log.row_type === 'visitor' ? 'dot-na' :
+                              !log.time_out ? 'dot-na' :
+                              log.msg_out_success ? 'dot-sent' :
+                              log.msg_out_success === 0 ? 'dot-failed' : 'dot-na'
+                            }`}>
+                              {log.row_type === 'visitor' ? 'N/A' :
+                                !log.time_out ? '---' :
+                                log.msg_out_success ? 'Sent' :
+                                log.msg_out_success === 0 ? 'Failed' : 'N/A'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+
+              {/* Pagination */}
+              {filteredLogs.length > ITEMS_PER_PAGE && (
+                <div className="pagination">
+                  <span className="pagination-info">
+                    Showing {indexOfFirstRecord + 1}-{Math.min(indexOfLastRecord, filteredLogs.length)} of {filteredLogs.length}
+                  </span>
+                  <div className="pagination-controls">
+                    <button
+                      className="pagination-btn"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <i className="fas fa-chevron-left"></i>
+                    </button>
+                    {getPageNumbers().map((page, index) => (
+                      page === '...' ? (
+                        <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+                      ) : (
+                        <button
+                          key={page}
+                          className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+                          onClick={() => setCurrentPage(page)}
+                        >
+                          {page}
+                        </button>
+                      )
+                    ))}
+                    <button
+                      className="pagination-btn"
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      <i className="fas fa-chevron-right"></i>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
       {/* Floating Help Button */}
       <button className="help-float-btn" onClick={startTour}>
         <i className="fas fa-question"></i>
       </button>
-
-      {/* Help Modal - Removed, replaced with Intro.js tour */}
-
-      <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
 
       <Notification
         isOpen={showLoginSuccessToast}
@@ -434,7 +684,10 @@ function Dashboard() {
         message="Login successful. Welcome to the Admin Dashboard!"
         type="success"
       />
-    </div>
+
+      {/* Real-time anomaly toast notifications */}
+      <AnomalyToastContainer alerts={toastAlerts} onDismiss={handleToastDismiss} />
+    </AdminLayout>
   );
 }
 

@@ -1,59 +1,8 @@
-.activity-logs-container {
-  display: flex;
-  height: 100vh;
-  background: #ecf0f1;
-  overflow: hidden;
-}
-
-.activity-logs-content {
-  margin-left: 180px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  height: 100vh;
-  box-sizing: border-box;
-}
-
-/* Fix TopBar margins so it sits flush at the top */
-.activity-logs-content .topbar {
-  margin: 0 !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-  flex-shrink: 0;
-}
-
-.activity-logs-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  padding: 30px;
-}
-
-.activity-logs-container .page-header {
-  margin-bottom: 20px;
-  margin-top: -10px;
-  flex-shrink: 0;
-}
-
-.activity-logs-container .page-header h1 {
-  font-size: 28px;
-  font-weight: 700;
-  color: #2c3e50;
-  margin: 0;
-}
-
-
-
 /* Logs Section - Combined Filters and Table */
 .activity-logs-container .logs-section {
   background: white;
-  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
-  border: 1px solid #ddd;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -62,30 +11,14 @@
 
 /* Filters Section - Dark Header Bar */
 .filters-section {
-  background: #34495e;
-  padding: 12px 20px;
-  display: flex;
   gap: 10px;
-  align-items: center;
   flex-wrap: wrap;
   justify-content: flex-end;
 }
 
 .filter-label-inline {
-  font-size: 13px;
   font-weight: 600;
   color: white;
-}
-
-.filter-search-btn {
-  padding: 8px 14px;
-  background: #3498db;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.2s;
 }
 
 .filter-search-btn:hover:not(:disabled) {
@@ -99,10 +32,8 @@
 
 .date-input,
 .action-select {
-  padding: 8px 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 13px;
   font-family: inherit;
   background-color: white;
   cursor: pointer;
@@ -117,29 +48,8 @@
   box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
 }
 
-.activity-logs-container .export-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: fit-content;
-  background-color: #dc3545;
-  color: white;
-}
-
 .activity-logs-container .export-btn:hover:not(:disabled) {
-  background-color: #c82333;
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(220, 53, 69, 0.3);
+  background-color: #c62828;
 }
 
 .activity-logs-container .export-btn:disabled {
@@ -184,26 +94,9 @@
 }
 
 .activity-logs-container .logs-table thead {
-  background: #f8f9fa;
   position: sticky;
   top: 0;
   z-index: 1;
-}
-
-.activity-logs-container .logs-table th {
-  padding: 15px;
-  text-align: left;
-  font-weight: 600;
-  font-size: 13px;
-  color: #2c3e50;
-  border-bottom: 2px solid #ddd;
-}
-
-.activity-logs-container .logs-table td {
-  padding: 15px;
-  font-size: 14px;
-  color: #2c3e50;
-  border-bottom: 1px solid #ecf0f1;
 }
 
 .activity-logs-container .logs-table tbody tr:hover {
@@ -256,6 +149,26 @@
   color: #383d41;
 }
 
+.badge-archive {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.badge-unarchive {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.badge-checkin {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.badge-checkout {
+  background-color: #fce4ec;
+  color: #880e4f;
+}
+
 .badge-default {
   background-color: #e2e3e5;
   color: #383d41;
@@ -270,77 +183,8 @@
   color: #7f8c8d;
 }
 
-/* Pagination */
-.activity-logs-container .pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  border-top: 1px solid #ecf0f1;
-  background: #f8f9fa;
-}
-
-.activity-logs-container .pagination-info {
-  font-size: 13px;
-  color: #7f8c8d;
-  font-weight: 500;
-}
-
-.activity-logs-container .pagination-controls {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.activity-logs-container .pagination-btn {
-  width: 34px;
-  height: 34px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: #fff;
-  color: #34495e;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  padding: 0;
-}
-
-.activity-logs-container .pagination-btn:hover:not(:disabled):not(.active) {
-  background: #ecf0f1;
-  border-color: #bdc3c7;
-}
-
-.activity-logs-container .pagination-btn.active {
-  background: #34495e;
-  color: #fff;
-  border-color: #34495e;
-}
-
-.activity-logs-container .pagination-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.activity-logs-container .pagination-ellipsis {
-  width: 34px;
-  height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  color: #7f8c8d;
-}
-
 /* Responsive Design */
 @media (max-width: 1024px) {
-  .activity-logs-main {
-    padding: 20px;
-  }
-
   .filters-section {
     flex-direction: column;
     align-items: stretch;
@@ -366,7 +210,7 @@
 }
 
 @media (max-width: 768px) {
-  .activity-logs-main h1 {
+  .activity-logs-container h1 {
     font-size: 24px;
   }
 

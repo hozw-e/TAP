@@ -190,6 +190,10 @@ function Login({ setIsAuthenticated }) {
     try {
       const response = await authAPI.login(username, password);
       if (response.success) {
+        // Store session token for WebSocket authentication
+        if (response.data?.session_token) {
+          sessionStorage.setItem('session_token', response.data.session_token);
+        }
         setIsAuthenticated(true);
         navigate('/dashboard', { state: { justLoggedIn: true } });
       } else {

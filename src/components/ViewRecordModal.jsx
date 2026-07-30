@@ -128,6 +128,8 @@ function ViewRecordModal({ isOpen, onClose, student, onEdit }) {
                 <div className="info-item"><label>Guardian Name</label><input value={student.guardian_name || ''} readOnly /></div>
                 <div className="info-item"><label>Contact Details</label><input value={student.guardian_cellnum || ''} readOnly /></div>
                 <div className="info-item"><label>Address</label><input value={student.guardian_address || ''} readOnly /></div>
+                <div className="info-item"><label>Messenger PSID</label><input value={student.messenger_psid || '—'} readOnly /></div>
+                <div className="info-item"><label>Viber ID</label><input value={student.viber_id || '—'} readOnly /></div>
               </div>
             </div>
           </div>

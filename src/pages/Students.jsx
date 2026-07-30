@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
-import LogoutModal from '../components/LogoutModal';
+import AdminLayout from '../components/AdminLayout';
 import NewRecordModal from '../components/NewRecordModal';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import ArchiveConfirmModal from '../components/ArchiveConfirmModal';
 import UnarchiveConfirmModal from '../components/UnarchiveConfirmModal';
 import Notification from '../components/Notification';
 import { studentsAPI } from '../services/api';
-import TopBar from '../components/TopBar';
 import '../styles/Students.css';
 
 const COURSES = [
@@ -23,7 +21,6 @@ function Students() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showArchived, setShowArchived] = useState(false);
   const [courseFilter, setCourseFilter] = useState('');
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showNewRecordModal, setShowNewRecordModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
@@ -201,10 +198,7 @@ function Students() {
   };
 
   return (
-    <div className="students-layout">
-      <Sidebar onLogoutClick={() => setShowLogoutModal(true)} />
-      <div className="main-content">
-        <TopBar />
+    <AdminLayout className="students-layout">
         <div className="page-header">
           <h1>Student Records</h1>
         </div>
@@ -360,14 +354,12 @@ function Students() {
             </div>
           )}
         </div>
-      </div>
-      <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
       <NewRecordModal isOpen={showNewRecordModal} onClose={() => setShowNewRecordModal(false)} onSuccess={handleNewRecordSuccess} />
       <DeleteConfirmModal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} onSuccess={handleDeleteSuccess} student={selectedStudent} />
       <ArchiveConfirmModal isOpen={showArchiveModal} onClose={() => setShowArchiveModal(false)} onSuccess={handleArchiveSuccess} student={selectedStudent} />
       <UnarchiveConfirmModal isOpen={showUnarchiveModal} onClose={() => setShowUnarchiveModal(false)} onSuccess={handleUnarchiveSuccess} student={selectedStudent} />
       <Notification isOpen={notification.isOpen} onClose={() => setNotification({ ...notification, isOpen: false })} message={notification.message} type={notification.type} />
-    </div>
+    </AdminLayout>
   );
 }
 

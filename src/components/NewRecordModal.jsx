@@ -21,6 +21,7 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
     guardianName: '',
     guardianAddress: '',
     guardianContact: '',
+    guardianEmail: '',
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -51,6 +52,7 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
         guardianName: '',
         guardianAddress: '',
         guardianContact: '',
+        guardianEmail: '',
       });
       setError('');
       setShowConfirm(false);
@@ -123,6 +125,7 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
       guardian_name: formData.guardianName,
       guardian_address: formData.guardianAddress || null,
       guardian_cellnum: formData.guardianContact,
+      guardian_email: formData.guardianEmail || null,
     });
 
     if (!guardianResponse.success) {
@@ -351,6 +354,21 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
                       className="form-input"
                       value={formData.guardianContact}
                       onChange={handleChange}
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">Email Address (Optional - for SMS fallback)</label>
+                    <input
+                      type="email"
+                      name="guardianEmail"
+                      className="form-input"
+                      value={formData.guardianEmail}
+                      onChange={handleChange}
+                      placeholder="Optional"
                       disabled={isLoading}
                     />
                   </div>

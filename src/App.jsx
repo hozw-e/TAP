@@ -9,6 +9,8 @@ import VisitorPage from './pages/VisitorPage';
 import LandingPage from './pages/LandingPage';
 import ActivityLogs from './pages/ActivityLogs';
 import VisitorRecords from './pages/VisitorRecords';
+import CourseSchedules from './pages/CourseSchedules';
+import StudentLogs from './pages/StudentLogs';
 import { authAPI } from './services/api';
 
 function App() {
@@ -29,6 +31,12 @@ function App() {
         response?.data?.logged_in ??
         response?.logged_in ??
         false;
+
+      // Store session token for WebSocket authentication
+      const sessionToken = response?.data?.session_token;
+      if (loggedIn && sessionToken) {
+        sessionStorage.setItem('session_token', sessionToken);
+      }
 
       setIsAuthenticated(loggedIn === true);
     } catch (error) {
@@ -143,6 +151,24 @@ function App() {
           element={
             <ProtectedRoute>
               <ActivityLogs />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/course-schedules"
+          element={
+            <ProtectedRoute>
+              <CourseSchedules />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/student-logs"
+          element={
+            <ProtectedRoute>
+              <StudentLogs />
             </ProtectedRoute>
           }
         />

@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
-import TopBar from '../components/TopBar';
-import LogoutModal from '../components/LogoutModal';
+import AdminLayout from '../components/AdminLayout';
 import Notification from '../components/Notification';
 import api from '../services/api';
 import '../styles/VisitorRecords.css';
@@ -11,7 +9,6 @@ function VisitorRecords() {
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [notification, setNotification] = useState({ isOpen: false, message: '', type: 'success' });
 
   // Filter states (empty = all time)
@@ -170,13 +167,9 @@ function VisitorRecords() {
   }, []);
 
   return (
-    <div className="visitor-records-container">
-      <Sidebar onLogoutClick={() => setShowLogoutModal(true)} />
-      <div className="visitor-records-content">
-        <TopBar />
-        <div className="visitor-records-main">
+    <AdminLayout className="visitor-records-container">
           <div className="page-header">
-            <h1>Visitor Records</h1>
+            <h1>Visitor Logs</h1>
           </div>
 
           {/* Search Bar */}
@@ -248,6 +241,7 @@ function VisitorRecords() {
                       <th>Name</th>
                       <th>Date of Visit</th>
                       <th>Time In</th>
+                      <th>Time Out</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -257,6 +251,7 @@ function VisitorRecords() {
                         <td>{visitor.name}</td>
                         <td>{formatDate(visitor.date_of_visit)}</td>
                         <td>{formatTime(visitor.time_in)}</td>
+                        <td>{visitor.time_out ? formatTime(visitor.time_out) : <span className="no-timeout">—</span>}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -303,17 +298,14 @@ function VisitorRecords() {
               </div>
             )}
           </div>
-        </div>
-      </div>
 
-      <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
       <Notification
         isOpen={notification.isOpen}
         onClose={() => setNotification({ ...notification, isOpen: false })}
         message={notification.message}
         type={notification.type}
       />
-    </div>
+    </AdminLayout>
   );
 }
 

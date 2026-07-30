@@ -1,0 +1,158 @@
+/* StudentLogs page - full height table layout */
+
+.student-logs-page {
+  height: 100vh;
+}
+
+.student-logs-page .main-content {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.student-logs-page .logs-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.student-logs-page .logs-body {
+  flex: 1;
+  overflow: auto;
+  max-height: none;
+  min-height: 0;
+}
+
+.student-logs-page .logs-table {
+  height: 100%;
+}
+
+.student-logs-page .logs-table tbody tr {
+  height: calc((100vh - 260px) / 10);
+}
+
+.student-logs-page .logs-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.student-logs-page .logs-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #ecf0f1;
+}
+
+
+
+
+/* Logs header layout for StudentLogs */
+.student-logs-page .logs-header {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.student-logs-page .logs-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.student-logs-page .filter-label {
+  color: white;
+  font-weight: 600;
+}
+
+.student-logs-page .date-picker {
+  border: 1px solid white;
+  border-radius: 6px;
+  outline: none;
+  cursor: pointer;
+  background: white;
+  color: #2c3e50;
+}
+
+.student-logs-page .filter-select {
+  border: 1px solid white;
+  border-radius: 6px;
+  background: white;
+  color: #2c3e50;
+  cursor: pointer;
+  outline: none;
+}
+
+.student-logs-page .filter-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.student-logs-page .refresh-btn:hover {
+  background: #2980b9;
+}
+
+.student-logs-page .export-btn:hover {
+  background-color: #c62828;
+}
+
+/* SMS Badge */
+.student-logs-page .sms-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  min-width: 70px;
+}
+
+.student-logs-page .sms-badge.sms-sent {
+  background: #3498db;
+  color: white;
+}
+
+.student-logs-page .sms-badge.sms-failed {
+  background: #e74c3c;
+  color: white;
+}
+
+.student-logs-page .sms-badge.sms-na {
+  background: #95a5a6;
+  color: white;
+}
+
+/* Status Badge */
+.student-logs-page .status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  min-width: 70px;
+}
+
+.student-logs-page .status-badge.status-present {
+  background: #27ae60;
+  color: white;
+}
+
+.student-logs-page .status-badge.status-left {
+  background: #f39c12;
+  color: white;
+}
+
+.student-logs-page .status-badge.status-visitor {
+  background: #2980b9;
+  color: white;
+}

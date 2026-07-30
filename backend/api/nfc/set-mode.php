@@ -13,6 +13,7 @@ require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
 require_once '../../utils/session.php';
+require_once '../../utils/activity-logger.php';
 
 // Check admin authentication
 requireAdminAuth();
@@ -52,6 +53,8 @@ try {
         ON DUPLICATE KEY UPDATE mode = :mode2, updated_at = NOW()
     ");
     $stmt->execute([':mode' => $mode, ':mode2' => $mode]);
+
+    logActivity('SET_MODE', 'NFC_SCANNER', 'Scanner', "Mode changed to: {$mode}");
 
     sendSuccessResponse('Scanner mode updated', ['mode' => $mode]);
 

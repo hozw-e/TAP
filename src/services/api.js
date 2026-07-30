@@ -156,6 +156,18 @@ export const visitorsAPI = {
     return response.data;
   },
 
+  // Check in a visitor via NFC (name + uid)
+  checkinNFC: async (name, uid) => {
+    const response = await api.post('/visitors/checkin.php', { name, uid });
+    return response.data;
+  },
+
+  // Check out a visitor via NFC (uid only)
+  checkoutNFC: async (uid) => {
+    const response = await api.post('/visitors/checkout.php', { uid });
+    return response.data;
+  },
+
   // Get visitor records with pagination and filters
   list: async (filters = {}) => {
     const params = new URLSearchParams(filters).toString();
@@ -242,6 +254,34 @@ export const dashboardAPI = {
       return { success: false, data: [] };
     }
   },
+
+  // Get 30-day visit trend data (students + visitors per day)
+  getTrend: async () => {
+    const response = await api.get('/dashboard/trend.php');
+    return response.data;
+  },
+
+  // Get absent students for today (expected but not checked in)
+  getAbsentToday: async () => {
+    try {
+      const response = await api.get('/dashboard/absent-today.php');
+      return response.data;
+    } catch (error) {
+      console.error('Absent today error:', error);
+      return { success: false, data: { absent_students: [], total_expected: 0, total_absent: 0 } };
+    }
+  },
+
+  // Get today's course schedules
+  getSchedulesToday: async () => {
+    try {
+      const response = await api.get('/dashboard/schedules-today.php');
+      return response.data;
+    } catch (error) {
+      console.error('Schedules today error:', error);
+      return { success: false, data: [] };
+    }
+  },
 };
 
 // ============================================
@@ -264,6 +304,36 @@ export const activityLogsAPI = {
       params: filters,
       responseType: 'blob',
     });
+    return response.data;
+  },
+};
+
+// ============================================
+// COURSE SCHEDULES API
+// ============================================
+
+export const courseSchedulesAPI = {
+  // Get all course schedules
+  list: async () => {
+    const response = await api.get('/course-schedules/list.php');
+    return response.data;
+  },
+
+  // Create a new course schedule
+  create: async (data) => {
+    const response = await api.post('/course-schedules/create.php', data);
+    return response.data;
+  },
+
+  // Update an existing course schedule
+  update: async (id, data) => {
+    const response = await api.put(`/course-schedules/update.php?id=${id}`, data);
+    return response.data;
+  },
+
+  // Delete a course schedule
+  delete: async (id) => {
+    const response = await api.delete(`/course-schedules/delete.php?id=${id}`);
     return response.data;
   },
 };

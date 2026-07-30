@@ -40,7 +40,7 @@ if (!$student) {
 
 // Fetch attendance logs in the date range
 $stmt2 = $conn->prepare("
-    SELECT date, time_in, time_out
+    SELECT date, time_in, time_out, attendance_flag
     FROM attendance_logs
     WHERE student_id = :student_id AND date BETWEEN :date_from AND :date_to
     ORDER BY date ASC, time_in ASC
@@ -86,6 +86,7 @@ while ($currentDate <= $endDate) {
                     'time_in' => $log['time_in'],
                     'time_out' => $log['time_out'],
                     'status' => $status,
+                    'attendance_flag' => $log['attendance_flag'] ?? null,
                 ];
             }
         } else {
@@ -95,6 +96,7 @@ while ($currentDate <= $endDate) {
                 'time_in' => null,
                 'time_out' => null,
                 'status' => 'Absent',
+                'attendance_flag' => null,
             ];
         }
     }
@@ -153,7 +155,7 @@ class StudentAttendancePDF extends FPDF {
         $this->Ln(3);
         
         // Calculate table width and center position
-        $tableWidth = 164; // 12 + 38 + 38 + 38 + 38
+        $tableWidth = 192; // 12 + 34 + 34 + 34 + 34 + 44
         $pageWidth = $this->GetPageWidth();
         $leftMargin = ($pageWidth - $tableWidth) / 2;
         $this->SetX($leftMargin);
@@ -163,10 +165,11 @@ class StudentAttendancePDF extends FPDF {
         $this->SetTextColor(255, 255, 255);
         $this->SetFont('Arial', 'B', 9);
         $this->Cell(12, 8, '#', 1, 0, 'C', true);
-        $this->Cell(38, 8, 'Date', 1, 0, 'C', true);
-        $this->Cell(38, 8, 'Time In', 1, 0, 'C', true);
-        $this->Cell(38, 8, 'Time Out', 1, 0, 'C', true);
-        $this->Cell(38, 8, 'Status', 1, 1, 'C', true);
+        $this->Cell(34, 8, 'Date', 1, 0, 'C', true);
+        $this->Cell(34, 8, 'Time In', 1, 0, 'C', true);
+        $this->Cell(34, 8, 'Time Out', 1, 0, 'C', true);
+        $this->Cell(34, 8, 'Status', 1, 0, 'C', true);
+        $this->Cell(44, 8, 'Attendance Flag', 1, 1, 'C', true);
         $this->SetTextColor(0, 0, 0);
     }
     function Footer() {
@@ -195,16 +198,16 @@ if (empty($allRecords)) {
     $pdf->Cell(0, 12, 'No records found for the selected filters.', 0, 1, 'C');
 } else {
     // Calculate table width and center position
-    $tableWidth = 164; // 12 + 38 + 38 + 38 + 38
+    $tableWidth = 192; // 12 + 34 + 34 + 34 + 34 + 44
     $pageWidth = $pdf->GetPageWidth();
     $leftMargin = ($pageWidth - $tableWidth) / 2;
     
     foreach ($allRecords as $i => $row) {
         $pdf->SetX($leftMargin);
         $pdf->Cell(12, 8, $i + 1, 1, 0, 'C');
-        $pdf->Cell(38, 8, formatDisplayDate($row['date']), 1, 0, 'C');
-        $pdf->Cell(38, 8, formatTimeDisplay($row['time_in']), 1, 0, 'C');
-        $pdf->Cell(38, 8, formatTimeDisplay($row['time_out']), 1, 0, 'C');
+        $pdf->Cell(34, 8, formatDisplayDate($row['date']), 1, 0, 'C');
+        $pdf->Cell(34, 8, formatTimeDisplay($row['time_in']), 1, 0, 'C');
+        $pdf->Cell(34, 8, formatTimeDisplay($row['time_out']), 1, 0, 'C');
         
         // Status cell with color
         $status = $row['status'];
@@ -218,9 +221,13 @@ if (empty($allRecords)) {
             $pdf->SetFillColor(255, 235, 59);
             $pdf->SetTextColor(51, 51, 51);
         }
-        $pdf->Cell(38, 8, $status, 1, 1, 'C', true);
+        $pdf->Cell(34, 8, $status, 1, 0, 'C', true);
         $pdf->SetTextColor(0, 0, 0);
         $pdf->SetFillColor(255, 255, 255);
+        
+        // Attendance Flag cell
+        $flagDisplay = ucfirst($row['attendance_flag'] ?? '');
+        $pdf->Cell(44, 8, $flagDisplay, 1, 1, 'C');
     }
 }
 

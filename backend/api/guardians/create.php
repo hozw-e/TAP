@@ -7,7 +7,8 @@
  * {
  *   "guardian_name": "John Doe",
  *   "guardian_address": "123 Main St",
- *   "guardian_cellnum": "+639123456789"
+ *   "guardian_cellnum": "+639123456789",
+ *   "guardian_email": "john@example.com"
  * }
  */
 
@@ -15,6 +16,7 @@ require_once '../../config/database.php';
 require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
 require_once '../../utils/session.php';
+require_once '../../utils/activity-logger.php';
 
 // Check admin authentication
 requireAdminAuth();
@@ -37,6 +39,17 @@ $guardianName = trim($input['guardian_name']);
 $guardianAddress = isset($input['guardian_address']) ? trim($input['guardian_address']) : null;
 $guardianCellnum = trim($input['guardian_cellnum']);
 
+// Validate optional guardian_email field
+$guardianEmail = isset($input['guardian_email']) && $input['guardian_email'] !== '' ? trim($input['guardian_email']) : null;
+
+if ($guardianEmail !== null && !filter_var($guardianEmail, FILTER_VALIDATE_EMAIL)) {
+    sendErrorResponse('Invalid email address format', 400);
+}
+
+// Legacy fields (kept for backward compatibility, no longer collected in forms)
+// $messengerPsid = isset($input['messenger_psid']) ...
+// $viberId = isset($input['viber_id']) ...
+
 // Get database connection
 $conn = getDBConnection();
 if (!$conn) {
@@ -44,25 +57,28 @@ if (!$conn) {
 }
 
 try {
-    // Insert guardian with correct column count and bindings
     $stmt = $conn->prepare("
-        INSERT INTO guardians (guardian_name, guardian_address, guardian_cellnum) 
-        VALUES (:name, :address, :cellnum)
+        INSERT INTO guardians (guardian_name, guardian_address, guardian_cellnum, guardian_email) 
+        VALUES (:name, :address, :cellnum, :email)
     ");
     
     $stmt->execute([
         ':name' => $guardianName,
         ':address' => $guardianAddress,
-        ':cellnum' => $guardianCellnum
+        ':cellnum' => $guardianCellnum,
+        ':email' => $guardianEmail
     ]);
     
     $guardianId = $conn->lastInsertId();
-    
+
+    logActivity('CREATE', 'GUARDIAN', $guardianName, "Guardian ID: {$guardianId}, Contact: {$guardianCellnum}");
+
     sendSuccessResponse('Guardian created successfully', [
         'guardian_id' => $guardianId,
         'guardian_name' => $guardianName,
         'guardian_address' => $guardianAddress,
-        'guardian_cellnum' => $guardianCellnum
+        'guardian_cellnum' => $guardianCellnum,
+        'guardian_email' => $guardianEmail
     ]);
     
 } catch (PDOException $e) {

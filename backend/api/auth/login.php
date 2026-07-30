@@ -90,6 +90,7 @@ try {
         'admin_id'   => $admin['admin_id'],
         'admin_name' => $admin['admin_name'],
         'username'   => $admin['username'],
+        'session_token' => session_id(),
     ]);
 
 } catch (PDOException $e) {

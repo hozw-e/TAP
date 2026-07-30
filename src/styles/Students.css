@@ -1,43 +1,5 @@
-.students-layout {
-  display: flex;
-  height: 100vh;
-  background: #f5f5f5;
-  overflow: hidden;
-}
+/* Students page-specific styles */
 
-.main-content {
-  margin-left: 180px;
-  flex: 1;
-  padding: 30px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  height: 100vh;
-  box-sizing: border-box;
-}
-
-.main-content .page-header {
-  flex-shrink: 0;
-  margin-bottom: 20px;
-  margin-top: -10px;
-}
-
-.main-content .page-header h1 {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1a3a5c;
-  margin: 0;
-}
-
-.main-content .topbar {
-  flex-shrink: 0;
-  position: relative;
-  margin-left: -30px;
-  margin-right: -30px;
-  margin-top: -30px;
-  margin-bottom: 20px;
-  width: calc(100% + 60px);
-}
 
 /* Search and Add Section */
 .controls-section {
@@ -115,9 +77,7 @@
 /* Students Table */
 .students-section {
   background: white;
-  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -135,14 +95,7 @@
 }
 
 .students-header {
-  background: #34495e;
-  color: white;
-  padding: 15px 20px;
-  font-weight: 600;
-  font-size: 16px;
-  display: flex;
   justify-content: space-between;
-  align-items: center;
 }
 
 .students-header-actions {
@@ -152,12 +105,10 @@
 }
 
 .course-filter-select {
-  padding: 8px 16px;
   background: #ffffff;
   color: #34495e;
   border: none;
   border-radius: 6px;
-  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -173,12 +124,10 @@
 }
 
 .toggle-archive-btn {
-  padding: 8px 16px;
   background: #ffffff;
   color: #34495e;
   border: none;
   border-radius: 6px;
-  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -190,26 +139,9 @@
 }
 
 .students-table thead {
-  background: #ecf0f1;
   position: sticky;
   top: 0;
   z-index: 1;
-}
-
-.students-table th {
-  padding: 15px;
-  text-align: left;
-  font-weight: 600;
-  color: #2c3e50;
-  font-size: 13px;
-  border-bottom: 2px solid #ddd;
-}
-
-.students-table td {
-  padding: 15px;
-  border-bottom: 1px solid #ecf0f1;
-  color: #34495e;
-  font-size: 14px;
 }
 
 .students-table tbody tr:hover {
@@ -370,67 +302,4 @@
 }
 
 
-/* Pagination */
-.pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  border-top: 1px solid #ecf0f1;
-  background: #f8f9fa;
-  flex-shrink: 0;
-}
 
-.pagination-info {
-  font-size: 13px;
-  color: #7f8c8d;
-  font-weight: 500;
-}
-
-.pagination-controls {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.pagination-btn {
-  width: 34px;
-  height: 34px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: #fff;
-  color: #34495e;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.pagination-btn:hover:not(:disabled):not(.active) {
-  background: #ecf0f1;
-  border-color: #bdc3c7;
-}
-
-.pagination-btn.active {
-  background: #34495e;
-  color: #fff;
-  border-color: #34495e;
-}
-
-.pagination-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.pagination-ellipsis {
-  width: 34px;
-  height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  color: #7f8c8d;
-}
