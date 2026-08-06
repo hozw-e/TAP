@@ -100,6 +100,18 @@ try {
     $stmt->execute([':uid' => $uid]);
     $nfcTag = $stmt->fetch();
     
+    // Fetch scanner mode early — needed by both the student and unassigned branches
+    $scannerMode = 'attendance'; // default
+    try {
+        $modeStmt = $conn->query("SELECT mode FROM scanner_mode WHERE id = 1 LIMIT 1");
+        $modeRow = $modeStmt->fetch(PDO::FETCH_ASSOC);
+        if ($modeRow) {
+            $scannerMode = $modeRow['mode'];
+        }
+    } catch (Exception $e) {
+        // Table might not exist yet, default to attendance
+    }
+    
     // --- VISITOR CHECK-OUT FLOW ---
     if ($nfcTag && $nfcTag['visitor_session_id']) {
         // This NFC tag is currently linked to an active visitor session → check out the visitor
@@ -164,6 +176,22 @@ try {
     // --- END VISITOR CHECK-OUT FLOW ---
     
     if ($nfcTag && $nfcTag['student_id']) {
+        // --- Student card in visitor mode: block it ---
+        if ($scannerMode === 'visitor') {
+            $resultData = json_encode([
+                'status'  => 'student_card',
+                'uid'     => $uid,
+                'message' => 'This card belongs to a student',
+            ]);
+            $stmtUpdate = $conn->prepare("UPDATE temp_nfc_scans SET action_result = :result WHERE id = :id");
+            $stmtUpdate->execute([':result' => $resultData, ':id' => $scanInsertId]);
+            sendSuccessResponse('Student card scanned in visitor mode', [
+                'status'  => 'student_card',
+                'uid'     => $uid,
+                'message' => 'This card belongs to a student',
+            ]);
+        }
+        // --- End student card in visitor mode ---
         $studentId        = $nfcTag['student_id'];
         $studentName      = $nfcTag['student_name'];
         $studentCourse    = $nfcTag['course'];
@@ -513,16 +541,6 @@ try {
         sendSuccessResponse('NFC tag scanned (assigned)', $responseData);
     } else {
         // Not assigned — check scanner mode to determine response
-        $scannerMode = 'attendance'; // default
-        try {
-            $modeStmt = $conn->query("SELECT mode FROM scanner_mode WHERE id = 1 LIMIT 1");
-            $modeRow = $modeStmt->fetch(PDO::FETCH_ASSOC);
-            if ($modeRow) {
-                $scannerMode = $modeRow['mode'];
-            }
-        } catch (Exception $e) {
-            // Table might not exist yet, default to attendance
-        }
 
         if ($scannerMode === 'assign') {
             // Assignment mode — card is expected to be unassigned
@@ -538,6 +556,21 @@ try {
                 'status' => 'unassigned',
                 'uid' => $uid,
                 'message' => 'NFC tag stored for assignment'
+            ]);
+        } elseif ($scannerMode === 'visitor') {
+            // Visitor mode — unassigned/unknown card is valid for visitor check-in
+            $resultData = json_encode([
+                'status' => 'unassigned',
+                'uid' => $uid,
+                'message' => 'Ready for visitor check-in'
+            ]);
+            $stmtUpdate = $conn->prepare("UPDATE temp_nfc_scans SET action_result = :result WHERE id = :id");
+            $stmtUpdate->execute([':result' => $resultData, ':id' => $scanInsertId]);
+
+            sendSuccessResponse('NFC tag scanned (visitor mode)', [
+                'status' => 'unassigned',
+                'uid' => $uid,
+                'message' => 'Ready for visitor check-in'
             ]);
         } else {
             // Attendance mode — unassigned card is an error

@@ -26,8 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // Get JSON input
 $input = json_decode(file_get_contents('php://input'), true);
 
-if (!isset($input['mode']) || !in_array($input['mode'], ['assign', 'attendance'])) {
-    sendErrorResponse('mode must be "assign" or "attendance"', 400);
+if (!isset($input['mode']) || !in_array($input['mode'], ['assign', 'attendance', 'visitor'])) {
+    sendErrorResponse('mode must be "assign", "attendance", or "visitor"', 400);
 }
 
 $mode = $input['mode'];

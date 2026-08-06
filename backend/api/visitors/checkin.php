@@ -47,7 +47,18 @@ try {
         $tag = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$tag) {
-            sendErrorResponse('NFC tag not found', 404);
+            // Tag not in nfc_tags yet — auto-register it as an unassigned visitor card
+            $stmt = $conn->prepare("
+                INSERT INTO nfc_tags (uid, student_id, visitor_session_id)
+                VALUES (:uid, NULL, NULL)
+            ");
+            $stmt->execute([':uid' => $uid]);
+            $newTagId = $conn->lastInsertId();
+            $tag = [
+                'tag_id'             => $newTagId,
+                'student_id'         => null,
+                'visitor_session_id' => null,
+            ];
         }
 
         if ($tag['student_id'] !== null) {

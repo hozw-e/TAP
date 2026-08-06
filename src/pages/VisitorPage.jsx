@@ -143,15 +143,9 @@ function VisitorPage() {
               // Student card tapped in visitor mode — show error
               setStudentCardModal({ show: true });
             } else if (status === 'visitor_checkout') {
-              // Visitor checked out via scan.php inline logic
-              try {
-                const checkoutResponse = await visitorsAPI.checkoutNFC(scannedUid);
-                const checkoutName = (checkoutResponse.data && checkoutResponse.data.name) || scannedVisitorName || 'Visitor';
-                setModal({ show: true, type: 'farewell', name: checkoutName });
-              } catch (err) {
-                // Fallback: show farewell with whatever name we have
-                setModal({ show: true, type: 'farewell', name: scannedVisitorName || 'Visitor' });
-              }
+              // Visitor already checked out by scan.php — name is in the response
+              const checkoutName = response.data.name || scannedVisitorName || 'Visitor';
+              setModal({ show: true, type: 'farewell', name: checkoutName });
             } else if (status === 'unassigned') {
               // Unassigned tag in visitor mode — need to check if name is filled
               const currentName = visitorNameRef.current.trim();
