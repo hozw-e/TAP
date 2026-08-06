@@ -10,8 +10,11 @@
 #include <HTTPClient.h>
 
 // WiFi Credentials
-const char* WIFI_SSID = "Hozwe";        // Change to your WiFi name
-const char* WIFI_PASSWORD = "12345678"; // Change to your WiFi password
+// const char* WIFI_SSID = "Hozwe";        // Change to your WiFi name
+// const char* WIFI_PASSWORD = "12345678"; // Change to your WiFi password
+
+const char* WIFI_SSID = "UggaMuggaCafe";        // Change to your WiFi name
+const char* WIFI_PASSWORD = "Ugg@muggasub1c!"; // Change to your WiFi password
 
 // Backend API URL
 const char* API_URL = "https://thesisi-production.up.railway.app/api/nfc/scan.php";
@@ -300,27 +303,64 @@ void sendToBackend(String uid) {
     Serial.println();
     
     // Parse JSON response from backend
-    if (response.indexOf("\"action\":\"check_in\"") >= 0) {
+    // Student check-in
+    if (response.indexOf("\"action\":\"check_in\"") >= 0 && response.indexOf("\"status\":\"assigned\"") >= 0) {
       Serial.println("╔════════════════════════════════╗");
-      Serial.println("║            WELCOME!            ║");
+      Serial.println("║       STUDENT WELCOME!         ║");
       Serial.println("║       TIME IN RECORDED         ║");
       Serial.println("╚════════════════════════════════╝");
       playSuccessSound();
     } 
-    else if (response.indexOf("\"action\":\"check_out\"") >= 0) {
+    // Student check-out
+    else if (response.indexOf("\"action\":\"check_out\"") >= 0 && response.indexOf("\"status\":\"assigned\"") >= 0) {
       Serial.println("╔════════════════════════════════╗");
-      Serial.println("║        SEE YOU LATER!          ║");
+      Serial.println("║     STUDENT SEE YOU LATER!     ║");
       Serial.println("║       TIME OUT RECORDED        ║");
       Serial.println("╚════════════════════════════════╝");
       playSuccessSound();
     }
-    else if (response.indexOf("\"action\":\"check_out_denied\"") >= 0 || response.indexOf("\"status\":\"denied\"") >= 0) {
+    // Visitor check-out
+    else if (response.indexOf("\"action\":\"visitor_checkout\"") >= 0 && response.indexOf("\"status\":\"visitor\"") >= 0) {
       Serial.println("╔════════════════════════════════╗");
-      Serial.println("║            TOO SOON            ║");
-      Serial.println("║   Wait before checking out!    ║");
+      Serial.println("║      VISITOR GOODBYE!          ║");
+      Serial.println("║       TIME OUT RECORDED        ║");
+      Serial.println("╚════════════════════════════════╝");
+      playSuccessSound();
+    }
+    // Check-out denied (too early / hour requirement / session not ended)
+    else if (response.indexOf("\"action\":\"check_out_denied\"") >= 0 || 
+             response.indexOf("\"action\":\"hour_requirement_denied\"") >= 0) {
+      Serial.println("╔════════════════════════════════╗");
+      Serial.println("║       CHECK-OUT DENIED         ║");
+      Serial.println("║   Session not completed yet!   ║");
       Serial.println("╚════════════════════════════════╝");
       playFailSound();
     }
+    // Check-in denied (too early / session ended)
+    else if (response.indexOf("\"action\":\"check_in_denied\"") >= 0) {
+      Serial.println("╔════════════════════════════════╗");
+      Serial.println("║       CHECK-IN DENIED          ║");
+      Serial.println("║    Outside session hours!      ║");
+      Serial.println("╚════════════════════════════════╝");
+      playFailSound();
+    }
+    // Archived student
+    else if (response.indexOf("\"action\":\"archived_denied\"") >= 0) {
+      Serial.println("╔════════════════════════════════╗");
+      Serial.println("║      SESSIONS COMPLETED        ║");
+      Serial.println("║      Student archived!         ║");
+      Serial.println("╚════════════════════════════════╝");
+      playFailSound();
+    }
+    // Generic denied status
+    else if (response.indexOf("\"status\":\"denied\"") >= 0) {
+      Serial.println("╔════════════════════════════════╗");
+      Serial.println("║          ACCESS DENIED         ║");
+      Serial.println("║    Check system requirements   ║");
+      Serial.println("╚════════════════════════════════╝");
+      playFailSound();
+    }
+    // Unregistered card in attendance mode
     else if (response.indexOf("\"status\":\"error_unassigned\"") >= 0) {
       Serial.println("╔════════════════════════════════╗");
       Serial.println("║        UNREGISTERED CARD       ║");
@@ -328,6 +368,7 @@ void sendToBackend(String uid) {
       Serial.println("╚════════════════════════════════╝");
       playFailSound();
     }
+    // Unassigned card in assignment mode
     else if (response.indexOf("\"status\":\"unassigned\"") >= 0) {
       Serial.println("╔════════════════════════════════╗");
       Serial.println("║       UNASSIGNED CARD          ║");
@@ -335,12 +376,14 @@ void sendToBackend(String uid) {
       Serial.println("╚════════════════════════════════╝");
       playAssignReadySound();
     }
+    // Server error
     else if (response.indexOf("\"success\":false") >= 0) {
       Serial.println("╔════════════════════════════════╗");
       Serial.println("║       ✗ SERVER ERROR           ║");
       Serial.println("╚════════════════════════════════╝");
       playFailSound();
     }
+    // Fallback for unknown responses
     else {
       Serial.println("   ✓ Scan processed!");
       playSuccessSound();

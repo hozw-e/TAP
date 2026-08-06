@@ -15,6 +15,7 @@ require_once '../../utils/attendance-helpers.php';
 require_once '../../utils/NotificationService.php';
 require_once '../../utils/session-counter.php';
 require_once '../../utils/auto-archiver.php';
+require_once '../../utils/activity-logger.php';
 
 /**
  * Publish an attendance event to the WebSocket server for real-time broadcasting.
@@ -81,11 +82,12 @@ try {
     
     error_log("NFC Scan stored in database: " . $uid);
     
-    // Check if this UID is already assigned to a student
+    // Check if this UID is already assigned to a student OR linked to a visitor session
     $stmt = $conn->prepare("
         SELECT 
             n.nfctag_id,
             n.student_id,
+            n.visitor_session_id,
             s.student_name,
             s.guardian_id,
             s.student_course AS course,
@@ -97,6 +99,69 @@ try {
     
     $stmt->execute([':uid' => $uid]);
     $nfcTag = $stmt->fetch();
+    
+    // --- VISITOR CHECK-OUT FLOW ---
+    if ($nfcTag && $nfcTag['visitor_session_id']) {
+        // This NFC tag is currently linked to an active visitor session → check out the visitor
+        $visitId = $nfcTag['visitor_session_id'];
+        
+        // Get visitor details
+        $stmt = $conn->prepare("
+            SELECT visit_id, name, time_in
+            FROM visitors
+            WHERE visit_id = :visit_id AND time_out IS NULL
+        ");
+        $stmt->execute([':visit_id' => $visitId]);
+        $visitor = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($visitor) {
+            $now = date('H:i:s');
+            
+            // Record time_out
+            $stmt = $conn->prepare("
+                UPDATE visitors
+                SET time_out = :time_out
+                WHERE visit_id = :visit_id
+            ");
+            $stmt->execute([
+                ':time_out' => $now,
+                ':visit_id' => $visitId,
+            ]);
+            
+            // Release the NFC tag back to unassigned status
+            $stmt = $conn->prepare("
+                UPDATE nfc_tags
+                SET visitor_session_id = NULL
+                WHERE nfctag_id = :nfctag_id
+            ");
+            $stmt->execute([':nfctag_id' => $nfcTag['nfctag_id']]);
+            
+            logActivity('CHECK_OUT', 'VISITOR', $visitor['name'], "Visit ID: {$visitId}, Time out: {$now}", 'System');
+            
+            $resultData = [
+                'status' => 'visitor',
+                'action' => 'visitor_checkout',
+                'uid' => $uid,
+                'visit_id' => (int)$visitor['visit_id'],
+                'name' => $visitor['name'],
+                'time_out' => $now,
+                'message' => 'Visitor checked out: ' . $visitor['name'],
+            ];
+            
+            // Store in temp_nfc_scans
+            $stmtUpdate = $conn->prepare("UPDATE temp_nfc_scans SET action_result = :result WHERE id = :id");
+            $stmtUpdate->execute([':result' => json_encode($resultData), ':id' => $scanInsertId]);
+            
+            sendSuccessResponse('Visitor checked out successfully', $resultData);
+        } else {
+            // Orphaned visitor_session_id — reset tag
+            $stmt = $conn->prepare("UPDATE nfc_tags SET visitor_session_id = NULL WHERE nfctag_id = :nfctag_id");
+            $stmt->execute([':nfctag_id' => $nfcTag['nfctag_id']]);
+            
+            sendErrorResponse('Visitor session not found or already checked out', 404);
+        }
+    }
+    // --- END VISITOR CHECK-OUT FLOW ---
     
     if ($nfcTag && $nfcTag['student_id']) {
         $studentId        = $nfcTag['student_id'];
