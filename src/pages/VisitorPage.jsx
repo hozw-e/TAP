@@ -10,6 +10,9 @@ function VisitorPage() {
   // Welcome/Farewell modal (NFC tap)
   const [modal, setModal] = useState({ show: false, type: '', name: '' });
 
+  // Dedicated check-out farewell modal
+  const [farewellModal, setFarewellModal] = useState({ show: false, name: '', timeOut: '' });
+
 
   
   // Already tapped in modal (check-out denied)
@@ -50,6 +53,14 @@ function VisitorPage() {
       return () => clearTimeout(timer);
     }
   }, [modal.show]);
+
+  // Auto-dismiss farewell modal after 5 seconds
+  useEffect(() => {
+    if (farewellModal.show) {
+      const timer = setTimeout(() => setFarewellModal({ show: false, name: '', timeOut: '' }), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [farewellModal.show]);
 
 
   
@@ -145,7 +156,8 @@ function VisitorPage() {
             } else if (status === 'visitor_checkout') {
               // Visitor already checked out by scan.php — name is in the response
               const checkoutName = response.data.name || scannedVisitorName || 'Visitor';
-              setModal({ show: true, type: 'farewell', name: checkoutName });
+              const checkoutTime = response.data.time_out || '';
+              setFarewellModal({ show: true, name: checkoutName, timeOut: checkoutTime });
             } else if (status === 'unassigned') {
               // Unassigned tag in visitor mode — need to check if name is filled
               const currentName = visitorNameRef.current.trim();
@@ -260,19 +272,40 @@ function VisitorPage() {
         </div>
       </div>
 
-      {/* Welcome / Farewell Modal (NFC Tap) */}
-      {modal.show && (
+      {/* Welcome Modal (Check-in) */}
+      {modal.show && modal.type === 'welcome' && (
         <div className="visitor-modal-overlay">
-          <div className={`visitor-modal visitor-result-modal ${modal.type === 'welcome' ? 'welcome-modal' : 'farewell-modal'}`}>
+          <div className="visitor-modal visitor-result-modal welcome-modal">
             <div className="visitor-modal-icon">
-              <i className={`fas ${modal.type === 'welcome' ? 'fa-door-open' : 'fa-sign-out-alt'} result-icon`}></i>
-              <p className={modal.type === 'welcome' ? 'result-label-welcome' : 'result-label-farewell'}>
-                {modal.type === 'welcome' ? 'CHECK-IN RECORDED' : 'CHECK-OUT RECORDED'}
-              </p>
+              <i className="fas fa-door-open result-icon"></i>
+              <p className="result-label-welcome">CHECK-IN RECORDED</p>
             </div>
-            <h2 className="result-name">
-              {modal.type === 'welcome' ? `Welcome, ${modal.name}!` : `Goodbye, ${modal.name}!`}
-            </h2>
+            <h2 className="result-name">Welcome, {modal.name}!</h2>
+            <p className="visitor-modal-timestamp">
+              {new Date().toLocaleString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </p>
+            <div className="result-dismiss-hint">Closes automatically…</div>
+          </div>
+        </div>
+      )}
+
+      {/* Farewell Modal (Check-out) */}
+      {farewellModal.show && (
+        <div className="visitor-modal-overlay">
+          <div className="visitor-modal visitor-result-modal farewell-modal">
+            <div className="visitor-modal-icon">
+              <i className="fas fa-walking result-icon farewell-walk-icon"></i>
+              <p className="result-label-farewell">CHECK-OUT RECORDED</p>
+            </div>
+            <h2 className="result-name farewell-name">Goodbye, {farewellModal.name}!</h2>
+            <p className="visitor-modal-subtext">Thank you for visiting A+ Center.</p>
             <p className="visitor-modal-timestamp">
               {new Date().toLocaleString('en-US', {
                 weekday: 'long',
@@ -293,20 +326,17 @@ function VisitorPage() {
       {/* Already Tapped In Modal (Check-out Denied) */}
       {deniedModal.show && (
         <div className="visitor-modal-overlay">
-          <div className="visitor-modal denied-modal">
-            <div className="visitor-modal-icon denied-icon">
-              <i className="fas fa-hourglass-half"></i>
-              <p>You've Already Tapped In</p>
+          <div className="visitor-modal visitor-result-modal denied-modal">
+            <div className="visitor-modal-icon">
+              <i className="fas fa-hourglass-half result-icon"></i>
+              <p className="result-label-denied">SESSION ACTIVE</p>
             </div>
-            <h2>{deniedModal.name}</h2>
-            <div className="session-status">
-              <span className="status-badge active">
-                <i className="fas fa-circle"></i> Session Active
-              </span>
-            </div>
-            <p className="denied-message">
-              Your entry has already been recorded for this session. Please wait for a minute to pass before tapping your ID to time out.
+            <h2 className="result-name denied-name">You've Already Tapped In</h2>
+            <p className="visitor-modal-subtext">
+              {deniedModal.name ? `${deniedModal.name} — your` : 'Your'} session is still in progress.
             </p>
+            <p className="visitor-modal-timestamp">Tap your card again when you're ready to leave.</p>
+            <div className="result-dismiss-hint">Closes automatically…</div>
           </div>
         </div>
       )}
@@ -314,15 +344,14 @@ function VisitorPage() {
       {/* Unassigned NFC Modal */}
       {unassignedModal.show && (
         <div className="visitor-modal-overlay">
-          <div className="visitor-modal unassigned-modal">
-            <div className="visitor-modal-icon unassigned-icon">
-              <i className="fas fa-user-slash"></i>
-              <p>This ID is not registered</p>
+          <div className="visitor-modal visitor-result-modal unassigned-modal">
+            <div className="visitor-modal-icon">
+              <i className="fas fa-ban result-icon"></i>
+              <p className="result-label-error">UNREGISTERED CARD</p>
             </div>
-            <h2>NFC not assigned</h2>
-            <p className="unassigned-message">
-              Please ask the admin personnel for assistance. Your NFC ID may not have been registered to your name.
-            </p>
+            <h2 className="result-name error-name">NFC Card Not Found</h2>
+            <p className="visitor-modal-subtext">Please ask admin personnel for assistance.</p>
+            <div className="result-dismiss-hint">Closes automatically…</div>
           </div>
         </div>
       )}
@@ -330,15 +359,14 @@ function VisitorPage() {
       {/* Student Card Error Modal */}
       {studentCardModal.show && (
         <div className="visitor-modal-overlay">
-          <div className="visitor-modal unassigned-modal">
-            <div className="visitor-modal-icon denied-icon">
-              <i className="fas fa-exclamation-triangle"></i>
-              <p>Wrong card type</p>
+          <div className="visitor-modal visitor-result-modal unassigned-modal">
+            <div className="visitor-modal-icon">
+              <i className="fas fa-exclamation-triangle result-icon"></i>
+              <p className="result-label-error">WRONG CARD TYPE</p>
             </div>
-            <h2>This card is not a visitor card</h2>
-            <p className="unassigned-message">
-              This NFC card is assigned to a student. Please use an unassigned visitor card instead.
-            </p>
+            <h2 className="result-name error-name">Student Card Detected</h2>
+            <p className="visitor-modal-subtext">This card belongs to a student. Please use a visitor card.</p>
+            <div className="result-dismiss-hint">Closes automatically…</div>
           </div>
         </div>
       )}
@@ -346,15 +374,14 @@ function VisitorPage() {
       {/* Name Required Modal */}
       {nameRequiredModal.show && (
         <div className="visitor-modal-overlay">
-          <div className="visitor-modal unassigned-modal">
+          <div className="visitor-modal visitor-result-modal info-modal">
             <div className="visitor-modal-icon">
-              <i className="fas fa-info-circle"></i>
-              <p>Name required</p>
+              <i className="fas fa-keyboard result-icon"></i>
+              <p className="result-label-info">ACTION REQUIRED</p>
             </div>
-            <h2>Please enter your name first</h2>
-            <p className="unassigned-message">
-              Type your name in the input field above, then tap your NFC card again to check in.
-            </p>
+            <h2 className="result-name info-name">Enter Your Name First</h2>
+            <p className="visitor-modal-subtext">Type your name above, then tap your NFC card to check in.</p>
+            <div className="result-dismiss-hint">Closes automatically…</div>
           </div>
         </div>
       )}
@@ -362,15 +389,14 @@ function VisitorPage() {
       {/* Tap Visitor ID Reminder Modal */}
       {tapReminderModal.show && (
         <div className="visitor-modal-overlay">
-          <div className="visitor-modal unassigned-modal">
+          <div className="visitor-modal visitor-result-modal info-modal">
             <div className="visitor-modal-icon">
-              <i className="fas fa-id-card"></i>
-              <p>Tap required</p>
+              <i className="fas fa-id-card result-icon"></i>
+              <p className="result-label-info">TAP REQUIRED</p>
             </div>
-            <h2>Please tap your Visitor ID to login</h2>
-            <p className="unassigned-message">
-              Place your NFC visitor card on the reader to complete check-in.
-            </p>
+            <h2 className="result-name info-name">Now Tap Your Visitor Card</h2>
+            <p className="visitor-modal-subtext">Place your NFC card on the reader to complete check-in.</p>
+            <div className="result-dismiss-hint">Closes automatically…</div>
           </div>
         </div>
       )}
@@ -378,15 +404,16 @@ function VisitorPage() {
       {/* Already Checked In Modal */}
       {alreadyCheckedInModal.show && (
         <div className="visitor-modal-overlay">
-          <div className="visitor-modal unassigned-modal">
+          <div className="visitor-modal visitor-result-modal info-modal">
             <div className="visitor-modal-icon">
-              <i className="fas fa-check-circle"></i>
-              <p>Already checked in</p>
+              <i className="fas fa-user-clock result-icon"></i>
+              <p className="result-label-info">ALREADY CHECKED IN</p>
             </div>
-            <h2>You are already checked in</h2>
-            <p className="unassigned-message">
-              {alreadyCheckedInModal.name}, you have already checked in today. Tap again when you are ready to leave.
+            <h2 className="result-name info-name">You're Already Inside</h2>
+            <p className="visitor-modal-subtext">
+              {alreadyCheckedInModal.name}, your visit is already recorded. Tap again when you're ready to leave.
             </p>
+            <div className="result-dismiss-hint">Closes automatically…</div>
           </div>
         </div>
       )}

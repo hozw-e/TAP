@@ -111,7 +111,7 @@
   cursor: not-allowed;
 }
 
-/* ── Welcome / Farewell Modal ─────────────────────────────────── */
+/* ── Modal Overlay ────────────────────────────────────────────── */
 .visitor-modal-overlay {
   position: fixed;
   inset: 0;
@@ -122,6 +122,7 @@
   z-index: 100;
 }
 
+/* ── Base modal card ──────────────────────────────────────────── */
 .visitor-modal {
   background: #ffffff;
   border-radius: 16px;
@@ -130,9 +131,22 @@
   max-width: 560px;
   width: 90%;
   animation: popIn 0.3s ease;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
 
+@keyframes popIn {
+  from { transform: scale(0.92); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+/* ── Unified result modal (all prompt modals use this) ────────── */
+.visitor-result-modal {
+  max-width: 580px;
+  padding: 56px 68px;
+  border-top: 8px solid transparent;
+}
+
+/* Icon wrapper */
 .visitor-modal-icon {
   display: flex;
   flex-direction: column;
@@ -140,144 +154,109 @@
   margin-bottom: 20px;
 }
 
-.visitor-modal-icon i {
-  font-size: 48px;
-  color: #2c3e50;
-  margin-bottom: 10px;
+/* Large icon */
+.result-icon {
+  font-size: 68px !important;
+  margin-bottom: 14px !important;
 }
 
-.visitor-modal-icon p {
-  font-size: 18px;
-  font-weight: 600;
-  color: #555;
+/* Badge label below the icon */
+.result-label-welcome,
+.result-label-farewell,
+.result-label-denied,
+.result-label-error,
+.result-label-info {
+  display: inline-block;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 4px 16px;
+  border-radius: 20px;
   margin: 0;
 }
 
-.visitor-modal h2 {
-  color: #2c3e50;
-  font-size: 36px;
-  font-weight: 800;
-  margin-bottom: 8px;
+/* Big heading */
+.result-name {
+  font-size: 38px !important;
+  font-weight: 800 !important;
+  margin: 18px 0 6px !important;
+  line-height: 1.15;
 }
 
+/* Subtext line */
+.visitor-modal-subtext {
+  font-size: 15px;
+  color: #888;
+  margin: 6px 0 0;
+  line-height: 1.5;
+}
+
+/* Timestamp */
 .visitor-modal-timestamp {
-  font-size: 16px;
-  color: #888;
-  margin-top: 8px;
+  font-size: 14px;
+  color: #aaa;
+  margin-top: 10px;
 }
 
-/* ── Manual Login Modal ────────────────────────────────────────── */
-.visitor-modal.manual-login-modal {
-  max-width: 560px;
+/* Auto-close hint */
+.result-dismiss-hint {
+  margin-top: 22px;
+  font-size: 12px;
+  color: #ccc;
+  letter-spacing: 0.5px;
 }
 
-.visitor-modal-icon.manual-login-icon i {
-  font-size: 48px;
-  color: #27ae60;
+/* ── Color themes ─────────────────────────────────────────────── */
+
+/* Welcome (green) */
+.welcome-modal  { border-top-color: #27ae60; }
+.welcome-modal .result-icon { color: #27ae60 !important; }
+.result-label-welcome { color: #27ae60 !important; background: #eafaf1; }
+.result-name.welcome-name,
+.welcome-modal .result-name { color: #1a5e34 !important; }
+
+/* Farewell (orange) */
+.farewell-modal { border-top-color: #e67e22; }
+.farewell-modal .result-icon { color: #e67e22 !important; }
+.result-label-farewell { color: #e67e22 !important; background: #fef5ec; }
+.farewell-name  { color: #a04000 !important; }
+
+/* Denied / session active (amber) */
+.denied-modal   { border-top-color: #f39c12; }
+.denied-modal .result-icon { color: #f39c12 !important; }
+.result-label-denied { color: #b7770d !important; background: #fef9e7; }
+.denied-name    { color: #7d5500 !important; }
+
+/* Error (red) */
+.unassigned-modal { border-top-color: #e74c3c; }
+.unassigned-modal .result-icon { color: #e74c3c !important; }
+.result-label-error { color: #c0392b !important; background: #fdf0ef; }
+.error-name     { color: #922b21 !important; }
+
+/* Info / reminder (blue) */
+.info-modal     { border-top-color: #3498db; }
+.info-modal .result-icon { color: #3498db !important; }
+.result-label-info { color: #2471a3 !important; background: #eaf4fb; }
+.info-name      { color: #1a4a6e !important; }
+
+/* Farewell walk animation */
+.farewell-walk-icon {
+  animation: walkBounce 0.6s ease infinite alternate;
 }
 
-.visitor-modal-icon.manual-login-icon p {
-  color: #27ae60;
+@keyframes walkBounce {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-6px); }
 }
 
-/* ── Already Tapped In Modal (Denied) ────────────────────────── */
-.visitor-modal.denied-modal {
-  max-width: 650px;
-  padding: 50px 70px;
-}
-
-.visitor-modal-icon.denied-icon i {
-  font-size: 52px;
-  color: #34495e;
-}
-
-.visitor-modal-icon.denied-icon p {
-  font-size: 20px;
-  font-weight: 700;
-  color: #2c3e50;
-  margin-top: 12px;
-}
-
-.session-status {
-  margin: 20px 0;
-  display: flex;
-  justify-content: center;
-}
-
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 24px;
-  border-radius: 30px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.status-badge.active {
-  background: #d4edda;
-  color: #155724;
-  border: 2px solid #28a745;
-}
-
-.status-badge i {
-  font-size: 10px;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-.denied-message {
-  font-size: 17px;
-  color: #666;
-  line-height: 1.6;
-  margin-top: 16px;
-}
-
+/* Pulse for denied session badge (kept for any internal use) */
 @keyframes pulse {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.4;
-  }
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
 }
 
-/* ── Unassigned NFC Modal ─────────────────────────────────────── */
-.visitor-modal.unassigned-modal {
-  max-width: 520px;
-  padding: 50px 60px;
-}
-
-.visitor-modal-icon.unassigned-icon i {
-  font-size: 48px;
-  color: #cf1e1e;
-}
-
-.visitor-modal-icon.unassigned-icon p {
-  font-size: 16px;
-  font-weight: 600;
-  color: #555;
-  margin-top: 8px;
-}
-
-.visitor-modal.unassigned-modal h2 {
-  font-size: 32px;
-  font-weight: 600;
-  color: #cf1e1e;
-  margin-bottom: 12px;
-}
-
-.unassigned-message {
-  font-size: 16px;
-  color: #888;
-  line-height: 1.6;
-  margin-top: 8px;
-}
-
-/* ── Admin Login Modal ────────────────────────────────────────── */
-.admin-login-modal {
+/* ── Admin Login Modal ────────────────────────────────────────── */.admin-login-modal {
   background: #2c3e50;
   border-radius: 16px;
   padding: 36px;
@@ -421,75 +400,4 @@
   font-size: 13px;
   text-align: center;
   z-index: 10;
-}
-
-/* ── Welcome / Farewell Result Modals ───────────────────────── */
-.visitor-result-modal {
-  max-width: 600px;
-  padding: 60px 70px;
-  border-top: 8px solid transparent;
-}
-
-.welcome-modal {
-  border-top-color: #27ae60;
-}
-
-.farewell-modal {
-  border-top-color: #2980b9;
-}
-
-.result-icon {
-  font-size: 72px !important;
-  margin-bottom: 16px !important;
-}
-
-.welcome-modal .result-icon {
-  color: #27ae60 !important;
-}
-
-.farewell-modal .result-icon {
-  color: #2980b9 !important;
-}
-
-.result-label-welcome {
-  font-size: 13px !important;
-  font-weight: 700 !important;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: #27ae60 !important;
-  background: #eafaf1;
-  padding: 4px 16px;
-  border-radius: 20px;
-}
-
-.result-label-farewell {
-  font-size: 13px !important;
-  font-weight: 700 !important;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: #2980b9 !important;
-  background: #eaf4fb;
-  padding: 4px 16px;
-  border-radius: 20px;
-}
-
-.result-name {
-  font-size: 42px !important;
-  font-weight: 800 !important;
-  margin: 20px 0 8px !important;
-}
-
-.welcome-modal .result-name {
-  color: #1a5e34 !important;
-}
-
-.farewell-modal .result-name {
-  color: #1a4a6e !important;
-}
-
-.result-dismiss-hint {
-  margin-top: 20px;
-  font-size: 13px;
-  color: #bbb;
-  letter-spacing: 0.5px;
 }

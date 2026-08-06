@@ -19,7 +19,7 @@ function StudentLogs() {
   const [dateTo, setDateTo] = useState('');
 
   // Type & course filters
-  const [filterType, setFilterType] = useState('All');
+  const [filterType, setFilterType] = useState('Student');
   const [filterCourse, setFilterCourse] = useState('All');
 
   // Pagination
