@@ -12,8 +12,11 @@ require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
 require_once '../../utils/session.php';
 
-// Check admin authentication
-requireAdminAuth();
+// Check admin authentication — skip for visitor kiosk mode
+// The visitor page is a public kiosk; it clears scans without an admin session.
+if (!isAdminLoggedIn()) {
+    // Allow public access for visitor kiosk — no auth required
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendErrorResponse('Method not allowed', 405);

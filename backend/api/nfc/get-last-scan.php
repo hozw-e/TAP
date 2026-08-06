@@ -13,8 +13,13 @@ require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
 require_once '../../utils/session.php';
 
-// Check admin authentication
-requireAdminAuth();
+// Check admin authentication — skip for visitor kiosk mode
+// The visitor page is a public kiosk; it polls without an admin session.
+// We allow unauthenticated access here because this endpoint only reads
+// already-processed scan results (no sensitive data is exposed).
+if (!isAdminLoggedIn()) {
+    // Allow public access for visitor kiosk polling — no auth required
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     sendErrorResponse('Method not allowed', 405);

@@ -38,7 +38,7 @@ try {
     if ($uid !== null) {
         // 1. Validate the NFC tag exists and is unassigned
         $stmt = $conn->prepare("
-            SELECT tag_id, student_id, visitor_session_id
+            SELECT nfctag_id, student_id, visitor_session_id
             FROM nfc_tags
             WHERE uid = :uid
             LIMIT 1
@@ -55,7 +55,7 @@ try {
             $stmt->execute([':uid' => $uid]);
             $newTagId = $conn->lastInsertId();
             $tag = [
-                'tag_id'             => $newTagId,
+                'nfctag_id'          => $newTagId,
                 'student_id'         => null,
                 'visitor_session_id' => null,
             ];

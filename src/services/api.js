@@ -218,7 +218,10 @@ api.interceptors.response.use(
       console.error('API Error:', error.response.data);
       
       // If unauthorized (401), redirect to login
-      if (error.response.status === 401) {
+      // But don't redirect for NFC mode/polling endpoints used by the visitor kiosk
+      const url = error.config?.url || '';
+      const isKioskEndpoint = url.includes('set-mode') || url.includes('get-last-scan') || url.includes('clear-scan');
+      if (error.response.status === 401 && !isKioskEndpoint) {
         window.location.href = '/';
       }
     } else if (error.request) {

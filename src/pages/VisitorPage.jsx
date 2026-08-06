@@ -43,10 +43,10 @@ function VisitorPage() {
   const lastUIDRef  = useRef(null);
   const visitorNameRef = useRef('');
 
-  // Auto-dismiss NFC modal after 3 seconds
+  // Auto-dismiss NFC modal after 5 seconds (increased from 3 for better visibility)
   useEffect(() => {
     if (modal.show) {
-      const timer = setTimeout(() => setModal({ show: false, type: '', name: '' }), 3000);
+      const timer = setTimeout(() => setModal({ show: false, type: '', name: '' }), 5000);
       return () => clearTimeout(timer);
     }
   }, [modal.show]);
@@ -263,12 +263,14 @@ function VisitorPage() {
       {/* Welcome / Farewell Modal (NFC Tap) */}
       {modal.show && (
         <div className="visitor-modal-overlay">
-          <div className="visitor-modal">
+          <div className={`visitor-modal visitor-result-modal ${modal.type === 'welcome' ? 'welcome-modal' : 'farewell-modal'}`}>
             <div className="visitor-modal-icon">
-              <i className={`fas ${modal.type === 'welcome' ? 'fa-check-circle' : 'fa-sign-out-alt'}`}></i>
-              <p>{modal.type === 'welcome' ? 'Tap-in successful' : 'Tap-out successful. Have a great day!'}</p>
+              <i className={`fas ${modal.type === 'welcome' ? 'fa-door-open' : 'fa-sign-out-alt'} result-icon`}></i>
+              <p className={modal.type === 'welcome' ? 'result-label-welcome' : 'result-label-farewell'}>
+                {modal.type === 'welcome' ? 'CHECK-IN RECORDED' : 'CHECK-OUT RECORDED'}
+              </p>
             </div>
-            <h2>
+            <h2 className="result-name">
               {modal.type === 'welcome' ? `Welcome, ${modal.name}!` : `Goodbye, ${modal.name}!`}
             </h2>
             <p className="visitor-modal-timestamp">
@@ -281,6 +283,7 @@ function VisitorPage() {
                 minute: '2-digit',
               })}
             </p>
+            <div className="result-dismiss-hint">Closes automatically…</div>
           </div>
         </div>
       )}

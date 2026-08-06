@@ -422,3 +422,74 @@
   text-align: center;
   z-index: 10;
 }
+
+/* ── Welcome / Farewell Result Modals ───────────────────────── */
+.visitor-result-modal {
+  max-width: 600px;
+  padding: 60px 70px;
+  border-top: 8px solid transparent;
+}
+
+.welcome-modal {
+  border-top-color: #27ae60;
+}
+
+.farewell-modal {
+  border-top-color: #2980b9;
+}
+
+.result-icon {
+  font-size: 72px !important;
+  margin-bottom: 16px !important;
+}
+
+.welcome-modal .result-icon {
+  color: #27ae60 !important;
+}
+
+.farewell-modal .result-icon {
+  color: #2980b9 !important;
+}
+
+.result-label-welcome {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #27ae60 !important;
+  background: #eafaf1;
+  padding: 4px 16px;
+  border-radius: 20px;
+}
+
+.result-label-farewell {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #2980b9 !important;
+  background: #eaf4fb;
+  padding: 4px 16px;
+  border-radius: 20px;
+}
+
+.result-name {
+  font-size: 42px !important;
+  font-weight: 800 !important;
+  margin: 20px 0 8px !important;
+}
+
+.welcome-modal .result-name {
+  color: #1a5e34 !important;
+}
+
+.farewell-modal .result-name {
+  color: #1a4a6e !important;
+}
+
+.result-dismiss-hint {
+  margin-top: 20px;
+  font-size: 13px;
+  color: #bbb;
+  letter-spacing: 0.5px;
+}

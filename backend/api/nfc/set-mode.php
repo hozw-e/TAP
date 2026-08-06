@@ -15,16 +15,18 @@ require_once '../../utils/response.php';
 require_once '../../utils/session.php';
 require_once '../../utils/activity-logger.php';
 
-// Check admin authentication
-requireAdminAuth();
+// Check admin authentication — visitor mode can be set by the public kiosk page
+// Only require auth for sensitive modes (assign, attendance)
+$input = json_decode(file_get_contents('php://input'), true);
+$requestedMode = $input['mode'] ?? '';
+if ($requestedMode !== 'visitor') {
+    requireAdminAuth();
+}
 
 // Only allow POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendErrorResponse('Method not allowed', 405);
 }
-
-// Get JSON input
-$input = json_decode(file_get_contents('php://input'), true);
 
 if (!isset($input['mode']) || !in_array($input['mode'], ['assign', 'attendance', 'visitor'])) {
     sendErrorResponse('mode must be "assign", "attendance", or "visitor"', 400);
