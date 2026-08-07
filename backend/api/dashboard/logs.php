@@ -43,6 +43,7 @@ try {
             s.student_course,
             a.time_in,
             a.time_out,
+            a.auto_closed,
             a.sms_sent_in,
             a.sms_sent_out,
             a.date
@@ -104,6 +105,7 @@ try {
             'student_course' => $row['student_course'],
             'time_in'        => $row['time_in'],
             'time_out'       => $row['time_out'],
+            'auto_closed'    => (bool)$row['auto_closed'],
             'sms_sent_in'    => (bool)$row['sms_sent_in'],
             'sms_sent_out'   => (bool)$row['sms_sent_out'],
             'sms_sent'       => (bool)($row['sms_sent_in'] || $row['sms_sent_out']),

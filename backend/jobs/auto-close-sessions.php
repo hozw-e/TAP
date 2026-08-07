@@ -55,10 +55,11 @@ try {
             try {
                 $conn->beginTransaction();
 
-                // Set time_out to 23:59:59
+                // Set time_out to 23:59:59 and mark as auto_closed
                 $updateStmt = $conn->prepare("
                     UPDATE attendance_logs
-                    SET time_out = :time_out
+                    SET time_out = :time_out,
+                        auto_closed = 1
                     WHERE attendance_id = :id
                 ");
                 $updateStmt->execute([

@@ -15,7 +15,8 @@ ON COMPLETION PRESERVE
 ENABLE
 DO
   UPDATE attendance_logs
-  SET time_out = '23:59:59'
+  SET time_out = '23:59:59',
+      auto_closed = 1
   WHERE date = CURDATE() - INTERVAL 1 DAY
     AND time_in IS NOT NULL
     AND time_out IS NULL;

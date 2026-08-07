@@ -6,7 +6,7 @@ import AtRiskPanel from '../components/AtRiskPanel';
 import AnomalyToastContainer from '../components/AnomalyToast';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { useAnomalyAlerts } from '../hooks/useAnomalyAlerts';
-import api, { dashboardAPI } from '../services/api';
+import api, { dashboardAPI, nfcAPI } from '../services/api';
 import '../styles/Dashboard.css';
 import { useLocation, useNavigate } from 'react-router-dom';
 import introJs from 'intro.js';
@@ -171,6 +171,12 @@ function Dashboard() {
     }
     return pages;
   };
+
+  // Ensure scanner is in attendance mode whenever the dashboard is active.
+  // This recovers from cases where VisitorPage left the mode as 'visitor'.
+  useEffect(() => {
+    nfcAPI.setMode('attendance').catch(() => {});
+  }, []);
 
   // Load on mount
   useEffect(() => {

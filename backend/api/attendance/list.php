@@ -38,6 +38,7 @@ try {
             a.date,
             a.time_in,
             a.time_out,
+            a.auto_closed,
             a.sms_sent_in,
             a.sms_sent_out,
             s.student_name,

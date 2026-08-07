@@ -172,6 +172,7 @@ function StudentLogs() {
 
   const getStatus = (log) => {
     if (log.row_type === 'visitor') return 'VISITOR';
+    if (log.auto_closed) return 'NO TIME OUT';
     return log.time_out ? 'LEFT' : 'PRESENT';
   };
 
@@ -252,8 +253,8 @@ function StudentLogs() {
                     <tr key={`${log.row_type}-${log.attendance_id}`}>
                       <td>{log.student_name || 'Unknown'}</td>
                       <td>{formatTime(log.time_in)}</td>
-                      <td>{formatTime(log.time_out)}</td>
-                      <td>{log.row_type === 'visitor' ? (log.time_out ? calculateDuration(log.time_in, log.time_out) : 'N/A') : calculateDuration(log.time_in, log.time_out)}</td>
+                      <td>{log.auto_closed ? '---' : formatTime(log.time_out)}</td>
+                      <td>{log.row_type === 'visitor' ? (log.time_out ? calculateDuration(log.time_in, log.time_out) : 'N/A') : (log.auto_closed ? '---' : calculateDuration(log.time_in, log.time_out))}</td>
                       <td>
                         <span className={`sms-badge ${
                           log.row_type === 'visitor' ? 'sms-na' :
@@ -264,7 +265,11 @@ function StudentLogs() {
                         </span>
                       </td>
                       <td>
-                        <span className={`status-badge ${log.row_type === 'visitor' ? 'status-visitor' : getStatus(log) === 'PRESENT' ? 'status-present' : 'status-left'}`}>
+                        <span className={`status-badge ${
+                          log.row_type === 'visitor' ? 'status-visitor' :
+                          getStatus(log) === 'NO TIME OUT' ? 'status-no-time-out' :
+                          getStatus(log) === 'PRESENT' ? 'status-present' : 'status-left'
+                        }`}>
                           {getStatus(log)}
                         </span>
                       </td>

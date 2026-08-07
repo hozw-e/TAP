@@ -89,7 +89,8 @@ function EditRecord() {
         // Normalize actual logs and add status
         const actualLogs = logsData.map((log) => {
           let status = 'Absent';
-          if (log.time_in && log.time_out) status = 'Present';
+          if (log.time_in && log.auto_closed) status = 'No Time Out';
+          else if (log.time_in && log.time_out) status = 'Present';
           else if (log.time_in && !log.time_out) status = 'No Time Out';
           
           return {
@@ -167,6 +168,7 @@ function EditRecord() {
   const getLogStatus = (log) => {
     if (log?.status) return log.status;
     if (!log?.time_in) return 'Absent';
+    if (log?.auto_closed) return 'No Time Out';
     if (log?.time_in && !log?.time_out) return 'No Time Out';
     if (log?.time_in && log?.time_out) return 'Present';
     return '';
@@ -384,7 +386,7 @@ function EditRecord() {
                             <tr key={`${log.attendance_id || 'log'}-${index}`}>
                               <td>{formatDate(log.attendanceDate)}</td>
                               <td>{formatTime(log.time_in)}</td>
-                              <td>{log.time_out ? formatTime(log.time_out) : '--'}</td>
+                              <td>{log.time_out && !log.auto_closed ? formatTime(log.time_out) : '--'}</td>
                               <td>
                                 <span
                                   className="log-badge"

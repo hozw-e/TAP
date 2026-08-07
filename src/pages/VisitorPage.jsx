@@ -8,7 +8,7 @@ function VisitorPage() {
   const [visitorName, setVisitorName] = useState('');
 
   // Welcome/Farewell modal (NFC tap)
-  const [modal, setModal] = useState({ show: false, type: '', name: '' });
+  const [modal, setModal] = useState({ show: false, type: '', name: '', subtype: '' });
 
   // Dedicated check-out farewell modal
   const [farewellModal, setFarewellModal] = useState({ show: false, name: '', timeOut: '' });
@@ -29,9 +29,6 @@ function VisitorPage() {
   const [adminLoading, setAdminLoading] = useState(false);
   const [showAdminPassword, setShowAdminPassword] = useState(false);
 
-  // Student card modal (NFC tap of a student card in visitor mode)
-  const [studentCardModal, setStudentCardModal] = useState({ show: false });
-
   // Name required modal (NFC tap with empty name)
   const [nameRequiredModal, setNameRequiredModal] = useState({ show: false });
 
@@ -49,7 +46,7 @@ function VisitorPage() {
   // Auto-dismiss NFC modal after 5 seconds (increased from 3 for better visibility)
   useEffect(() => {
     if (modal.show) {
-      const timer = setTimeout(() => setModal({ show: false, type: '', name: '' }), 5000);
+      const timer = setTimeout(() => setModal({ show: false, type: '', name: '', subtype: '' }), 5000);
       return () => clearTimeout(timer);
     }
   }, [modal.show]);
@@ -80,14 +77,6 @@ function VisitorPage() {
     }
   }, [unassignedModal.show]);
 
-  // Auto-dismiss student card modal after 4 seconds
-  useEffect(() => {
-    if (studentCardModal.show) {
-      const timer = setTimeout(() => setStudentCardModal({ show: false }), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [studentCardModal.show]);
-
   // Auto-dismiss name required modal after 4 seconds
   useEffect(() => {
     if (nameRequiredModal.show) {
@@ -117,15 +106,15 @@ function VisitorPage() {
     visitorNameRef.current = visitorName;
   }, [visitorName]);
 
-  // Set scanner mode to 'visitor' on mount, restore to 'attendance' on unmount
+  // Set scanner mode to 'attendance' on mount — handles both students and visitors.
+  // Students tap normally; unassigned cards with a name typed trigger visitor check-in.
   useEffect(() => {
-    nfcAPI.setMode('visitor').catch(err => console.error('Failed to set visitor mode:', err));
+    nfcAPI.setMode('attendance').catch(err => console.error('Failed to set attendance mode:', err));
     nfcAPI.clearScan().finally(() => {
       startPolling();
     });
     return () => {
       stopPolling();
-      nfcAPI.setMode('attendance').catch(err => console.error('Failed to restore attendance mode:', err));
     };
   }, []);
 
@@ -145,43 +134,41 @@ function VisitorPage() {
             const { status, action, student_name, time_since_checkin, required_time, uid: scannedUid, name: scannedVisitorName } = response.data;
 
             if (status === 'assigned') {
-              // Student card scanned in attendance mode (shouldn't happen in visitor mode, but handle gracefully)
-              setModal({ show: true, type: action === 'check_in' ? 'welcome' : 'farewell', name: student_name });
+              // Student card — check-in or check-out recorded
+              setModal({ show: true, type: action === 'check_in' ? 'welcome' : 'farewell', name: student_name, subtype: 'student' });
             } else if (status === 'denied') {
               const remainingTime = required_time - time_since_checkin;
               setDeniedModal({ show: true, name: student_name, remainingTime });
             } else if (status === 'student_card') {
-              // Student card tapped in visitor mode — show error
-              setStudentCardModal({ show: true });
+              // Should not occur in attendance mode, treat as student check-in/out
+              setModal({ show: true, type: action === 'check_in' ? 'welcome' : 'farewell', name: student_name });
             } else if (status === 'visitor_checkout') {
-              // Visitor already checked out by scan.php — name is in the response
+              // Visitor card tapped — already checked out by scan.php
               const checkoutName = response.data.name || scannedVisitorName || 'Visitor';
               const checkoutTime = response.data.time_out || '';
               setFarewellModal({ show: true, name: checkoutName, timeOut: checkoutTime });
-            } else if (status === 'unassigned') {
-              // Unassigned tag in visitor mode — need to check if name is filled
+            } else if (status === 'error_unassigned' || status === 'unassigned') {
+              // Unassigned / unregistered card:
+              // → if name is typed, treat as visitor check-in
+              // → if name is empty, prompt to enter name
               const currentName = visitorNameRef.current.trim();
               if (!currentName) {
-                // Show "enter name first" error
                 setNameRequiredModal({ show: true });
               } else {
-                // Call checkinNFC with the name from the input field
                 try {
                   const checkinResponse = await visitorsAPI.checkinNFC(currentName, scannedUid);
                   if (checkinResponse.success && checkinResponse.data) {
                     if (checkinResponse.data.created === true) {
-                      setModal({ show: true, type: 'welcome', name: currentName });
-                      setVisitorName(''); // Clear input
+                      setModal({ show: true, type: 'welcome', name: currentName, subtype: 'visitor' });
+                      setVisitorName('');
                     } else if (checkinResponse.data.status === 'already_checked_in') {
                       setAlreadyCheckedInModal({ show: true, name: currentName });
                     }
                   }
                 } catch (err) {
-                  console.error('NFC check-in error:', err);
+                  console.error('Visitor check-in error:', err);
                 }
               }
-            } else if (status === 'error_unassigned') {
-              setUnassignedModal({ show: true });
             }
 
             // Reset lastUID after modals dismiss so the same card can be tapped again.
@@ -221,6 +208,7 @@ function VisitorPage() {
       const response = await authAPI.login(adminUsername, adminPassword);
       if (response.success) {
         stopPolling();
+        await nfcAPI.setMode('attendance').catch(() => {});
         navigate('/dashboard');
       } else {
         setAdminError(response.message || 'Invalid credentials');
@@ -245,7 +233,7 @@ function VisitorPage() {
       {/* Main content */}
       <div className="visitor-content">
         <h1 className="visitor-title">Welcome to A+ Center!</h1>
-        <p className="visitor-subtitle">Please enter your name and tap your <strong>NFC</strong> card to check in</p>
+        <p className="visitor-subtitle">Students, tap your NFC card to record attendance. Visitors, enter your name first then tap your card.</p>
 
         <form className="visitor-form" onSubmit={(e) => e.preventDefault()}>
           <input
@@ -278,7 +266,9 @@ function VisitorPage() {
           <div className="visitor-modal visitor-result-modal welcome-modal">
             <div className="visitor-modal-icon">
               <i className="fas fa-door-open result-icon"></i>
-              <p className="result-label-welcome">CHECK-IN RECORDED</p>
+              <p className="result-label-welcome">
+                {modal.subtype === 'student' ? 'ATTENDANCE RECORDED' : 'CHECK-IN RECORDED'}
+              </p>
             </div>
             <h2 className="result-name">Welcome, {modal.name}!</h2>
             <p className="visitor-modal-timestamp">
@@ -296,16 +286,22 @@ function VisitorPage() {
         </div>
       )}
 
-      {/* Farewell Modal (Check-out) */}
-      {farewellModal.show && (
+      {/* Farewell Modal (Check-out) - for both students and visitors */}
+      {(modal.show && modal.type === 'farewell') || farewellModal.show ? (
         <div className="visitor-modal-overlay">
           <div className="visitor-modal visitor-result-modal farewell-modal">
             <div className="visitor-modal-icon">
               <i className="fas fa-walking result-icon farewell-walk-icon"></i>
-              <p className="result-label-farewell">CHECK-OUT RECORDED</p>
+              <p className="result-label-farewell">
+                {modal.subtype === 'student' ? 'ATTENDANCE RECORDED' : 'CHECK-OUT RECORDED'}
+              </p>
             </div>
-            <h2 className="result-name farewell-name">Goodbye, {farewellModal.name}!</h2>
-            <p className="visitor-modal-subtext">Thank you for visiting A+ Center.</p>
+            <h2 className="result-name farewell-name">
+              Goodbye, {modal.type === 'farewell' ? modal.name : farewellModal.name}!
+            </h2>
+            <p className="visitor-modal-subtext">
+              {modal.subtype === 'student' ? 'See you next session!' : 'Thank you for visiting A+ Center.'}
+            </p>
             <p className="visitor-modal-timestamp">
               {new Date().toLocaleString('en-US', {
                 weekday: 'long',
@@ -319,7 +315,7 @@ function VisitorPage() {
             <div className="result-dismiss-hint">Closes automatically…</div>
           </div>
         </div>
-      )}
+      ) : null}
 
 
 
@@ -351,21 +347,6 @@ function VisitorPage() {
             </div>
             <h2 className="result-name error-name">NFC Card Not Found</h2>
             <p className="visitor-modal-subtext">Please ask admin personnel for assistance.</p>
-            <div className="result-dismiss-hint">Closes automatically…</div>
-          </div>
-        </div>
-      )}
-
-      {/* Student Card Error Modal */}
-      {studentCardModal.show && (
-        <div className="visitor-modal-overlay">
-          <div className="visitor-modal visitor-result-modal unassigned-modal">
-            <div className="visitor-modal-icon">
-              <i className="fas fa-exclamation-triangle result-icon"></i>
-              <p className="result-label-error">WRONG CARD TYPE</p>
-            </div>
-            <h2 className="result-name error-name">Student Card Detected</h2>
-            <p className="visitor-modal-subtext">This card belongs to a student. Please use a visitor card.</p>
             <div className="result-dismiss-hint">Closes automatically…</div>
           </div>
         </div>

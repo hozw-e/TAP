@@ -156,3 +156,8 @@
   background: #2980b9;
   color: white;
 }
+
+.student-logs-page .status-badge.status-no-time-out {
+  background: #f0b429;
+  color: #333;
+}
