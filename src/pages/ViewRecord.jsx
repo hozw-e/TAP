@@ -397,6 +397,8 @@ function ViewRecord() {
                                 )}
                               </td>
                               <td>{log.time_out && !log.auto_closed ? formatTime(log.time_out) : '--'}</td>
+                              <td>
+                                {timeOutSms && !log.auto_closed ? (
                                   <span
                                     className="log-badge"
                                     style={{
