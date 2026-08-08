@@ -147,7 +147,7 @@ function VisitorPage() {
             } else if (status === 'student_card') {
               // Should not occur in attendance mode, treat as student check-in/out
               setModal({ show: true, type: action === 'check_in' ? 'welcome' : 'farewell', name: student_name });
-            } else if (status === 'visitor_checkout') {
+            } else if (status === 'visitor' && action === 'visitor_checkout') {
               // Visitor card tapped — already checked out by scan.php
               const checkoutName = response.data.name || scannedVisitorName || 'Visitor';
               const checkoutTime = response.data.time_out || '';

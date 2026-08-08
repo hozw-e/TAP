@@ -61,12 +61,20 @@ try {
         CREATE TABLE IF NOT EXISTS temp_nfc_scans (
             id INT PRIMARY KEY AUTO_INCREMENT,
             uid VARCHAR(100) NOT NULL,
+            action_result JSON DEFAULT NULL,
             scanned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             consumed BOOLEAN DEFAULT FALSE,
             INDEX idx_consumed (consumed),
             INDEX idx_scanned_at (scanned_at)
         )
     ");
+
+    // Add action_result column if it doesn't exist (for tables created before this column was introduced)
+    try {
+        $conn->exec("ALTER TABLE temp_nfc_scans ADD COLUMN action_result JSON DEFAULT NULL");
+    } catch (Exception $e) {
+        // Ignore — column likely already exists
+    }
     
     // Insert the new scan (action_result will be updated after processing)
     $stmt = $conn->prepare("
