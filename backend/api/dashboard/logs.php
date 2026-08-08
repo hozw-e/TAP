@@ -35,6 +35,22 @@ try {
         sendErrorResponse('Database connection failed', 500);
     }
 
+    // Check if auto_closed column exists (migration may not have run yet on all instances)
+    $hasAutoClosedCol = false;
+    try {
+        $colCheck = $conn->query("
+            SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'attendance_logs'
+              AND COLUMN_NAME = 'auto_closed'
+        ");
+        $hasAutoClosedCol = (int)$colCheck->fetchColumn() > 0;
+    } catch (Exception $e) {
+        // Default to false if check fails
+    }
+
+    $autoClosedSelect = $hasAutoClosedCol ? 'a.auto_closed' : '0 AS auto_closed';
+
     // Student attendance logs
     $studentQuery = "
         SELECT
@@ -43,7 +59,7 @@ try {
             s.student_course,
             a.time_in,
             a.time_out,
-            a.auto_closed,
+            {$autoClosedSelect},
             a.sms_sent_in,
             a.sms_sent_out,
             a.date

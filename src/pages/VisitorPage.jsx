@@ -42,6 +42,8 @@ function VisitorPage() {
   const intervalRef = useRef(null);
   const lastUIDRef  = useRef(null);
   const visitorNameRef = useRef('');
+  const pollFailCountRef = useRef(0);
+  const [nfcActive, setNfcActive] = useState(true);
 
   // Auto-dismiss NFC modal after 5 seconds (increased from 3 for better visibility)
   useEffect(() => {
@@ -123,6 +125,9 @@ function VisitorPage() {
     intervalRef.current = setInterval(async () => {
       try {
         const response = await nfcAPI.getLastScan();
+        // Successful poll — reader is reachable
+        pollFailCountRef.current = 0;
+        setNfcActive(true);
         if (response.success && response.data.uid) {
           const { uid } = response.data;
           if (uid !== lastUIDRef.current) {
@@ -179,7 +184,11 @@ function VisitorPage() {
           }
         }
       } catch (e) {
-        // silent fail
+        // Poll failed — increment failure counter
+        pollFailCountRef.current += 1;
+        if (pollFailCountRef.current >= 3) {
+          setNfcActive(false);
+        }
       }
     }, 500);
   };
@@ -233,7 +242,7 @@ function VisitorPage() {
       {/* Main content */}
       <div className="visitor-content">
         <h1 className="visitor-title">Welcome to A+ Center!</h1>
-        <p className="visitor-subtitle">Students, tap your NFC card to record attendance. Visitors, enter your name first then tap your card.</p>
+        <p className="visitor-subtitle"><strong>Students</strong>, tap your NFC ID to record attendance.<br /><strong>Visitors</strong>, enter your name first then tap your Visitor ID.</p>
 
         <form className="visitor-form" onSubmit={(e) => e.preventDefault()}>
           <input
@@ -254,9 +263,10 @@ function VisitorPage() {
         </form>
 
         {/* NFC Reader Status */}
-        <div className="nfc-status">
-          <i className="fas fa-wifi"></i>
-          <span>NFC Reader is Active</span>
+        <div className={`nfc-status ${nfcActive ? 'nfc-status--active' : 'nfc-status--inactive'}`}>
+          <i className={`fas ${nfcActive ? 'fa-wifi' : 'fa-wifi-slash'}`}></i>
+          <span>{nfcActive ? 'NFC Reader is Active' : 'NFC Reader is Offline'}</span>
+          {nfcActive && <span className="nfc-pulse-dot"></span>}
         </div>
       </div>
 

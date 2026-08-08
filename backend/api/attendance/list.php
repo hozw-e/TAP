@@ -30,6 +30,22 @@ if (!$conn) {
 }
 
 try {
+    // Check if auto_closed column exists
+    $hasAutoClosedCol = false;
+    try {
+        $colCheck = $conn->query("
+            SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'attendance_logs'
+              AND COLUMN_NAME = 'auto_closed'
+        ");
+        $hasAutoClosedCol = (int)$colCheck->fetchColumn() > 0;
+    } catch (Exception $e) {
+        // Default to false if check fails
+    }
+
+    $autoClosedSelect = $hasAutoClosedCol ? 'a.auto_closed' : '0 AS auto_closed';
+
     // Build query with optional filters
     $query = "
         SELECT 
@@ -38,7 +54,7 @@ try {
             a.date,
             a.time_in,
             a.time_out,
-            a.auto_closed,
+            {$autoClosedSelect},
             a.sms_sent_in,
             a.sms_sent_out,
             s.student_name,

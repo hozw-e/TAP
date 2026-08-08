@@ -341,15 +341,43 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   margin-top: 20px;
-  font-size: 16px;
-  color: #555;
+  font-size: 15px;
+  font-weight: 500;
+  transition: color 0.3s ease;
 }
 
-.nfc-status i {
-  margin-right: 8px;
-  font-size: 20px;
-  color: #2c3e50;
+.nfc-status--active {
+  color: #27ae60;
+}
+
+.nfc-status--active i {
+  color: #27ae60;
+  font-size: 18px;
+}
+
+.nfc-status--inactive {
+  color: #e74c3c;
+}
+
+.nfc-status--inactive i {
+  color: #e74c3c;
+  font-size: 18px;
+}
+
+.nfc-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #27ae60;
+  animation: pulse-nfc 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse-nfc {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.75); }
 }
 
 /* Footer */
