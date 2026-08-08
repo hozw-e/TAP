@@ -122,7 +122,7 @@ function Students() {
     }
   };
 
-  // Calculate total hours from backend total_seconds
+  // Calculate hours rendered from backend total_seconds
   const calculateTotalHours = (student) => {
     const totalSeconds = parseInt(student.total_seconds) || 0;
     const totalHours = Math.floor(totalSeconds / 3600);
@@ -266,8 +266,8 @@ function Students() {
                   <tr>
                     <th>Student Name</th>
                     <th>Course</th>
-                    <th>Duration</th>
-                    <th>Total Hours</th>
+                    <th>Sessions Left</th>
+                    <th>Hours Rendered</th>
                     <th>Guardian</th>
                     <th>Contact Number</th>
                     <th></th>
@@ -278,7 +278,7 @@ function Students() {
                     <tr key={student.student_id}>
                       <td>{student.student_name}</td>
                       <td>{student.student_course || '-'}</td>
-                      <td>{student.course_duration || '-'}</td>
+                      <td>{student.remaining_sessions ?? '-'}</td>
                       <td>{calculateTotalHours(student)}</td>
                       <td>{student.guardian_name || '-'}</td>
                       <td>{student.guardian_cellnum || '-'}</td>

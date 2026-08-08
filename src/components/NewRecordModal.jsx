@@ -16,7 +16,6 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
     contactNumber: '',
     completeAddress: '',
     course: '',
-    duration: '',
     nfcId: '',
     guardianName: '',
     guardianAddress: '',
@@ -93,10 +92,6 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
       setError('Course is required');
       return;
     }
-    if (!formData.duration.trim()) {
-      setError('Course duration is required');
-      return;
-    }
     if (!formData.nfcId.trim()) {
       setError('NFC ID is required. Please scan an NFC card.');
       return;
@@ -144,7 +139,6 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
       student_address: formData.completeAddress,
       student_cellnum: formData.contactNumber || null,
       student_course: formData.course || null,
-      course_duration: formData.duration || null,
     });
 
     if (!studentResponse.success) {
@@ -256,7 +250,7 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
                   </div>
                 </div>
 
-                <div className="form-row two-columns">
+                <div className="form-row">
                   <div className="form-group">
                     <label className="form-label">Course <span style={{ color: 'red' }}>*</span></label>
                     <select
@@ -271,17 +265,6 @@ function NewRecordModal({ isOpen, onClose, onSuccess }) {
                         <option key={course} value={course}>{course}</option>
                       ))}
                     </select>
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Duration <span style={{ color: 'red' }}>*</span></label>
-                    <input
-                      type="text"
-                      name="duration"
-                      className="form-input"
-                      value={formData.duration}
-                      onChange={handleChange}
-                      disabled={isLoading}
-                    />
                   </div>
                 </div>
 
