@@ -31,6 +31,7 @@ function EditRecord() {
     guardianName: '',
     guardianContact: '',
     guardianAddress: '',
+    guardianEmail: '',
   });
 
   useEffect(() => {
@@ -68,6 +69,7 @@ function EditRecord() {
       guardianName: student.guardian_name || '',
       guardianContact: student.guardian_cellnum || '',
       guardianAddress: student.guardian_address || '',
+      guardianEmail: student.guardian_email || '',
     });
   }, [student]);
 
@@ -237,6 +239,7 @@ function EditRecord() {
         guardian_name: formData.guardianName,
         guardian_address: formData.guardianAddress || null,
         guardian_cellnum: formData.guardianContact || null,
+        guardian_email: formData.guardianEmail || null,
       });
       if (!guardianResponse.success) {
         throw new Error(guardianResponse.message || 'Failed to update guardian');
@@ -336,6 +339,7 @@ function EditRecord() {
                       <div className="info-item"><label>Guardian Name</label><input name="guardianName" value={formData.guardianName} onChange={handleChange} /></div>
                       <div className="info-item"><label>Contact Details</label><input name="guardianContact" value={formData.guardianContact} onChange={handleChange} /></div>
                       <div className="info-item"><label>Address</label><input name="guardianAddress" value={formData.guardianAddress} onChange={handleChange} /></div>
+                      <div className="info-item"><label>Email Address</label><input name="guardianEmail" type="email" value={formData.guardianEmail} onChange={handleChange} placeholder="Optional" /></div>
                     </div>
                   </div>
                 </div>

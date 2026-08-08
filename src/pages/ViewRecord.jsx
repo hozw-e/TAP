@@ -309,6 +309,7 @@ function ViewRecord() {
                       <div className="info-item"><label>Guardian Name</label><input value={student.guardian_name || ''} readOnly /></div>
                       <div className="info-item"><label>Contact Details</label><input value={student.guardian_cellnum || ''} readOnly /></div>
                       <div className="info-item"><label>Address</label><input value={student.guardian_address || ''} readOnly /></div>
+                      <div className="info-item"><label>Email Address</label><input value={student.guardian_email || ''} readOnly placeholder="—" /></div>
                     </div>
                   </div>
                 </div>

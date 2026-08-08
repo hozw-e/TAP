@@ -442,7 +442,13 @@ function Dashboard() {
 
   const getStatus = (log) => {
     if (log.row_type === 'visitor') return 'VISITOR';
-    return log.time_out ? 'LEFT' : 'PRESENT';
+    if (log.auto_closed) return 'NO TIME OUT';
+    if (!log.time_out) {
+      const today = new Date().toISOString().split('T')[0];
+      if (log.date && log.date < today) return 'NO TIME OUT';
+      return 'PRESENT';
+    }
+    return 'LEFT';
   };
 
   useEffect(() => {

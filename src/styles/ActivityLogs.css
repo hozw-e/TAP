@@ -99,6 +99,13 @@
   z-index: 1;
 }
 
+.activity-logs-container .logs-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #ecf0f1;
+}
+
 .activity-logs-container .logs-table tbody tr:hover {
   background: #f8f9fa;
 }

@@ -134,6 +134,11 @@ input {
   text-transform: none;
   letter-spacing: normal;
   border-bottom: 2px solid #ddd;
+  /* background on th directly — required for sticky to work with border-collapse */
+  background: #ecf0f1;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 /* Table body cells */
@@ -239,6 +244,13 @@ input {
 /* ===== Unified ViewRecord/EditRecord Table ===== */
 .view-logs-table thead {
   background: #ecf0f1;
+}
+
+.view-logs-table th {
+  background: #ecf0f1;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .view-logs-table th {

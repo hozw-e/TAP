@@ -173,7 +173,13 @@ function StudentLogs() {
   const getStatus = (log) => {
     if (log.row_type === 'visitor') return 'VISITOR';
     if (log.auto_closed) return 'NO TIME OUT';
-    return log.time_out ? 'LEFT' : 'PRESENT';
+    if (!log.time_out) {
+      // If the record is from a past date and has no time_out, it's a missed checkout
+      const today = new Date().toISOString().split('T')[0];
+      if (log.date && log.date < today) return 'NO TIME OUT';
+      return 'PRESENT';
+    }
+    return 'LEFT';
   };
 
   return (
