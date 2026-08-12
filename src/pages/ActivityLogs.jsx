@@ -21,7 +21,7 @@ function ActivityLogs() {
     current_page: 1,
     total_pages: 1,
     total_count: 0,
-    per_page: 10
+    per_page: 20
   });
 
   // Action type options

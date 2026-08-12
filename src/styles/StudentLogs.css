@@ -68,22 +68,18 @@
   font-weight: 600;
 }
 
-.student-logs-page .date-picker {
-  border: 1px solid white;
-  border-radius: 6px;
-  outline: none;
-  cursor: pointer;
-  background: white;
-  color: #2c3e50;
-}
-
+.student-logs-page .date-picker,
 .student-logs-page .filter-select {
-  border: 1px solid white;
+  padding: 5px 9px;
+  border: 1px solid #fff;
   border-radius: 6px;
-  background: white;
+  font-size: 12px;
+  background: #fff;
   color: #2c3e50;
-  cursor: pointer;
   outline: none;
+  height: 30px;
+  cursor: pointer;
+  box-sizing: border-box;
 }
 
 .student-logs-page .filter-select:disabled {
@@ -133,10 +129,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 5px 12px;
-  border-radius: 12px;
+  padding: 5px 16px;
+  border-radius: 20px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   text-align: center;
   white-space: nowrap;
   min-width: 70px;
@@ -158,6 +154,6 @@
 }
 
 .student-logs-page .status-badge.status-no-time-out {
-  background: #f0b429;
+  background: #ffeb3b;
   color: #333;
 }

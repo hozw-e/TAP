@@ -21,7 +21,7 @@ function VisitorRecords() {
     current_page: 1,
     total_pages: 1,
     total_count: 0,
-    per_page: 10
+    per_page: 20
   });
 
   // Pagination page numbers
@@ -247,7 +247,7 @@ function VisitorRecords() {
                   <tbody>
                     {visitors.map((visitor, index) => (
                       <tr key={visitor.visit_id}>
-                        <td>{(pagination.current_page - 1) * 10 + index + 1}</td>
+                        <td>{(pagination.current_page - 1) * 20 + index + 1}</td>
                         <td>{visitor.name}</td>
                         <td>{formatDate(visitor.date_of_visit)}</td>
                         <td>{formatTime(visitor.time_in)}</td>

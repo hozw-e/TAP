@@ -28,7 +28,7 @@ function Students() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const recordsPerPage = 10;
+  const recordsPerPage = 20;
   
   // Notification state
   const [notification, setNotification] = useState({

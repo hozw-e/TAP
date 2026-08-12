@@ -284,73 +284,70 @@ function EditRecord() {
           </div>
         ) : (
           <div className="view-record-page-content edit-record-page">
-            <div className="view-record-topbar">
-              <button className="view-back-btn" onClick={() => navigate(`/students/${student.student_id}`)}>
-                <i className="fas fa-chevron-left"></i> Back
-              </button>
-            </div>
+            <button className="view-back-btn" onClick={() => navigate(`/students/${student.student_id}`)}>
+              <i className="fas fa-chevron-left"></i> Back
+            </button>
 
             <div className="view-record-layout">
-              {/* Top section: profile card left + student info right */}
-              <div className="view-top-section">
-                <div className="view-profile-card">
-                  <h2>{student.student_name || 'Unknown Student'}</h2>
-                  <p className="view-meta">NFC ID: {student.nfc_uid || 'XXXXXXX'}</p>
-                  {student.student_course && (
-                    <div className="view-course-badge">{student.student_course}</div>
-                  )}
-                  <div className="view-profile-stats">
-                    <div>
-                      <span className="label">Member since</span>
-                      <strong>{formatDate(student.created_at || student.enrollment_date)}</strong>
-                    </div>
-                    <div>
-                      <span className="label">Status</span>
-                      <strong className={`status ${studentStatus.toLowerCase().replace(' ', '-')}`}>{studentStatus}</strong>
-                    </div>
+              {/* Profile banner */}
+              <div className="view-profile-card">
+                <h2>{student.student_name || 'Unknown Student'}</h2>
+                <p className="view-meta">NFC ID: {student.nfc_uid || 'XXXXXXX'}</p>
+                {student.student_course && (
+                  <div className="view-course-badge">{student.student_course}</div>
+                )}
+                <div className="view-profile-stats">
+                  <div>
+                    <span className="label">Member since</span>
+                    <strong>{formatDate(student.created_at || student.enrollment_date)}</strong>
                   </div>
-                </div>
-
-                <div className="view-main-panel">
-                  <div className="view-panel-header">
-                    <h3>Student Information</h3>
-                    <div className="view-actions">
-                      <button className="view-action-btn cancel" onClick={() => navigate(`/students/${student.student_id}`)} disabled={isSaving}>
-                        Cancel
-                      </button>
-                      <button className="view-action-btn edit" onClick={handleSave} disabled={isSaving}>
-                        <i className="fas fa-save"></i> {isSaving ? 'Saving...' : 'Save Changes'}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="view-info-grid">
-                    <div className="info-item"><label>Course Enrolled</label><input name="studentCourse" value={formData.studentCourse} onChange={handleChange} /></div>
-                    <div className="info-item"><label>Course Duration</label><input name="courseDuration" value={formData.courseDuration} onChange={handleChange} /></div>
-                    <div className="info-item"><label>NFC ID</label><input name="nfcId" value={formData.nfcId} readOnly /></div>
-                    <div className="info-item"><label>Birthdate</label><input name="birthdate" value={formData.birthdate} onChange={handleChange} type="date" /></div>
-                    <div className="info-item"><label>Address</label><input name="address" value={formData.address} onChange={handleChange} /></div>
-                    <div className="info-item"><label>Contact Number</label><input name="contactNumber" value={formData.contactNumber} onChange={handleChange} /></div>
-                  </div>
-
-                  <div className="view-guardian-section">
-                    <h3>Guardian Information</h3>
-                    <div className="view-info-grid guardian">
-                      <div className="info-item"><label>Guardian Name</label><input name="guardianName" value={formData.guardianName} onChange={handleChange} /></div>
-                      <div className="info-item"><label>Contact Details</label><input name="guardianContact" value={formData.guardianContact} onChange={handleChange} /></div>
-                      <div className="info-item"><label>Address</label><input name="guardianAddress" value={formData.guardianAddress} onChange={handleChange} /></div>
-                      <div className="info-item"><label>Email Address</label><input name="guardianEmail" type="email" value={formData.guardianEmail} onChange={handleChange} placeholder="Optional" /></div>
-                    </div>
+                  <div>
+                    <span className="label">Status</span>
+                    <strong className={`status ${studentStatus.toLowerCase().replace(' ', '-')}`}>{studentStatus}</strong>
                   </div>
                 </div>
               </div>
 
-              {/* Bottom section: full-width attendance logs */}
+              {/* Student & Guardian info */}
+              <div className="view-main-panel">
+                <div className="view-panel-header">
+                  <h3>Student Information</h3>
+                  <div className="view-actions">
+                    <button className="view-action-btn cancel" onClick={() => navigate(`/students/${student.student_id}`)} disabled={isSaving}>
+                      Cancel
+                    </button>
+                    <button className="view-action-btn edit" onClick={handleSave} disabled={isSaving}>
+                      <i className="fas fa-save"></i> {isSaving ? 'Saving...' : 'Save Changes'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="view-info-grid">
+                  <div className="info-item"><label>Course Enrolled</label><input name="studentCourse" value={formData.studentCourse} onChange={handleChange} /></div>
+                  <div className="info-item"><label>Course Duration</label><input name="courseDuration" value={formData.courseDuration} onChange={handleChange} /></div>
+                  <div className="info-item"><label>NFC ID</label><input name="nfcId" value={formData.nfcId} readOnly /></div>
+                  <div className="info-item"><label>Birthdate</label><input name="birthdate" value={formData.birthdate} onChange={handleChange} type="date" /></div>
+                  <div className="info-item"><label>Address</label><input name="address" value={formData.address} onChange={handleChange} /></div>
+                  <div className="info-item"><label>Contact Number</label><input name="contactNumber" value={formData.contactNumber} onChange={handleChange} /></div>
+                </div>
+
+                <div className="view-guardian-section">
+                  <h3>Guardian Information</h3>
+                  <div className="view-info-grid guardian">
+                    <div className="info-item"><label>Guardian Name</label><input name="guardianName" value={formData.guardianName} onChange={handleChange} /></div>
+                    <div className="info-item"><label>Contact Details</label><input name="guardianContact" value={formData.guardianContact} onChange={handleChange} /></div>
+                    <div className="info-item"><label>Address</label><input name="guardianAddress" value={formData.guardianAddress} onChange={handleChange} /></div>
+                    <div className="info-item"><label>Email Address</label><input name="guardianEmail" type="email" value={formData.guardianEmail} onChange={handleChange} placeholder="Optional" /></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Attendance logs */}
               <div className="view-logs-section">
                 <div className="view-logs-header">
                   <span>Attendance Logs</span>
-                  <div className="view-logs-header-right" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginLeft: 'auto' }}>
-                    <div className="view-logs-filters" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div className="view-logs-header-right">
+                    <div className="view-logs-filters">
                       <label>From</label>
                       <input type="date" className="view-filter-date" value={filterFrom} onChange={e => setFilterFrom(e.target.value)} />
                       <label>To</label>
@@ -392,29 +389,7 @@ function EditRecord() {
                               <td>{formatTime(log.time_in)}</td>
                               <td>{log.time_out && !log.auto_closed ? formatTime(log.time_out) : '--'}</td>
                               <td>
-                                <span
-                                  className="log-badge"
-                                  style={{
-                                    backgroundColor:
-                                      status === 'Present'
-                                        ? '#4caf50'
-                                        : status === 'Absent'
-                                          ? '#f44336'
-                                          : status === 'No Time Out'
-                                            ? '#ffeb3b'
-                                            : '#e0e0e0',
-                                    color:
-                                      status === 'No Time Out'
-                                        ? '#333'
-                                        : '#fff',
-                                    fontWeight: 600,
-                                    borderRadius: '12px',
-                                    padding: '2px 12px',
-                                    display: 'inline-block',
-                                    minWidth: '90px',
-                                    textAlign: 'center',
-                                  }}
-                                >
+                                <span className="log-badge" style={{ backgroundColor: status === 'Present' ? '#4caf50' : status === 'Absent' ? '#f44336' : status === 'No Time Out' ? '#ffeb3b' : '#e0e0e0', color: status === 'No Time Out' ? '#333' : '#fff', fontWeight: 700, borderRadius: '20px', padding: '3px 12px', display: 'inline-flex', minWidth: '90px', justifyContent: 'center' }}>
                                   {status}
                                 </span>
                               </td>

@@ -23,7 +23,7 @@ function StudentLogs() {
   const [filterCourse, setFilterCourse] = useState('All');
 
   // Pagination
-  const ITEMS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 20;
   const [currentPage, setCurrentPage] = useState(1);
 
   const totalPages = Math.ceil(filteredLogs.length / ITEMS_PER_PAGE);
