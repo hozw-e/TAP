@@ -22,7 +22,7 @@ require_once '../../utils/activity-logger.php';
  * Fire-and-forget: errors are logged but never delay the scan response.
  */
 function publishAttendanceEvent($eventData) {
-    $wsUrl = getenv('WEBSOCKET_SERVER_URL') ?: 'http://localhost:3001';
+    $wsUrl = getenv('WEBSOCKET_SERVER_URL') ?: 'https://tap-web-socket.up.railway.app';
     $ch = curl_init($wsUrl . '/internal/event');
     curl_setopt_array($ch, [
         CURLOPT_POST => true,

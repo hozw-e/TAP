@@ -10,7 +10,27 @@ export function computeBackoffDelay(attempt) {
   return Math.min(Math.pow(2, attempt - 1) * 1000, 30000);
 }
 
-const WS_URL = import.meta.env.VITE_WEBSOCKET_URL || 'ws://localhost:3001';
+/**
+ * Resolve the WebSocket server URL.
+ * Priority: VITE_WEBSOCKET_URL env var → derive from current hostname (production) → localhost fallback.
+ * Deriving from hostname means Railway deployments work without setting the env var explicitly.
+ */
+function resolveWsUrl() {
+  const envUrl = import.meta.env.VITE_WEBSOCKET_URL;
+  if (envUrl && envUrl !== 'ws://localhost:3001') return envUrl;
+
+  // In a browser on a Railway/production domain, derive the WS URL from the page origin.
+  // e.g. https://apsolutionstap.up.railway.app → wss://tap-web-socket.up.railway.app
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    // The WebSocket service is on a sibling Railway domain — use env var or hardcoded fallback
+    return envUrl || `${protocol}//tap-web-socket.up.railway.app`;
+  }
+
+  return 'ws://localhost:3001';
+}
+
+const WS_URL = resolveWsUrl();
 const MAX_RECONNECT_ATTEMPTS = 10;
 const WS_CONNECT_TIMEOUT = 3000;
 const SSE_CONNECT_TIMEOUT = 5000;

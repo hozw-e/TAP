@@ -112,9 +112,7 @@ function VisitorPage() {
   // Students tap normally; unassigned cards with a name typed trigger visitor check-in.
   useEffect(() => {
     nfcAPI.setMode('attendance').catch(err => console.error('Failed to set attendance mode:', err));
-    nfcAPI.clearScan().finally(() => {
-      startPolling();
-    });
+    startPolling();
     return () => {
       stopPolling();
     };
