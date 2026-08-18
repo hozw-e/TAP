@@ -347,12 +347,12 @@ function Dashboard() {
       </div>`;
     };
 
-    const totalSteps = 14;
+    const totalSteps = 16;
 
     intro.setOptions({
       steps: [
         { intro: buildIntro(1, totalSteps, 'Welcome to Dashboard!|This is your main control center for monitoring attendance and system activity. Let me show you around!') },
-        { element: '.dashboard-col-left', intro: buildIntro(2, totalSteps, 'Overview Panel|The left side shows your key statistics, attendance trends, and quick-glance info panels.') },
+        { element: '.dashboard-col-left', intro: buildIntro(2, totalSteps, 'Overview Panel|The left side shows your key statistics, attendance trends, at-risk alerts, and quick-glance info panels.') },
         { element: '.stats-grid', intro: buildIntro(3, totalSteps, 'Statistics Cards|These cards give you a quick snapshot of your facility\'s current status.') },
         { element: '.stat-card:nth-child(1)', intro: buildIntro(4, totalSteps, 'Total Students|Shows the total number of students registered in the system.') },
         { element: '.stat-card:nth-child(2)', intro: buildIntro(5, totalSteps, 'Students Present|Displays how many students are currently inside the facility right now.') },
@@ -361,10 +361,12 @@ function Dashboard() {
         { element: '.compact-panels', intro: buildIntro(8, totalSteps, 'Info Panels|These panels show today\'s absent students and scheduled classes so you can quickly see who\'s missing and what\'s coming up.') },
         { element: '.compact-panel:nth-child(1)', intro: buildIntro(9, totalSteps, 'Expected But Absent|Lists students who have a scheduled class today but haven\'t checked in yet. Helps you track attendance gaps in real time.') },
         { element: '.compact-panel:nth-child(2)', intro: buildIntro(10, totalSteps, 'Today\'s Schedules|Shows all courses scheduled for today with their start times. Live classes are highlighted with a pulsing dot, and past classes are dimmed.') },
-        { element: '.logs-section', intro: buildIntro(11, totalSteps, 'Attendance Logs|Today\'s attendance records showing Name, Time In, SMS notification status, Time Out, and Out SMS status.') },
-        { element: '.logs-table', intro: buildIntro(12, totalSteps, 'Logs Table|Each row shows a student or visitor entry. The colored dot indicates student (purple) or visitor (blue). SMS columns show notification status for check-in and check-out.') },
-        { element: '.sidebar', intro: buildIntro(13, totalSteps, 'Navigation Menu|Use the sidebar to navigate to Student Records, Attendance Logs, Visitor Logs, Activity Logs, Course Schedules, and the Login Panel.') },
-        { element: '.help-float-btn', intro: buildIntro(14, totalSteps, 'Help Button|Click this button anytime to restart this tour and review the dashboard features. That\'s it! You\'re all set!') }
+        { element: '.at-risk-panel', intro: buildIntro(11, totalSteps, 'At-Risk Students|Powered by the anomaly detection engine, this panel flags students showing behavioral patterns like chronic tardiness, attendance drop-off, or irregular timing. Click any alert to go to their record.') },
+        { element: '.logs-section', intro: buildIntro(12, totalSteps, 'Attendance Logs|Today\'s real-time attendance records showing Name, Time In, SMS notification status, Time Out, and Out SMS status. Updates automatically when a student taps their NFC card.') },
+        { element: '.logs-table', intro: buildIntro(13, totalSteps, 'Logs Table|Each row shows a student or visitor entry. The colored dot indicates student (purple) or visitor (blue). SMS columns show notification status for check-in and check-out.') },
+        { element: '.topbar-left', intro: buildIntro(14, totalSteps, 'Connection Status|Shows whether the system is connected to the real-time server. A green dot means live updates are active. If disconnected, click Retry to reconnect.') },
+        { element: '.sidebar', intro: buildIntro(15, totalSteps, 'Navigation Menu|Use the sidebar to navigate to Student Records, Attendance Logs, Visitor Logs, Activity Logs, Course Schedules, and the Login Panel.') },
+        { element: '.help-float-btn', intro: buildIntro(16, totalSteps, 'Help Button|Click this button anytime to restart this tour and review the dashboard features. That\'s it! You\'re all set!') }
       ],
       showProgress: false,
       showBullets: false,

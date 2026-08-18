@@ -277,6 +277,12 @@ function ViewRecord() {
                     <strong>{formatDate(student.created_at || student.enrollment_date)}</strong>
                   </div>
                   <div>
+                    <span className="label">Sessions Left</span>
+                    <strong>
+                      {student.remaining_sessions ?? '—'}
+                    </strong>
+                  </div>
+                  <div>
                     <span className="label">Status</span>
                     <strong className={`status ${studentStatus.toLowerCase().replace(' ', '-')}`}>{studentStatus}</strong>
                   </div>
@@ -295,8 +301,8 @@ function ViewRecord() {
                 </div>
 
                 <div className="view-info-grid">
-                  <div className="info-item"><label>Course Enrolled</label><input value={student.student_course || ''} readOnly /></div>
-                  <div className="info-item"><label>Course Duration</label><input value={student.course_duration || ''} readOnly /></div>
+                  <div className="info-item"><label>Name</label><input value={student.student_name || ''} readOnly /></div>
+                  <div className="info-item"><label>Course</label><input value={student.student_course || ''} readOnly /></div>
                   <div className="info-item"><label>NFC ID</label><input value={student.nfc_uid || ''} readOnly /></div>
                   <div className="info-item"><label>Birthdate</label><input value={student.student_birthdate || ''} readOnly /></div>
                   <div className="info-item"><label>Address</label><input value={student.student_address || ''} readOnly /></div>

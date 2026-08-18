@@ -526,3 +526,60 @@
     width: 100%;
   }
 }
+
+/* ─── NFC Reassign (Edit Record page) ───────────────────────── */
+.edit-record-page .nfc-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.edit-record-page .nfc-input-wrapper input {
+  padding-right: 130px;
+}
+
+.edit-record-page .scan-nfc-btn {
+  position: absolute;
+  right: 6px;
+  height: calc(100% - 10px);
+  padding: 0 12px;
+  background: #1e3557;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.edit-record-page .scan-nfc-btn:hover:not(:disabled) {
+  background: #2c4e7f;
+}
+
+.edit-record-page .scan-nfc-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.edit-record-page .scan-nfc-btn.scanning {
+  background: #27ae60;
+  animation: nfc-pulse 1.5s infinite;
+}
+
+@keyframes nfc-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.edit-record-page .form-hint.scanning-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #27ae60;
+  font-style: italic;
+}

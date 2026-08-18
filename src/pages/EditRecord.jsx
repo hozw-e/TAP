@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
 import Notification from '../components/Notification';
-import { attendanceAPI, guardiansAPI, studentsAPI } from '../services/api';
+import { attendanceAPI, guardiansAPI, nfcAPI, studentsAPI } from '../services/api';
+import { useNFCScanner } from '../hooks/useNFCScanner';
 import '../styles/Students.css';
 import '../styles/ViewRecordModal.css';
 
@@ -16,14 +17,13 @@ function EditRecord() {
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
   const [isLoadingStudent, setIsLoadingStudent] = useState(!location.state?.student);
   const [isSaving, setIsSaving] = useState(false);
+  const [nfcScanning, setNfcScanning] = useState(false);
   const [notification, setNotification] = useState({ isOpen: false, message: '', type: 'success' });
   // Filters
   const [filterFrom, setFilterFrom] = useState('');
   const [filterTo, setFilterTo] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [formData, setFormData] = useState({
-    studentCourse: '',
-    courseDuration: '',
     nfcId: '',
     birthdate: '',
     address: '',
@@ -60,8 +60,6 @@ function EditRecord() {
   useEffect(() => {
     if (!student) return;
     setFormData({
-      studentCourse: student.student_course || '',
-      courseDuration: student.course_duration || '',
       nfcId: student.nfc_uid || '',
       birthdate: student.student_birthdate || '',
       address: student.student_address || '',
@@ -200,6 +198,45 @@ function EditRecord() {
     return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   };
 
+  const handleNFCScan = async (uid) => {
+    setNfcScanning(false);
+    try {
+      await nfcAPI.setMode('attendance');
+    } catch (err) {
+      console.error('Failed to reset scanner mode:', err);
+    }
+    try {
+      const response = await nfcAPI.assign({ student_id: student.student_id, uid });
+      if (!response.success) throw new Error(response.message || 'Failed to assign NFC tag');
+      setFormData((prev) => ({ ...prev, nfcId: uid }));
+      setStudent((prev) => ({ ...prev, nfc_uid: uid }));
+      setNotification({ isOpen: true, message: 'NFC tag assigned successfully.', type: 'success' });
+    } catch (err) {
+      setNotification({ isOpen: true, message: err.message || 'Failed to assign NFC tag.', type: 'error' });
+    }
+  };
+
+  const { isPolling } = useNFCScanner(nfcScanning, handleNFCScan);
+
+  const handleScanNFC = async () => {
+    const newScanning = !nfcScanning;
+    setNfcScanning(newScanning);
+    try {
+      await nfcAPI.setMode(newScanning ? 'assign' : 'attendance');
+    } catch (err) {
+      console.error('Failed to set scanner mode:', err);
+    }
+  };
+
+  // Reset scanner mode if user leaves page while scanning
+  useEffect(() => {
+    return () => {
+      if (nfcScanning) {
+        nfcAPI.setMode('attendance').catch(() => {});
+      }
+    };
+  }, [nfcScanning]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -250,8 +287,6 @@ function EditRecord() {
         student_birthdate: formData.birthdate || null,
         student_address: formData.address,
         student_cellnum: formData.contactNumber || null,
-        student_course: formData.studentCourse || null,
-        course_duration: formData.courseDuration || null,
       });
       if (!studentResponse.success) {
         throw new Error(studentResponse.message || 'Failed to update student');
@@ -302,6 +337,12 @@ function EditRecord() {
                     <strong>{formatDate(student.created_at || student.enrollment_date)}</strong>
                   </div>
                   <div>
+                    <span className="label">Sessions Left</span>
+                    <strong>
+                      {student.remaining_sessions ?? '—'}
+                    </strong>
+                  </div>
+                  <div>
                     <span className="label">Status</span>
                     <strong className={`status ${studentStatus.toLowerCase().replace(' ', '-')}`}>{studentStatus}</strong>
                   </div>
@@ -323,9 +364,32 @@ function EditRecord() {
                 </div>
 
                 <div className="view-info-grid">
-                  <div className="info-item"><label>Course Enrolled</label><input name="studentCourse" value={formData.studentCourse} onChange={handleChange} /></div>
-                  <div className="info-item"><label>Course Duration</label><input name="courseDuration" value={formData.courseDuration} onChange={handleChange} /></div>
-                  <div className="info-item"><label>NFC ID</label><input name="nfcId" value={formData.nfcId} readOnly /></div>
+                  <div className="info-item"><label>Name</label><input value={student.student_name || ''} readOnly /></div>
+                  <div className="info-item"><label>Course</label><input value={student.student_course || ''} readOnly /></div>
+                  <div className="info-item"><label>NFC ID</label>
+                    <div className="nfc-input-wrapper">
+                      <input
+                        name="nfcId"
+                        value={formData.nfcId}
+                        placeholder={isPolling ? 'Waiting for NFC scan...' : 'No NFC assigned'}
+                        readOnly
+                      />
+                      <button
+                        type="button"
+                        className={`scan-nfc-btn ${isPolling ? 'scanning' : ''}`}
+                        onClick={handleScanNFC}
+                        disabled={isSaving}
+                        title={isPolling ? 'Stop scanning' : 'Assign new NFC tag'}
+                      >
+                        <i className="fas fa-wifi"></i> {isPolling ? 'Stop Scan' : 'Reassign NFC'}
+                      </button>
+                    </div>
+                    {isPolling && (
+                      <small className="form-hint scanning-hint">
+                        <i className="fas fa-spinner fa-spin"></i> Tap the new NFC card on the reader...
+                      </small>
+                    )}
+                  </div>
                   <div className="info-item"><label>Birthdate</label><input name="birthdate" value={formData.birthdate} onChange={handleChange} type="date" /></div>
                   <div className="info-item"><label>Address</label><input name="address" value={formData.address} onChange={handleChange} /></div>
                   <div className="info-item"><label>Contact Number</label><input name="contactNumber" value={formData.contactNumber} onChange={handleChange} /></div>

@@ -26,12 +26,14 @@ function TopBar({ connectionState, onRetryConnection }) {
 
   return (
     <div className="topbar">
-      {connectionState && (
-        <ConnectionStatus
-          connectionState={connectionState}
-          onRetry={onRetryConnection}
-        />
-      )}
+      <div className="topbar-left">
+        {connectionState && (
+          <ConnectionStatus
+            connectionState={connectionState}
+            onRetry={onRetryConnection}
+          />
+        )}
+      </div>
       <span className="topbar-clock">{clock}</span>
     </div>
   );
