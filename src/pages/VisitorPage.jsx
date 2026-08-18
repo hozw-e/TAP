@@ -138,13 +138,25 @@ function VisitorPage() {
 
             if (status === 'assigned') {
               // Student card — check-in or check-out recorded
-              setModal({ show: true, type: action === 'check_in' ? 'welcome' : 'farewell', name: student_name, subtype: 'student' });
+              if (action === 'check_in') {
+                setModal({ show: true, type: 'welcome', name: student_name, subtype: 'student' });
+              } else {
+                setModal({ show: true, type: 'farewell', name: student_name, subtype: 'student' });
+              }
             } else if (status === 'denied') {
-              const remainingTime = required_time - time_since_checkin;
-              setDeniedModal({ show: true, name: student_name, remainingTime });
+              if (action === 'archived_denied') {
+                // Student has completed all sessions — show a specific message
+                setModal({ show: true, type: 'archived', name: student_name, subtype: 'student' });
+              } else if (action === 'check_in_denied') {
+                // Too early or session ended — can't check in yet
+                setModal({ show: true, type: 'checkin_denied', name: student_name, subtype: 'student' });
+              } else {
+                // check_out_denied or hour_requirement_denied — session still in progress
+                setDeniedModal({ show: true, name: student_name });
+              }
             } else if (status === 'student_card') {
-              // Should not occur in attendance mode, treat as student check-in/out
-              setModal({ show: true, type: action === 'check_in' ? 'welcome' : 'farewell', name: student_name });
+              // Should not occur in attendance mode — treat as denied
+              setDeniedModal({ show: true, name: student_name || '' });
             } else if (status === 'visitor' && action === 'visitor_checkout') {
               // Visitor card tapped — already checked out by scan.php
               const checkoutName = response.data.name || scannedVisitorName || 'Visitor';
@@ -294,36 +306,79 @@ function VisitorPage() {
         </div>
       )}
 
-      {/* Farewell Modal (Check-out) - for both students and visitors */}
-      {(modal.show && modal.type === 'farewell') || farewellModal.show ? (
+      {/* Farewell Modal — student check-out */}
+      {modal.show && modal.type === 'farewell' && (
         <div className="visitor-modal-overlay">
           <div className="visitor-modal visitor-result-modal farewell-modal">
             <div className="visitor-modal-icon">
               <i className="fas fa-walking result-icon farewell-walk-icon"></i>
-              <p className="result-label-farewell">
-                {modal.subtype === 'student' ? 'ATTENDANCE RECORDED' : 'CHECK-OUT RECORDED'}
-              </p>
+              <p className="result-label-farewell">ATTENDANCE RECORDED</p>
             </div>
-            <h2 className="result-name farewell-name">
-              Goodbye, {modal.type === 'farewell' ? modal.name : farewellModal.name}!
-            </h2>
-            <p className="visitor-modal-subtext">
-              {modal.subtype === 'student' ? 'See you next session!' : 'Thank you for visiting A+ Center.'}
-            </p>
+            <h2 className="result-name farewell-name">Goodbye, {modal.name}!</h2>
+            <p className="visitor-modal-subtext">See you next session!</p>
             <p className="visitor-modal-timestamp">
               {new Date().toLocaleString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
+                weekday: 'long', year: 'numeric', month: 'long',
+                day: 'numeric', hour: '2-digit', minute: '2-digit',
               })}
             </p>
             <div className="result-dismiss-hint">Closes automatically…</div>
           </div>
         </div>
-      ) : null}
+      )}
+
+      {/* Farewell Modal — visitor check-out */}
+      {farewellModal.show && (
+        <div className="visitor-modal-overlay">
+          <div className="visitor-modal visitor-result-modal farewell-modal">
+            <div className="visitor-modal-icon">
+              <i className="fas fa-walking result-icon farewell-walk-icon"></i>
+              <p className="result-label-farewell">CHECK-OUT RECORDED</p>
+            </div>
+            <h2 className="result-name farewell-name">Goodbye, {farewellModal.name}!</h2>
+            <p className="visitor-modal-subtext">Thank you for visiting A+ Center.</p>
+            <p className="visitor-modal-timestamp">
+              {new Date().toLocaleString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long',
+                day: 'numeric', hour: '2-digit', minute: '2-digit',
+              })}
+            </p>
+            <div className="result-dismiss-hint">Closes automatically…</div>
+          </div>
+        </div>
+      )}
+
+      {/* Archived Student Modal */}
+      {modal.show && modal.type === 'archived' && (
+        <div className="visitor-modal-overlay">
+          <div className="visitor-modal visitor-result-modal denied-modal">
+            <div className="visitor-modal-icon">
+              <i className="fas fa-graduation-cap result-icon"></i>
+              <p className="result-label-denied">SESSIONS COMPLETED</p>
+            </div>
+            <h2 className="result-name denied-name">{modal.name || 'Student'}</h2>
+            <p className="visitor-modal-subtext">All sessions have been completed. Please see the admin.</p>
+            <div className="result-dismiss-hint">Closes automatically…</div>
+          </div>
+        </div>
+      )}
+
+      {/* Check-in Denied Modal (too early / session ended) */}
+      {modal.show && modal.type === 'checkin_denied' && (
+        <div className="visitor-modal-overlay">
+          <div className="visitor-modal visitor-result-modal denied-modal">
+            <div className="visitor-modal-icon">
+              <i className="fas fa-clock result-icon"></i>
+              <p className="result-label-denied">CHECK-IN DENIED</p>
+            </div>
+            <h2 className="result-name denied-name">Outside Session Hours</h2>
+            <p className="visitor-modal-subtext">
+              {modal.name ? `${modal.name} — ` : ''}Please check in during your scheduled session time.
+            </p>
+            <div className="result-dismiss-hint">Closes automatically…</div>
+          </div>
+        </div>
+      )}
 
 
 
