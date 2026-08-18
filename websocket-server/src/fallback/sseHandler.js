@@ -1,5 +1,6 @@
 const { validateSession } = require('../auth/sessionValidator');
 const logger = require('../utils/logger');
+const config = require('../config');
 
 // Track SSE clients for broadcasting
 const sseClients = new Map(); // token -> response
@@ -13,6 +14,20 @@ const sseClients = new Map(); // token -> response
  */
 function createSSEHandler() {
   return async (req, res) => {
+    // Set CORS headers first — must be present on every response including errors
+    const origin = req.headers.origin;
+    if (origin && config.allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+    // Handle preflight
+    if (req.method === 'OPTIONS') {
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      return res.status(200).end();
+    }
+
     // 1. Extract token from query string: /events/stream?token=xxx
     const token = req.query.token;
     if (!token) {
@@ -26,12 +41,11 @@ function createSSEHandler() {
     }
 
     // 3. Set SSE headers
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-      'X-Accel-Buffering': 'no', // Disable nginx buffering
-    });
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.status(200).flushHeaders();
 
     // 4. Send initial connection event
     res.write('data: {"type":"connected"}\n\n');

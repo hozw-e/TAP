@@ -20,6 +20,21 @@ const { createSSEHandler, broadcastSSE, getSSEClientCount } = require('./fallbac
 const app = express();
 app.use(express.json());
 
+// Global CORS middleware — required for browser clients connecting from the frontend origin
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && config.allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
+
 // Health check endpoint for the WebSocket server itself
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', uptime: process.uptime() });
@@ -126,8 +141,8 @@ const wss = new WebSocketServer({ noServer: true });
 server.on('upgrade', async (req, socket, head) => {
   const origin = req.headers.origin;
 
-  // 1. Validate origin
-  if (!connectionManager.validateOrigin(origin)) {
+  // 1. Validate origin — allow requests with no origin (server-to-server) but block mismatched browser origins
+  if (origin && !connectionManager.validateOrigin(origin)) {
     logger.warn('Connection rejected: invalid origin', { origin, ip: req.socket.remoteAddress });
     socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
     socket.destroy();
