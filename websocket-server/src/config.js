@@ -1,5 +1,5 @@
 const config = {
-  port: parseInt(process.env.WEBSOCKET_PORT, 10) || 3001,
+  port: parseInt(process.env.PORT || process.env.WEBSOCKET_PORT, 10) || 3001,
   allowedOrigins: (process.env.WEBSOCKET_ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:3000,http://localhost:80,https://apsolutionstap.up.railway.app')
     .split(',')
     .map(origin => origin.trim()),
