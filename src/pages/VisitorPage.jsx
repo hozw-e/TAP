@@ -147,9 +147,6 @@ function VisitorPage() {
               if (action === 'archived_denied') {
                 // Student has completed all sessions — show a specific message
                 setModal({ show: true, type: 'archived', name: student_name, subtype: 'student' });
-              } else if (action === 'check_in_denied') {
-                // Too early or session ended — can't check in yet
-                setModal({ show: true, type: 'checkin_denied', name: student_name, subtype: 'student' });
               } else {
                 // check_out_denied or hour_requirement_denied — session still in progress
                 setDeniedModal({ show: true, name: student_name });
@@ -362,25 +359,6 @@ function VisitorPage() {
           </div>
         </div>
       )}
-
-      {/* Check-in Denied Modal (too early / session ended) */}
-      {modal.show && modal.type === 'checkin_denied' && (
-        <div className="visitor-modal-overlay">
-          <div className="visitor-modal visitor-result-modal denied-modal">
-            <div className="visitor-modal-icon">
-              <i className="fas fa-clock result-icon"></i>
-              <p className="result-label-denied">CHECK-IN DENIED</p>
-            </div>
-            <h2 className="result-name denied-name">Outside Session Hours</h2>
-            <p className="visitor-modal-subtext">
-              {modal.name ? `${modal.name} — ` : ''}Please check in during your scheduled session time.
-            </p>
-            <div className="result-dismiss-hint">Closes automatically…</div>
-          </div>
-        </div>
-      )}
-
-
 
       {/* Already Tapped In Modal (Check-out Denied) */}
       {deniedModal.show && (
