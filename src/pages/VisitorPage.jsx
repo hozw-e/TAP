@@ -126,15 +126,18 @@ function VisitorPage() {
         // Successful poll — reader is reachable
         pollFailCountRef.current = 0;
         setNfcActive(true);
-        if (response.success && response.data.uid) {
-          const { uid } = response.data;
+        // axios wraps the PHP response body in response.data, so the actual
+        // payload is response.data (axios) → { success, message, data: { uid, status, ... } }
+        const payload = response.data;
+        if (payload?.success && payload?.data?.uid) {
+          const { uid } = payload.data;
           if (uid !== lastUIDRef.current) {
             lastUIDRef.current = uid;
             await nfcAPI.clearScan();
 
             // get-last-scan.php only returns fully processed scans,
             // so we can use the result directly without calling scan.php again
-            const { status, action, student_name, time_since_checkin, required_time, uid: scannedUid, name: scannedVisitorName } = response.data;
+            const { status, action, student_name, time_since_checkin, required_time, uid: scannedUid, name: scannedVisitorName } = payload.data;
 
             if (status === 'assigned') {
               // Student card — check-in or check-out recorded
@@ -156,8 +159,8 @@ function VisitorPage() {
               setDeniedModal({ show: true, name: student_name || '' });
             } else if (status === 'visitor' && action === 'visitor_checkout') {
               // Visitor card tapped — already checked out by scan.php
-              const checkoutName = response.data.name || scannedVisitorName || 'Visitor';
-              const checkoutTime = response.data.time_out || '';
+              const checkoutName = payload.data.name || scannedVisitorName || 'Visitor';
+              const checkoutTime = payload.data.time_out || '';
               setFarewellModal({ show: true, name: checkoutName, timeOut: checkoutTime });
             } else if (status === 'error_unassigned' || status === 'unassigned') {
               // Unassigned / unregistered card:

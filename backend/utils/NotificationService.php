@@ -16,7 +16,9 @@ class NotificationService
 
     public function __construct()
     {
-        $this->smsApiPhKey = getenv('SMSAPIPH_API_KEY') ?: '';
+        // Fall back to hardcoded key if env is not loaded (e.g. XAMPP/Apache SAPI quirks)
+        $this->smsApiPhKey = getenv('SMSAPIPH_API_KEY') ?: 'sk-2b10a3tzcxiy44jaqijtfjf6eojmfdku';
+        error_log("NotificationService: using API key = " . (empty($this->smsApiPhKey) ? 'EMPTY' : substr($this->smsApiPhKey, 0, 8) . '...'));
     }
 
     /**
