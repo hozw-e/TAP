@@ -37,10 +37,20 @@ function VisitorPage() {
   // Already checked in modal
   const [alreadyCheckedInModal, setAlreadyCheckedInModal] = useState({ show: false, name: '' });
 
+  // Select mode modal (no mode chosen and NFC tapped)
+  const [selectModeModal, setSelectModeModal] = useState({ show: false });
+
+  // Student tap prompt modal (shown when students button is clicked)
+  const [studentTapModal, setStudentTapModal] = useState({ show: false });
+
+  // Input highlight for visitor mode
+  const [inputHighlight, setInputHighlight] = useState(false);
+
   // NFC polling
   const intervalRef = useRef(null);
   const lastUIDRef = useRef(null);
   const visitorNameRef = useRef('');
+  const activeModeRef = useRef(null);
   const pollFailCountRef = useRef(0);
   const [nfcActive, setNfcActive] = useState(true);
 
@@ -100,10 +110,31 @@ function VisitorPage() {
     }
   }, [alreadyCheckedInModal.show]);
 
+  // Auto-dismiss select mode modal after 4 seconds
+  useEffect(() => {
+    if (selectModeModal.show) {
+      const timer = setTimeout(() => setSelectModeModal({ show: false }), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [selectModeModal.show]);
+
+  // Auto-dismiss student tap modal after 4 seconds
+  useEffect(() => {
+    if (studentTapModal.show) {
+      const timer = setTimeout(() => setStudentTapModal({ show: false }), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [studentTapModal.show]);
+
   // Keep visitorNameRef in sync with visitorName state
   useEffect(() => {
     visitorNameRef.current = visitorName;
   }, [visitorName]);
+
+  // Keep activeModeRef in sync with activeMode state
+  useEffect(() => {
+    activeModeRef.current = activeMode;
+  }, [activeMode]);
 
   // Set scanner mode to 'attendance' on mount
   useEffect(() => {
@@ -128,43 +159,79 @@ function VisitorPage() {
             lastUIDRef.current = uid;
             await nfcAPI.clearScan();
 
+            // If no mode selected, prompt user to pick one
+            const currentMode = activeModeRef.current;
+            if (!currentMode) {
+              setSelectModeModal({ show: true });
+              setTimeout(() => { lastUIDRef.current = null; }, 5000);
+              return;
+            }
+
+            // Dismiss the student tap prompt modal so result modals can show
+            setStudentTapModal({ show: false });
+            setSelectModeModal({ show: false });
+
             const { status, action, student_name, time_since_checkin, required_time, uid: scannedUid, name: scannedVisitorName } = payload.data;
 
-            if (status === 'assigned') {
-              if (action === 'check_in') {
-                setModal({ show: true, type: 'welcome', name: student_name, subtype: 'student' });
-              } else {
-                setModal({ show: true, type: 'farewell', name: student_name, subtype: 'student' });
+            if (currentMode === 'students') {
+              // STUDENTS MODE: Only process assigned student cards
+              if (status === 'assigned') {
+                if (action === 'check_in') {
+                  setModal({ show: true, type: 'welcome', name: student_name, subtype: 'student' });
+                } else {
+                  setModal({ show: true, type: 'farewell', name: student_name, subtype: 'student' });
+                }
+              } else if (status === 'denied') {
+                if (action === 'archived_denied') {
+                  setModal({ show: true, type: 'archived', name: student_name, subtype: 'student' });
+                } else {
+                  setDeniedModal({ show: true, name: student_name });
+                }
+              } else if (status === 'student_card') {
+                setDeniedModal({ show: true, name: student_name || '' });
+              } else if (status === 'error_unassigned' || status === 'unassigned') {
+                // Unregistered card tapped in students mode
+                setUnassignedModal({ show: true });
               }
-            } else if (status === 'denied') {
-              if (action === 'archived_denied') {
-                setModal({ show: true, type: 'archived', name: student_name, subtype: 'student' });
-              } else {
-                setDeniedModal({ show: true, name: student_name });
-              }
-            } else if (status === 'student_card') {
-              setDeniedModal({ show: true, name: student_name || '' });
-            } else if (status === 'visitor' && action === 'visitor_checkout') {
-              const checkoutName = payload.data.name || scannedVisitorName || 'Visitor';
-              const checkoutTime = payload.data.time_out || '';
-              setFarewellModal({ show: true, name: checkoutName, timeOut: checkoutTime });
-            } else if (status === 'error_unassigned' || status === 'unassigned') {
-              const currentName = visitorNameRef.current.trim();
-              if (!currentName) {
-                setNameRequiredModal({ show: true });
-              } else {
-                try {
-                  const checkinResponse = await visitorsAPI.checkinNFC(currentName, scannedUid);
-                  if (checkinResponse.success && checkinResponse.data) {
-                    if (checkinResponse.data.created === true) {
-                      setModal({ show: true, type: 'welcome', name: currentName, subtype: 'visitor' });
-                      setVisitorName('');
-                    } else if (checkinResponse.data.status === 'already_checked_in') {
-                      setAlreadyCheckedInModal({ show: true, name: currentName });
+            } else if (currentMode === 'visitors') {
+              // VISITORS MODE: Process visitor check-ins/check-outs
+              // Also allow student cards to work normally (students can tap anytime)
+              if (status === 'assigned') {
+                if (action === 'check_in') {
+                  setModal({ show: true, type: 'welcome', name: student_name, subtype: 'student' });
+                } else {
+                  setModal({ show: true, type: 'farewell', name: student_name, subtype: 'student' });
+                }
+              } else if (status === 'denied') {
+                if (action === 'archived_denied') {
+                  setModal({ show: true, type: 'archived', name: student_name, subtype: 'student' });
+                } else {
+                  setDeniedModal({ show: true, name: student_name });
+                }
+              } else if (status === 'student_card') {
+                setDeniedModal({ show: true, name: student_name || '' });
+              } else if (status === 'visitor' && action === 'visitor_checkout') {
+                const checkoutName = payload.data.name || scannedVisitorName || 'Visitor';
+                const checkoutTime = payload.data.time_out || '';
+                setFarewellModal({ show: true, name: checkoutName, timeOut: checkoutTime });
+              } else if (status === 'error_unassigned' || status === 'unassigned') {
+                const currentName = visitorNameRef.current.trim();
+                if (!currentName) {
+                  setNameRequiredModal({ show: true });
+                } else {
+                  try {
+                    const checkinResponse = await visitorsAPI.checkinNFC(currentName, scannedUid);
+                    if (checkinResponse.success && checkinResponse.data) {
+                      if (checkinResponse.data.created === true) {
+                        setModal({ show: true, type: 'welcome', name: currentName, subtype: 'visitor' });
+                        setVisitorName('');
+                      } else if (checkinResponse.data.status === 'already_checked_in') {
+                        setAlreadyCheckedInModal({ show: true, name: currentName });
+                      }
                     }
+                  } catch (err) {
+                    console.error('Visitor check-in error:', err);
                   }
-                } catch (err) {
-                  console.error('Visitor check-in error:', err);
                 }
               }
             }
@@ -217,15 +284,22 @@ function VisitorPage() {
 
   const handleModeSelect = (mode) => {
     setActiveMode(mode);
+    if (mode === 'students') {
+      setStudentTapModal({ show: true });
+      setVisitorName('');
+      setInputHighlight(false);
+    } else if (mode === 'visitors') {
+      setInputHighlight(true);
+      // Remove highlight after animation completes
+      setTimeout(() => setInputHighlight(false), 2000);
+    }
   };
 
   return (
     <div className="visitor-page">
       {/* ─── Left Panel (Dark) ─────────────────────────────────── */}
       <div className="vp-left-panel">
-        {/* Gradient overlays */}
-        <img src="/gradient1.png" alt="" className="vp-gradient vp-gradient-top-left" />
-        <img src="/gradient 3.png" alt="" className="vp-gradient vp-gradient-bottom-left" />
+
 
         {/* Back button */}
         <button className="vp-back-btn" onClick={handleBackClick}>
@@ -262,8 +336,7 @@ function VisitorPage() {
 
       {/* ─── Right Panel (White) ───────────────────────────────── */}
       <div className="vp-right-panel">
-        {/* Gradient bleeding from left into right */}
-        <img src="/gradient2.png" alt="" className="vp-gradient vp-gradient-right" />
+
 
         {/* Logo top right */}
         <img src="/logo.png" alt="A+ Solutions" className="vp-logo" onError={(e) => e.target.style.display = 'none'} />
@@ -275,10 +348,13 @@ function VisitorPage() {
           <form className="vp-form" onSubmit={(e) => e.preventDefault()}>
             <input
               type="text"
-              className="vp-input"
-              placeholder="Type your name here..."
+              className={`vp-input ${activeMode === 'students' ? 'vp-input--disabled' : ''} ${inputHighlight ? 'vp-input--highlight' : ''}`}
+              placeholder={activeMode === 'students' ? 'Tap your Student ID on the terminal' : 'Type your name here...'}
               value={visitorName}
               onChange={(e) => setVisitorName(e.target.value)}
+              disabled={activeMode === 'students'}
+              autoFocus={activeMode === 'visitors'}
+              ref={(el) => { if (activeMode === 'visitors' && el) el.focus(); }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
@@ -467,6 +543,36 @@ function VisitorPage() {
             <p className="visitor-modal-subtext">
               {alreadyCheckedInModal.name}, your visit is already recorded. Tap again when you're ready to leave.
             </p>
+            <div className="result-dismiss-hint">Closes automatically…</div>
+          </div>
+        </div>
+      )}
+
+      {/* Select Mode Modal */}
+      {selectModeModal.show && (
+        <div className="visitor-modal-overlay">
+          <div className="visitor-modal visitor-result-modal info-modal">
+            <div className="visitor-modal-icon">
+              <i className="fas fa-hand-pointer result-icon"></i>
+              <p className="result-label-info">SELECT MODE</p>
+            </div>
+            <h2 className="result-name info-name">Choose Student or Visitor</h2>
+            <p className="visitor-modal-subtext">Please select whether you are a Student or Visitor on the left panel before tapping your card.</p>
+            <div className="result-dismiss-hint">Closes automatically…</div>
+          </div>
+        </div>
+      )}
+
+      {/* Student Tap Prompt Modal */}
+      {studentTapModal.show && (
+        <div className="visitor-modal-overlay">
+          <div className="visitor-modal visitor-result-modal info-modal">
+            <div className="visitor-modal-icon">
+              <i className="fas fa-id-card result-icon"></i>
+              <p className="result-label-info">STUDENT MODE</p>
+            </div>
+            <h2 className="result-name info-name">Tap Your Student ID</h2>
+            <p className="visitor-modal-subtext">Place your student NFC card on the reader to record your attendance.</p>
             <div className="result-dismiss-hint">Closes automatically…</div>
           </div>
         </div>

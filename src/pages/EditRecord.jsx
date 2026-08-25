@@ -210,7 +210,14 @@ function EditRecord() {
       if (!response.success) throw new Error(response.message || 'Failed to assign NFC tag');
       setFormData((prev) => ({ ...prev, nfcId: uid }));
       setStudent((prev) => ({ ...prev, nfc_uid: uid }));
-      setNotification({ isOpen: true, message: 'NFC tag assigned successfully.', type: 'success' });
+      
+      // Show notice if the tag was previously assigned to an archived student
+      const previousOwner = response.data?.previous_owner;
+      if (previousOwner) {
+        setNotification({ isOpen: true, message: `NFC tag reassigned. Previously linked to archived student: ${previousOwner}.`, type: 'success' });
+      } else {
+        setNotification({ isOpen: true, message: 'NFC tag assigned successfully.', type: 'success' });
+      }
     } catch (err) {
       setNotification({ isOpen: true, message: err.message || 'Failed to assign NFC tag.', type: 'error' });
     }

@@ -47,6 +47,12 @@ function EditRecordModal({ isOpen, onClose, onSuccess, student }) {
       }
 
       setFormData(prev => ({ ...prev, nfcId: uid }));
+      
+      // Show notice if the tag was previously assigned to an archived student
+      const previousOwner = response.data?.previous_owner;
+      if (previousOwner) {
+        setError(`Note: This tag was previously assigned to archived student: ${previousOwner}. Reassigned successfully.`);
+      }
     } catch (err) {
       setError(err.message || 'Failed to assign NFC tag. Please try again.');
     }

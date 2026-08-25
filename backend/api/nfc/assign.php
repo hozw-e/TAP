@@ -47,6 +47,24 @@ try {
     $stmt->execute([':uid' => $uid]);
     $existing = $stmt->fetch(PDO::FETCH_ASSOC);
     
+    // Track if the tag was previously assigned to an archived student
+    $previousOwner = null;
+    
+    if ($existing && $existing['student_id']) {
+        // Check if the previous owner is archived
+        $stmtPrev = $conn->prepare("
+            SELECT student_name, is_archived 
+            FROM students 
+            WHERE student_id = :student_id
+        ");
+        $stmtPrev->execute([':student_id' => $existing['student_id']]);
+        $prevStudent = $stmtPrev->fetch(PDO::FETCH_ASSOC);
+        
+        if ($prevStudent && $prevStudent['is_archived'] == 1 && $existing['student_id'] != $studentId) {
+            $previousOwner = $prevStudent['student_name'];
+        }
+    }
+    
     if ($existing) {
         // UID exists - update student_id
         error_log("NFC tag exists (nfctag_id={$existing['nfctag_id']}), updating student_id to $studentId");
@@ -104,7 +122,8 @@ try {
     
     sendSuccessResponse($message, [
         'student_id' => $studentId,
-        'uid' => $uid
+        'uid' => $uid,
+        'previous_owner' => $previousOwner
     ]);
     
 } catch (PDOException $e) {
