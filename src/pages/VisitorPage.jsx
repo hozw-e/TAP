@@ -152,9 +152,8 @@ function VisitorPage() {
         const response = await nfcAPI.getLastScan();
         pollFailCountRef.current = 0;
         setNfcActive(true);
-        const payload = response.data;
-        if (payload?.success && payload?.data?.uid) {
-          const { uid } = payload.data;
+        if (response?.success && response?.data?.uid) {
+          const { uid } = response.data;
           if (uid !== lastUIDRef.current) {
             lastUIDRef.current = uid;
             await nfcAPI.clearScan();
@@ -171,7 +170,7 @@ function VisitorPage() {
             setStudentTapModal({ show: false });
             setSelectModeModal({ show: false });
 
-            const { status, action, student_name, time_since_checkin, required_time, uid: scannedUid, name: scannedVisitorName } = payload.data;
+            const { status, action, student_name, time_since_checkin, required_time, uid: scannedUid, name: scannedVisitorName } = response.data;
 
             if (currentMode === 'students') {
               // STUDENTS MODE: Only process assigned student cards
@@ -211,8 +210,8 @@ function VisitorPage() {
               } else if (status === 'student_card') {
                 setDeniedModal({ show: true, name: student_name || '' });
               } else if (status === 'visitor' && action === 'visitor_checkout') {
-                const checkoutName = payload.data.name || scannedVisitorName || 'Visitor';
-                const checkoutTime = payload.data.time_out || '';
+                const checkoutName = response.data.name || scannedVisitorName || 'Visitor';
+                const checkoutTime = response.data.time_out || '';
                 setFarewellModal({ show: true, name: checkoutName, timeOut: checkoutTime });
               } else if (status === 'error_unassigned' || status === 'unassigned') {
                 const currentName = visitorNameRef.current.trim();
