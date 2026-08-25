@@ -6,6 +6,7 @@ import '../styles/VisitorPage.css';
 function VisitorPage() {
   const navigate = useNavigate();
   const [visitorName, setVisitorName] = useState('');
+  const [activeMode, setActiveMode] = useState(null); // 'students' or 'visitors'
 
   // Welcome/Farewell modal (NFC tap)
   const [modal, setModal] = useState({ show: false, type: '', name: '', subtype: '' });
@@ -13,8 +14,6 @@ function VisitorPage() {
   // Dedicated check-out farewell modal
   const [farewellModal, setFarewellModal] = useState({ show: false, name: '', timeOut: '' });
 
-
-  
   // Already tapped in modal (check-out denied)
   const [deniedModal, setDeniedModal] = useState({ show: false, name: '', remainingTime: 0 });
 
@@ -40,12 +39,12 @@ function VisitorPage() {
 
   // NFC polling
   const intervalRef = useRef(null);
-  const lastUIDRef  = useRef(null);
+  const lastUIDRef = useRef(null);
   const visitorNameRef = useRef('');
   const pollFailCountRef = useRef(0);
   const [nfcActive, setNfcActive] = useState(true);
 
-  // Auto-dismiss NFC modal after 5 seconds (increased from 3 for better visibility)
+  // Auto-dismiss NFC modal after 5 seconds
   useEffect(() => {
     if (modal.show) {
       const timer = setTimeout(() => setModal({ show: false, type: '', name: '', subtype: '' }), 5000);
@@ -61,8 +60,6 @@ function VisitorPage() {
     }
   }, [farewellModal.show]);
 
-
-  
   // Auto-dismiss denied modal after 5 seconds
   useEffect(() => {
     if (deniedModal.show) {
@@ -108,8 +105,7 @@ function VisitorPage() {
     visitorNameRef.current = visitorName;
   }, [visitorName]);
 
-  // Set scanner mode to 'attendance' on mount — handles both students and visitors.
-  // Students tap normally; unassigned cards with a name typed trigger visitor check-in.
+  // Set scanner mode to 'attendance' on mount
   useEffect(() => {
     nfcAPI.setMode('attendance').catch(err => console.error('Failed to set attendance mode:', err));
     startPolling();
@@ -123,11 +119,8 @@ function VisitorPage() {
     intervalRef.current = setInterval(async () => {
       try {
         const response = await nfcAPI.getLastScan();
-        // Successful poll — reader is reachable
         pollFailCountRef.current = 0;
         setNfcActive(true);
-        // axios wraps the PHP response body in response.data, so the actual
-        // payload is response.data (axios) → { success, message, data: { uid, status, ... } }
         const payload = response.data;
         if (payload?.success && payload?.data?.uid) {
           const { uid } = payload.data;
@@ -135,12 +128,9 @@ function VisitorPage() {
             lastUIDRef.current = uid;
             await nfcAPI.clearScan();
 
-            // get-last-scan.php only returns fully processed scans,
-            // so we can use the result directly without calling scan.php again
             const { status, action, student_name, time_since_checkin, required_time, uid: scannedUid, name: scannedVisitorName } = payload.data;
 
             if (status === 'assigned') {
-              // Student card — check-in or check-out recorded
               if (action === 'check_in') {
                 setModal({ show: true, type: 'welcome', name: student_name, subtype: 'student' });
               } else {
@@ -148,24 +138,17 @@ function VisitorPage() {
               }
             } else if (status === 'denied') {
               if (action === 'archived_denied') {
-                // Student has completed all sessions — show a specific message
                 setModal({ show: true, type: 'archived', name: student_name, subtype: 'student' });
               } else {
-                // check_out_denied or hour_requirement_denied — session still in progress
                 setDeniedModal({ show: true, name: student_name });
               }
             } else if (status === 'student_card') {
-              // Should not occur in attendance mode — treat as denied
               setDeniedModal({ show: true, name: student_name || '' });
             } else if (status === 'visitor' && action === 'visitor_checkout') {
-              // Visitor card tapped — already checked out by scan.php
               const checkoutName = payload.data.name || scannedVisitorName || 'Visitor';
               const checkoutTime = payload.data.time_out || '';
               setFarewellModal({ show: true, name: checkoutName, timeOut: checkoutTime });
             } else if (status === 'error_unassigned' || status === 'unassigned') {
-              // Unassigned / unregistered card:
-              // → if name is typed, treat as visitor check-in
-              // → if name is empty, prompt to enter name
               const currentName = visitorNameRef.current.trim();
               if (!currentName) {
                 setNameRequiredModal({ show: true });
@@ -186,15 +169,10 @@ function VisitorPage() {
               }
             }
 
-            // Reset lastUID after modals dismiss so the same card can be tapped again.
-            // We use a delay slightly longer than the longest modal auto-dismiss (5s for denied)
-            // to prevent the same scan from being picked up twice, while still allowing
-            // the student to tap again for their next action.
             setTimeout(() => { lastUIDRef.current = null; }, 5000);
           }
         }
       } catch (e) {
-        // Poll failed — increment failure counter
         pollFailCountRef.current += 1;
         if (pollFailCountRef.current >= 3) {
           setNfcActive(false);
@@ -209,8 +187,6 @@ function VisitorPage() {
       intervalRef.current = null;
     }
   };
-
-
 
   const handleBackClick = () => {
     setAdminError('');
@@ -239,46 +215,99 @@ function VisitorPage() {
     }
   };
 
+  const handleModeSelect = (mode) => {
+    setActiveMode(mode);
+  };
+
   return (
     <div className="visitor-page">
-      {/* Logo top right */}
-      <img src="/logo.png" alt="A+ Solutions" className="visitor-logo" onError={(e) => e.target.style.display = 'none'} />
+      {/* ─── Left Panel (Dark) ─────────────────────────────────── */}
+      <div className="vp-left-panel">
+        {/* Gradient overlays */}
+        <img src="/gradient1.png" alt="" className="vp-gradient vp-gradient-top-left" />
+        <img src="/gradient 3.png" alt="" className="vp-gradient vp-gradient-bottom-left" />
 
-      {/* Back button top left */}
-      <button className="visitor-back-btn" onClick={handleBackClick}>
-        <i className="fas fa-chevron-left"></i>
-      </button>
+        {/* Back button */}
+        <button className="vp-back-btn" onClick={handleBackClick}>
+          <i className="fas fa-chevron-left"></i>
+        </button>
 
-      {/* Main content */}
-      <div className="visitor-content">
-        <h1 className="visitor-title">Welcome to A+ Center!</h1>
-        <p className="visitor-subtitle"><strong>Students</strong>, tap your NFC ID to record attendance.<br /><strong>Visitors</strong>, enter your name first then tap your Visitor ID.</p>
+        {/* Mode selection cards */}
+        <div className="vp-cards">
+          {/* Students Card */}
+          <div
+            className={`vp-card vp-card-students ${activeMode === 'students' ? 'vp-card--active' : ''}`}
+            onClick={() => handleModeSelect('students')}
+          >
+            <h3 className="vp-card-title">STUDENTS</h3>
+            <div className="vp-card-body">
+              <p className="vp-card-desc">Click here and then directly tap your ID in the terminal</p>
+              <img src="/student.png" alt="Student scanning ID" className="vp-card-img" />
+            </div>
+          </div>
 
-        <form className="visitor-form" onSubmit={(e) => e.preventDefault()}>
-          <input
-            type="text"
-            className="visitor-input"
-            placeholder="Type your name here..."
-            value={visitorName}
-            onChange={(e) => setVisitorName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                if (visitorName.trim()) {
-                  setTapReminderModal({ show: true });
-                }
-              }
-            }}
-          />
-        </form>
-
-        {/* NFC Reader Status */}
-        <div className={`nfc-status ${nfcActive ? 'nfc-status--active' : 'nfc-status--inactive'}`}>
-          <i className={`fas ${nfcActive ? 'fa-wifi' : 'fa-wifi-slash'}`}></i>
-          <span>{nfcActive ? 'NFC Reader is Active' : 'NFC Reader is Offline'}</span>
-          {nfcActive && <span className="nfc-pulse-dot"></span>}
+          {/* Visitors Card */}
+          <div
+            className={`vp-card vp-card-visitors ${activeMode === 'visitors' ? 'vp-card--active' : ''}`}
+            onClick={() => handleModeSelect('visitors')}
+          >
+            <h3 className="vp-card-title">VISITORS</h3>
+            <div className="vp-card-body">
+              <p className="vp-card-desc">Click here, then type your name in the text field before tapping your Visitor ID in the terminal</p>
+              <img src="/visitor.png" alt="Visitor typing name" className="vp-card-img" />
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* ─── Right Panel (White) ───────────────────────────────── */}
+      <div className="vp-right-panel">
+        {/* Gradient bleeding from left into right */}
+        <img src="/gradient2.png" alt="" className="vp-gradient vp-gradient-right" />
+
+        {/* Logo top right */}
+        <img src="/logo.png" alt="A+ Solutions" className="vp-logo" onError={(e) => e.target.style.display = 'none'} />
+
+        {/* Main content */}
+        <div className="vp-right-content">
+          <h1 className="vp-welcome-title">Welcome to A+ Center!</h1>
+
+          <form className="vp-form" onSubmit={(e) => e.preventDefault()}>
+            <input
+              type="text"
+              className="vp-input"
+              placeholder="Type your name here..."
+              value={visitorName}
+              onChange={(e) => setVisitorName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  if (visitorName.trim()) {
+                    setTapReminderModal({ show: true });
+                  }
+                }
+              }}
+            />
+          </form>
+
+          {/* NFC Reader Status */}
+          <div className={`nfc-status ${nfcActive ? 'nfc-status--active' : 'nfc-status--inactive'}`}>
+            <i className={`fas ${nfcActive ? 'fa-wifi' : 'fa-wifi-slash'}`}></i>
+            <span>{nfcActive ? 'NFC Reader is Active' : 'NFC Reader is Offline'}</span>
+            {nfcActive && <span className="nfc-pulse-dot"></span>}
+          </div>
+        </div>
+
+        {/* Running Robot (only on right half) */}
+        <img src="/robot.gif" alt="" className="vp-running-robot" />
+      </div>
+
+      {/* ─── Footer ────────────────────────────────────────────── */}
+      <div className="vp-footer">
+        <p>© 2026 A+ Solution Development Center. All rights reserved.</p>
+      </div>
+
+      {/* ─── Modals ────────────────────────────────────────────── */}
 
       {/* Welcome Modal (Check-in) */}
       {modal.show && modal.type === 'welcome' && (
@@ -479,14 +508,6 @@ function VisitorPage() {
           </div>
         </div>
       )}
-
-      {/* Running Robot */}
-      <img src="/robot.gif" alt="" className="running-robot" />
-
-      {/* Footer */}
-      <div className="footer-banner">
-        <p>© 2026 A+ Solution Development Center. All rights reserved.</p>
-      </div>
     </div>
   );
 }

@@ -5,7 +5,7 @@
  * This loader is only triggered when the variable is not already set in the environment
  * (e.g. on Railway/Docker, real env vars take precedence).
  */
-if (getenv('SMSAPIPH_API_KEY') === false || getenv('SMSAPIPH_API_KEY') === '') {
+if (getenv('SMS_API_TOKEN') === false || getenv('SMS_API_TOKEN') === '') {
     $envFiles = [
         __DIR__ . '/../../.env.local',
         __DIR__ . '/../../.env',
@@ -39,11 +39,8 @@ define('DB_USER', getenv('DB_USER') ?: 'root');
 define('DB_PASS', getenv('DB_PASS') ?: '');
 define('DB_PORT', getenv('DB_PORT') ?: '3306');
 
-// SMS API PH - Free SMS API for Philippine numbers
-define('SMSAPIPH_API_KEY', getenv('SMSAPIPH_API_KEY') ?: '');
-
-// Legacy: IProgSMS token (no longer used, replaced by SMS API PH)
-// define('SMS_API_TOKEN', getenv('SMS_API_TOKEN') ?: '');
+// IProgSMS API token
+define('SMS_API_TOKEN', getenv('SMS_API_TOKEN') ?: '');
 
 // Set PHP timezone to Asia/Manila
 date_default_timezone_set('Asia/Manila');
