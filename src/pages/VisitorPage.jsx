@@ -6,7 +6,7 @@ import '../styles/VisitorPage.css';
 function VisitorPage() {
   const navigate = useNavigate();
   const [visitorName, setVisitorName] = useState('');
-  const [activeMode, setActiveMode] = useState(null); // 'students' or 'visitors'
+  const [activeMode, setActiveMode] = useState('students'); // 'students' or 'visitors'
 
   // Welcome/Farewell modal (NFC tap)
   const [modal, setModal] = useState({ show: false, type: '', name: '', subtype: '' });
@@ -50,7 +50,7 @@ function VisitorPage() {
   const intervalRef = useRef(null);
   const lastUIDRef = useRef(null);
   const visitorNameRef = useRef('');
-  const activeModeRef = useRef(null);
+  const activeModeRef = useRef('students');
   const pollFailCountRef = useRef(0);
   const [nfcActive, setNfcActive] = useState(true);
 
