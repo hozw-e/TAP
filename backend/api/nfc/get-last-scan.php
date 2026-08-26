@@ -13,6 +13,12 @@ require_once '../../utils/cors.php';
 require_once '../../utils/response.php';
 require_once '../../utils/session.php';
 
+// Prevent browser/CDN caching — this endpoint is polled every 500ms
+// and must always return fresh data from the database
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 // Check admin authentication — skip for visitor kiosk mode
 // The visitor page is a public kiosk; it polls without an admin session.
 // We allow unauthenticated access here because this endpoint only reads

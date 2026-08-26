@@ -127,7 +127,9 @@ export const nfcAPI = {
   // Poll for the latest unconsumed scan from temp_nfc_scans
   // Called by useNFCScanner every 500ms while scanning is active
   getLastScan: async () => {
-    const response = await api.get('/nfc/get-last-scan.php');
+    const response = await api.get('/nfc/get-last-scan.php', {
+      params: { _t: Date.now() },
+    });
     return response.data;
   },
 
