@@ -485,16 +485,21 @@ function VisitorPage() {
         </div>
       )}
 
-      {/* Unassigned NFC Modal */}
+      {/* Unassigned NFC Modal (student mode - unregistered card) */}
       {unassignedModal.show && (
         <div className="visitor-modal-overlay">
           <div className="visitor-modal visitor-result-modal unassigned-modal">
             <div className="visitor-modal-icon">
-              <i className="fas fa-ban result-icon"></i>
+              <i className="fas fa-id-card-alt result-icon"></i>
               <p className="result-label-error">UNREGISTERED CARD</p>
             </div>
-            <h2 className="result-name error-name">NFC Card Not Found</h2>
-            <p className="visitor-modal-subtext">Please ask admin personnel for assistance.</p>
+            <h2 className="result-name error-name">Card Not Recognized</h2>
+            <p className="visitor-modal-subtext">
+              This NFC card is not registered to any student.
+            </p>
+            <p className="visitor-modal-subtext">
+              Please see an admin to have your card assigned.
+            </p>
             <div className="result-dismiss-hint">Closes automatically…</div>
           </div>
         </div>

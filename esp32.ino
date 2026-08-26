@@ -13,8 +13,8 @@
 // const char* WIFI_SSID = "Hozwe";        // Change to your WiFi name
 // const char* WIFI_PASSWORD = "12345678"; // Change to your WiFi password
 
-const char* WIFI_SSID = "UggaMuggaCafe";        // Change to your WiFi name
-const char* WIFI_PASSWORD = "Ugg@muggasub1c!"; // Change to your WiFi password
+//const char* WIFI_SSID = "UggaMuggaCafe";        // Change to your WiFi name
+//const char* WIFI_PASSWORD = "Ugg@muggasub1c!"; // Change to your WiFi password
 
 // Backend API URL
 const char* API_URL = "https://thesisi-production.up.railway.app/api/nfc/scan.php";
@@ -60,9 +60,11 @@ void playSuccessSound() {
 
 void playAssignReadySound() {
   // Single neutral tone - card acknowledged, ready for assignment
-  buzzerTone(800, 200);
+  buzzerTone(1000, 150);
   delay(10);
-  buzzerTone(800, 200);
+  buzzerTone(1500, 150);
+  delay(10);
+  buzzerTone(2000, 200);
   delay(10);
 }
 
@@ -76,7 +78,7 @@ void playFailSound() {
 
 void playCardDetectedBeep() {
   // Short beep to acknowledge card read
-  buzzerTone(1200, 80);
+  buzzerTone(2000, 80);
   delay(10);
 }
 
