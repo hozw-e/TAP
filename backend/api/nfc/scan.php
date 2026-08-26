@@ -373,6 +373,23 @@ try {
             $action        = 'check_out';
             $actionMessage = 'Checked out: ' . $studentName;
 
+            // Store action result in temp_nfc_scans IMMEDIATELY so the frontend
+            // kiosk picks it up via polling — before any notification that might fail/delay
+            $resultDataArray = [
+                'status'             => 'assigned',
+                'action'             => $action,
+                'uid'                => $uid,
+                'student_id'         => $studentId,
+                'student_name'       => $studentName,
+                'notification_sent'  => false,
+                'message'            => $actionMessage,
+            ];
+            if (isset($remainingSessions)) {
+                $resultDataArray['remaining_sessions'] = $remainingSessions;
+            }
+            $stmtUpdate = $conn->prepare("UPDATE temp_nfc_scans SET action_result = :result WHERE id = :id");
+            $stmtUpdate->execute([':result' => json_encode($resultDataArray), ':id' => $scanInsertId]);
+
             // Publish real-time attendance event to WebSocket server (fire-and-forget, outside transaction)
             publishAttendanceEvent([
                 'student_id' => $studentId,
@@ -385,22 +402,26 @@ try {
 
             // Send check-out notification to guardian via NotificationService
             if ($guardianId) {
-                $ns = new NotificationService();
+                try {
+                    $ns = new NotificationService();
 
-                $message = NotificationService::formatCheckOutMessage($studentName, $displayTime);
-                $notifResult = $ns->notify((int)$guardianId, (int)$studentId, 'check_out', $message, $conn);
+                    $message = NotificationService::formatCheckOutMessage($studentName, $displayTime);
+                    $notifResult = $ns->notify((int)$guardianId, (int)$studentId, 'check_out', $message, $conn);
 
-                // Update attendance_logs with msg_channel and msg_success
-                $stmt = $conn->prepare("
-                    UPDATE attendance_logs
-                    SET msg_channel = :msg_channel, msg_success = :msg_success
-                    WHERE attendance_id = :attendance_id
-                ");
-                $stmt->execute([
-                    ':msg_channel'   => $notifResult['channel'],
-                    ':msg_success'   => $notifResult['success'] ? 1 : 0,
-                    ':attendance_id' => $openRecord['attendance_id'],
-                ]);
+                    // Update attendance_logs with msg_channel and msg_success
+                    $stmt = $conn->prepare("
+                        UPDATE attendance_logs
+                        SET msg_channel = :msg_channel, msg_success = :msg_success
+                        WHERE attendance_id = :attendance_id
+                    ");
+                    $stmt->execute([
+                        ':msg_channel'   => $notifResult['channel'],
+                        ':msg_success'   => $notifResult['success'] ? 1 : 0,
+                        ':attendance_id' => $openRecord['attendance_id'],
+                    ]);
+                } catch (Exception $e) {
+                    error_log("Check-out notification failed: " . $e->getMessage());
+                }
             }
         } else {
             // Student is checking IN
@@ -483,6 +504,20 @@ try {
             $action        = 'check_in';
             $actionMessage = 'Checked in: ' . $studentName;
 
+            // Store action result in temp_nfc_scans IMMEDIATELY so the frontend
+            // kiosk picks it up via polling — before any notification that might fail/delay
+            $resultDataArray = [
+                'status'             => 'assigned',
+                'action'             => $action,
+                'uid'                => $uid,
+                'student_id'         => $studentId,
+                'student_name'       => $studentName,
+                'notification_sent'  => false,
+                'message'            => $actionMessage,
+            ];
+            $stmtUpdate = $conn->prepare("UPDATE temp_nfc_scans SET action_result = :result WHERE id = :id");
+            $stmtUpdate->execute([':result' => json_encode($resultDataArray), ':id' => $scanInsertId]);
+
             // Publish real-time attendance event to WebSocket server
             publishAttendanceEvent([
                 'student_id' => $studentId,
@@ -495,45 +530,34 @@ try {
 
             // Send check-in notification to guardian via NotificationService
             if ($guardianId) {
-                $ns = new NotificationService();
+                try {
+                    $ns = new NotificationService();
 
-                $message = NotificationService::formatCheckInMessage($studentName, $displayTime);
-                $notifResult = $ns->notify((int)$guardianId, (int)$studentId, 'check_in', $message, $conn);
+                    $message = NotificationService::formatCheckInMessage($studentName, $displayTime);
+                    $notifResult = $ns->notify((int)$guardianId, (int)$studentId, 'check_in', $message, $conn);
 
-                // Update attendance_logs with msg_channel and msg_success
-                $stmt = $conn->prepare("
-                    UPDATE attendance_logs
-                    SET msg_channel = :msg_channel, msg_success = :msg_success
-                    WHERE attendance_id = :attendance_id
-                ");
-                $stmt->execute([
-                    ':msg_channel'   => $notifResult['channel'],
-                    ':msg_success'   => $notifResult['success'] ? 1 : 0,
-                    ':attendance_id' => $newAttendanceId,
-                ]);
+                    // Update attendance_logs with msg_channel and msg_success
+                    $stmt = $conn->prepare("
+                        UPDATE attendance_logs
+                        SET msg_channel = :msg_channel, msg_success = :msg_success
+                        WHERE attendance_id = :attendance_id
+                    ");
+                    $stmt->execute([
+                        ':msg_channel'   => $notifResult['channel'],
+                        ':msg_success'   => $notifResult['success'] ? 1 : 0,
+                        ':attendance_id' => $newAttendanceId,
+                    ]);
+                } catch (Exception $e) {
+                    error_log("Check-in notification failed: " . $e->getMessage());
+                }
             }
         }
 
         $notificationSent = isset($notifResult) ? $notifResult['success'] : false;
         error_log("Attendance recorded: $actionMessage | Notification sent: " . ($notificationSent ? 'yes' : 'no'));
 
-        // Store action result in temp_nfc_scans
-        $resultDataArray = [
-            'status'             => 'assigned',
-            'action'             => $action,
-            'uid'                => $uid,
-            'student_id'         => $studentId,
-            'student_name'       => $studentName,
-            'notification_sent'  => $notificationSent,
-            'message'            => $actionMessage,
-        ];
-        if (isset($remainingSessions)) {
-            $resultDataArray['remaining_sessions'] = $remainingSessions;
-        }
-        $resultData = json_encode($resultDataArray);
-        $stmtUpdate = $conn->prepare("UPDATE temp_nfc_scans SET action_result = :result WHERE id = :id");
-        $stmtUpdate->execute([':result' => $resultData, ':id' => $scanInsertId]);
-
+        // action_result was already stored earlier (before notifications) so the
+        // kiosk frontend picks it up immediately. Just send response to ESP32.
         $responseData = [
             'status'             => 'assigned',
             'action'             => $action,

@@ -59,6 +59,9 @@ try {
 
     // Return the pre-processed result from scan.php directly
     $actionResult = json_decode($scan['action_result'], true);
+    if (!is_array($actionResult)) {
+        $actionResult = [];
+    }
     sendSuccessResponse('Scan found', array_merge(
         ['uid' => $scan['uid']],
         $actionResult
