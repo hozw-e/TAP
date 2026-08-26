@@ -82,17 +82,18 @@ class NotificationService
     /**
      * Send a message via IProgSMS API.
      *
-     * @param string $recipient Guardian's phone number (e.g. +639XXXXXXXXX)
+     * @param string $recipient Guardian's phone number (e.g. 09XXXXXXXXX or 639XXXXXXXXX)
      * @param string $message   The notification text
-     * @return bool True if the API returned a 2xx status
+     * @return bool True if the API returned a success status
      */
     private function sendIProgSms(string $recipient, string $message): bool
     {
-        $url = 'https://api.iprogsms.com/api/sms/send';
+        $url = 'https://www.iprogsms.com/api/v1/sms_messages';
 
         $payload = json_encode([
-            'to'      => $recipient,
-            'message' => $message,
+            'api_token'    => $this->smsApiToken,
+            'phone_number' => $recipient,
+            'message'      => $message,
         ]);
 
         $ch = curl_init($url);
@@ -100,7 +101,6 @@ class NotificationService
         curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
-            'Authorization: Bearer ' . $this->smsApiToken,
         ]);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
@@ -117,7 +117,9 @@ class NotificationService
 
         error_log("NotificationService::sendIProgSms to $recipient — HTTP $httpCode: $result");
 
-        return $httpCode >= 200 && $httpCode < 300;
+        // IProgSMS returns {"status": 200, "message": "...", "message_id": "..."} on success
+        $response = json_decode($result, true);
+        return $httpCode === 200 && isset($response['status']) && $response['status'] === 200;
     }
 
     /**
