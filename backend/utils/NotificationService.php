@@ -88,25 +88,22 @@ class NotificationService
      */
     private function sendIProgSms(string $recipient, string $message): bool
     {
-        $params = http_build_query([
+        // Normalize phone number to 09XXXXXXXXX format for iProgSMS
+        $recipient = $this->normalizePhoneNumber($recipient);
+
+        $url = 'https://www.iprogsms.com/api/v1/sms_messages';
+
+        $data = [
             'api_token'    => $this->smsApiToken,
             'phone_number' => $recipient,
             'message'      => $message,
-        ]);
-
-        $url = 'https://www.iprogsms.com/api/v1/sms_messages?' . $params;
-
-        $payload = json_encode([
-            'api_token'    => $this->smsApiToken,
-            'phone_number' => $recipient,
-            'message'      => $message,
-        ]);
+        ];
 
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
+            'Content-Type: application/x-www-form-urlencoded',
         ]);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
@@ -126,6 +123,33 @@ class NotificationService
         // IProgSMS returns {"status": 200, "message": "...", "message_id": "..."} on success
         $response = json_decode($result, true);
         return $httpCode === 200 && isset($response['status']) && $response['status'] === 200;
+    }
+
+    /**
+     * Normalize a Philippine phone number to 09XXXXXXXXX format.
+     *
+     * Handles: +639XXXXXXXXX, 639XXXXXXXXX, 09XXXXXXXXX, 9XXXXXXXXX
+     */
+    private function normalizePhoneNumber(string $phone): string
+    {
+        // Strip spaces, dashes, parentheses
+        $phone = preg_replace('/[\s\-\(\)]+/', '', $phone);
+
+        // Remove leading +
+        $phone = ltrim($phone, '+');
+
+        // 639XXXXXXXXX → 09XXXXXXXXX
+        if (preg_match('/^63(9\d{9})$/', $phone, $m)) {
+            return '0' . $m[1];
+        }
+
+        // 9XXXXXXXXX (10 digits starting with 9) → 09XXXXXXXXX
+        if (preg_match('/^(9\d{9})$/', $phone, $m)) {
+            return '0' . $m[1];
+        }
+
+        // Already 09XXXXXXXXX or other format — return as-is
+        return $phone;
     }
 
     /**
