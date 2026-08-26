@@ -15,11 +15,11 @@ require_once '../../utils/response.php';
 require_once '../../utils/session.php';
 require_once '../../utils/activity-logger.php';
 
-// Check admin authentication — visitor mode can be set by the public kiosk page
-// Only require auth for sensitive modes (assign, attendance)
+// Check admin authentication — visitor and attendance modes can be set by the public kiosk page
+// Only require auth for sensitive modes (assign)
 $input = json_decode(file_get_contents('php://input'), true);
 $requestedMode = $input['mode'] ?? '';
-if ($requestedMode !== 'visitor') {
+if ($requestedMode === 'assign') {
     requireAdminAuth();
 }
 
