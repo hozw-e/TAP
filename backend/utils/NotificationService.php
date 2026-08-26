@@ -88,20 +88,16 @@ class NotificationService
      */
     private function sendIProgSms(string $recipient, string $message): bool
     {
-        $url = 'https://www.iprogsms.com/api/v1/sms_messages';
-
-        $payload = json_encode([
+        $params = http_build_query([
             'api_token'    => $this->smsApiToken,
             'phone_number' => $recipient,
             'message'      => $message,
         ]);
 
+        $url = 'https://www.iprogsms.com/api/v1/sms_messages?' . $params;
+
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-        ]);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 
