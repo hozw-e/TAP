@@ -183,6 +183,25 @@ function Dashboard() {
     loadDashboardData();
   }, []);
 
+  // Auto-refresh at midnight so dashboard resets to the new day
+  useEffect(() => {
+    const scheduleRefresh = () => {
+      const now = new Date();
+      const midnight = new Date(now);
+      midnight.setHours(24, 0, 0, 0);
+      const msUntilMidnight = midnight - now;
+
+      return setTimeout(() => {
+        loadDashboardData();
+        // Schedule the next midnight refresh
+        timerRef.current = scheduleRefresh();
+      }, msUntilMidnight);
+    };
+
+    const timerRef = { current: scheduleRefresh() };
+    return () => clearTimeout(timerRef.current);
+  }, []);
+
   // Load trend data on mount
   useEffect(() => {
     const loadTrend = async () => {
@@ -269,8 +288,9 @@ function Dashboard() {
       const statsResponse = await api.get('/dashboard/stats.php');
       if (statsResponse.data?.success) setStats(statsResponse.data.data);
 
-      // Always fetch today's logs for the dashboard
-      const params = { date_from: today, date_to: today };
+      // Compute today's date fresh each call so it stays correct after midnight
+      const currentToday = new Date().toISOString().split('T')[0];
+      const params = { date_from: currentToday, date_to: currentToday };
 
       const logsResponse = await api.get('/dashboard/logs.php', { params });
 

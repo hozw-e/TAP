@@ -1,10 +1,10 @@
 FROM php:8.2-fpm-alpine
 
 # Install nginx and required packages
-RUN apk add --no-cache nginx
+RUN apk add --no-cache nginx curl-dev
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql
+RUN docker-php-ext-install pdo pdo_mysql curl
 
 # Create nginx run directory
 RUN mkdir -p /run/nginx
