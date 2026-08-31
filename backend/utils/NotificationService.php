@@ -56,9 +56,9 @@ class NotificationService
         $error = null;
 
         try {
-            $success = $this->sendIProgSms($cellnum, $message);
+            [$success, $apiError] = $this->sendIProgSms($cellnum, $message);
             if (!$success) {
-                $error = 'IProgSMS returned non-success response';
+                $error = $apiError ?: 'IProgSMS returned non-success response';
             }
         } catch (\Exception $e) {
             $error = 'SMS error: ' . $e->getMessage();
@@ -84,9 +84,9 @@ class NotificationService
      *
      * @param string $recipient Guardian's phone number (e.g. 09XXXXXXXXX or 639XXXXXXXXX)
      * @param string $message   The notification text
-     * @return bool True if the API returned a success status
+     * @return array{0: bool, 1: string|null} [success, errorMessage]
      */
-    private function sendIProgSms(string $recipient, string $message): bool
+    private function sendIProgSms(string $recipient, string $message): array
     {
         // Normalize phone number to 639XXXXXXXXX format for iProgSMS
         $recipient = $this->normalizePhoneNumber($recipient);
@@ -116,9 +116,20 @@ class NotificationService
 
         error_log("NotificationService::sendIProgSms to $recipient — HTTP $httpCode: $result");
 
-        // IProgSMS returns {"status": 200, "message": "...", "message_id": "..."} on success
+        // IProgSMS returns {"status": 200, "message": "...", "message_id": "..."} on success.
+        // On failure it still returns HTTP 200 but with a non-200 "status" and a "message"
+        // that may be a string OR an array of strings (e.g. sender-name errors).
         $response = json_decode($result, true);
-        return $httpCode === 200 && isset($response['status']) && $response['status'] === 200;
+        $apiStatus = $response['status'] ?? null;
+        $success = ($httpCode === 200 && $apiStatus === 200);
+
+        $errorMessage = null;
+        if (!$success) {
+            $raw = $response['message'] ?? "HTTP $httpCode";
+            $errorMessage = is_array($raw) ? implode('; ', $raw) : (string)$raw;
+        }
+
+        return [$success, $errorMessage];
     }
 
     /**
