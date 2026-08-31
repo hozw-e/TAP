@@ -268,6 +268,12 @@ function VisitorPage() {
     try {
       const response = await authAPI.login(adminUsername, adminPassword);
       if (response.success) {
+        if (response.data?.session_token) {
+          sessionStorage.setItem('session_token', response.data.session_token);
+        }
+        if (response.data?.admin_name) {
+          sessionStorage.setItem('admin_name', response.data.admin_name);
+        }
         stopPolling();
         await nfcAPI.setMode('attendance').catch(() => {});
         navigate('/dashboard');

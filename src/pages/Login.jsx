@@ -194,6 +194,10 @@ function Login({ setIsAuthenticated }) {
         if (response.data?.session_token) {
           sessionStorage.setItem('session_token', response.data.session_token);
         }
+        // Store admin name for display in the sidebar
+        if (response.data?.admin_name) {
+          sessionStorage.setItem('admin_name', response.data.admin_name);
+        }
         setIsAuthenticated(true);
         navigate('/dashboard', { state: { justLoggedIn: true } });
       } else {

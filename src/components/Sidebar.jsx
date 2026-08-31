@@ -5,6 +5,8 @@ function Sidebar({ onLogoutClick }) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const adminName = sessionStorage.getItem('admin_name') || '';
+
   const isActive = (path) => location.pathname === path;
   const isStudentRoute = location.pathname.startsWith('/students');
   const isVisitorRecordRoute = location.pathname === '/visitor-records';
@@ -15,6 +17,9 @@ function Sidebar({ onLogoutClick }) {
       <div className="logo-circle">
         <img src="/logo.png" alt="A+ Solutions" onError={(e) => e.target.style.display = 'none'} />
       </div>
+
+      {/* Admin name */}
+      {adminName && <div className="sidebar-admin-name">{adminName}</div>}
 
       {/* Navigation Items */}
       <div

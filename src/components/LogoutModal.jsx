@@ -10,6 +10,7 @@ function LogoutModal({ isOpen, onClose }) {
       await authAPI.logout();
       onClose();
       sessionStorage.removeItem('session_token');
+      sessionStorage.removeItem('admin_name');
       sessionStorage.setItem('showLoggedOutToast', 'true');
       setTimeout(() => {
         navigate('/login');
@@ -18,6 +19,7 @@ function LogoutModal({ isOpen, onClose }) {
     } catch (error) {
       console.error('Logout error:', error);
       sessionStorage.removeItem('session_token');
+      sessionStorage.removeItem('admin_name');
       sessionStorage.setItem('showLoggedOutToast', 'true');
       navigate('/login');
       window.location.reload();

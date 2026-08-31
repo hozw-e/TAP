@@ -88,23 +88,19 @@ class NotificationService
      */
     private function sendIProgSms(string $recipient, string $message): bool
     {
-        // Normalize phone number to +639XXXXXXXXX format for iProgSMS
+        // Normalize phone number to 639XXXXXXXXX format for iProgSMS
         $recipient = $this->normalizePhoneNumber($recipient);
 
-        $url = 'https://www.iprogsms.com/api/v1/sms_messages';
-
-        $data = [
+        // iProgSMS expects all parameters as URL query string on a POST request
+        $query = http_build_query([
             'api_token'    => $this->smsApiToken,
             'phone_number' => $recipient,
             'message'      => $message,
-        ];
+        ]);
+        $url = 'https://www.iprogsms.com/api/v1/sms_messages?' . $query;
 
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/x-www-form-urlencoded',
-        ]);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 
@@ -126,7 +122,7 @@ class NotificationService
     }
 
     /**
-     * Normalize a Philippine phone number to +639XXXXXXXXX format.
+     * Normalize a Philippine phone number to 639XXXXXXXXX format (no leading +).
      *
      * Handles: 09XXXXXXXXX, 9XXXXXXXXX, 639XXXXXXXXX, +639XXXXXXXXX
      */
@@ -140,21 +136,21 @@ class NotificationService
 
         // 09XXXXXXXXX → 639XXXXXXXXX
         if (preg_match('/^0(9\d{9})$/', $phone, $m)) {
-            return '+63' . $m[1];
+            return '63' . $m[1];
         }
 
-        // 9XXXXXXXXX (10 digits starting with 9) → +639XXXXXXXXX
+        // 9XXXXXXXXX (10 digits starting with 9) → 639XXXXXXXXX
         if (preg_match('/^(9\d{9})$/', $phone, $m)) {
-            return '+63' . $m[1];
+            return '63' . $m[1];
         }
 
-        // 639XXXXXXXXX → +639XXXXXXXXX
+        // 639XXXXXXXXX → 639XXXXXXXXX (already correct)
         if (preg_match('/^(63\d{10})$/', $phone, $m)) {
-            return '+' . $m[1];
+            return $m[1];
         }
 
-        // Already +639XXXXXXXXX or other format — return as-is
-        return '+' . $phone;
+        // Other format — return digits as-is
+        return $phone;
     }
 
     /**
