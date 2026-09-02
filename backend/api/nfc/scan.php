@@ -408,16 +408,16 @@ try {
                     $message = NotificationService::formatCheckOutMessage($studentName, $displayTime);
                     $notifResult = $ns->notify((int)$guardianId, (int)$studentId, 'check_out', $message, $conn);
 
-                    // Update attendance_logs with msg_channel and msg_success
+                    // Update attendance_logs with check-out notification result
                     $stmt = $conn->prepare("
                         UPDATE attendance_logs
-                        SET msg_channel = :msg_channel, msg_success = :msg_success
+                        SET msg_out_channel = :msg_out_channel, msg_out_success = :msg_out_success
                         WHERE attendance_id = :attendance_id
                     ");
                     $stmt->execute([
-                        ':msg_channel'   => $notifResult['channel'],
-                        ':msg_success'   => $notifResult['success'] ? 1 : 0,
-                        ':attendance_id' => $openRecord['attendance_id'],
+                        ':msg_out_channel' => $notifResult['channel'],
+                        ':msg_out_success' => $notifResult['success'] ? 1 : 0,
+                        ':attendance_id'   => $openRecord['attendance_id'],
                     ]);
                 } catch (Exception $e) {
                     error_log("Check-out notification failed: " . $e->getMessage());
@@ -536,7 +536,7 @@ try {
                     $message = NotificationService::formatCheckInMessage($studentName, $displayTime);
                     $notifResult = $ns->notify((int)$guardianId, (int)$studentId, 'check_in', $message, $conn);
 
-                    // Update attendance_logs with msg_channel and msg_success
+                    // Update attendance_logs with check-in notification result
                     $stmt = $conn->prepare("
                         UPDATE attendance_logs
                         SET msg_channel = :msg_channel, msg_success = :msg_success

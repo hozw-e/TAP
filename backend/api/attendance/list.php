@@ -30,6 +30,24 @@ if (!$conn) {
 }
 
 try {
+    // Check if notification columns exist (migration 007 may not have run yet)
+    $hasNotifCols = false;
+    try {
+        $colCheck = $conn->query("
+            SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME   = 'attendance_logs'
+              AND COLUMN_NAME  = 'msg_channel'
+        ");
+        $hasNotifCols = (int)$colCheck->fetchColumn() > 0;
+    } catch (Exception $e) {
+        // Default to false
+    }
+
+    $notifSelect = $hasNotifCols
+        ? 'a.msg_channel, a.msg_success, a.msg_out_channel, a.msg_out_success, a.attendance_flag,'
+        : "NULL AS msg_channel, NULL AS msg_success, NULL AS msg_out_channel, NULL AS msg_out_success, NULL AS attendance_flag,";
+
     // Check if auto_closed column exists
     $hasAutoClosedCol = false;
     try {
@@ -55,6 +73,7 @@ try {
             a.time_in,
             a.time_out,
             {$autoClosedSelect},
+            {$notifSelect}
             a.sms_sent_in,
             a.sms_sent_out,
             s.student_name,

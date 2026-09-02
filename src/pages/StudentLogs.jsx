@@ -161,12 +161,8 @@ function StudentLogs() {
 
   const getNotificationStatus = (log) => {
     if (log.row_type === 'visitor') return 'N/A';
-    if (log.msg_channel && log.msg_success) {
-      return 'SMS';
-    }
-    if (log.msg_success === 0 || log.msg_success === false) {
-      return 'FAILED';
-    }
+    if (log.msg_channel && log.msg_success === 1) return 'SMS';
+    if (log.msg_success === 0) return 'FAILED';
     return 'N/A';
   };
 

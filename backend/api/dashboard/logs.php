@@ -35,21 +35,23 @@ try {
         sendErrorResponse('Database connection failed', 500);
     }
 
-    // Check if auto_closed column exists (migration may not have run yet on all instances)
-    $hasAutoClosedCol = false;
+    // Check if notification columns exist (migration 007 may not have run yet)
+    $hasNotifCols = false;
     try {
         $colCheck = $conn->query("
             SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
             WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'attendance_logs'
-              AND COLUMN_NAME = 'auto_closed'
+              AND TABLE_NAME   = 'attendance_logs'
+              AND COLUMN_NAME  = 'msg_channel'
         ");
-        $hasAutoClosedCol = (int)$colCheck->fetchColumn() > 0;
+        $hasNotifCols = (int)$colCheck->fetchColumn() > 0;
     } catch (Exception $e) {
-        // Default to false if check fails
+        // Default to false
     }
 
-    $autoClosedSelect = $hasAutoClosedCol ? 'a.auto_closed' : '0 AS auto_closed';
+    $notifSelect = $hasNotifCols
+        ? 'a.msg_channel, a.msg_success, a.msg_out_channel, a.msg_out_success, a.attendance_flag,'
+        : "NULL AS msg_channel, NULL AS msg_success, NULL AS msg_out_channel, NULL AS msg_out_success, NULL AS attendance_flag,";
 
     // Student attendance logs
     $studentQuery = "
@@ -59,7 +61,8 @@ try {
             s.student_course,
             a.time_in,
             a.time_out,
-            {$autoClosedSelect},
+            a.auto_closed,
+            {$notifSelect}
             a.sms_sent_in,
             a.sms_sent_out,
             a.date
@@ -116,17 +119,21 @@ try {
 
     foreach ($studentLogs as $row) {
         $logs[] = [
-            'attendance_id'  => $row['attendance_id'],
-            'student_name'   => $row['student_name'],
-            'student_course' => $row['student_course'],
-            'time_in'        => $row['time_in'],
-            'time_out'       => $row['time_out'],
-            'auto_closed'    => (bool)$row['auto_closed'],
-            'sms_sent_in'    => (bool)$row['sms_sent_in'],
-            'sms_sent_out'   => (bool)$row['sms_sent_out'],
-            'sms_sent'       => (bool)($row['sms_sent_in'] || $row['sms_sent_out']),
-            'date'           => $row['date'],
-            'row_type'       => 'student',
+            'attendance_id'   => $row['attendance_id'],
+            'student_name'    => $row['student_name'],
+            'student_course'  => $row['student_course'],
+            'time_in'         => $row['time_in'],
+            'time_out'        => $row['time_out'],
+            'auto_closed'     => (bool)$row['auto_closed'],
+            'msg_channel'     => $row['msg_channel'],
+            'msg_success'     => isset($row['msg_success'])     ? (int)$row['msg_success']     : null,
+            'msg_out_channel' => $row['msg_out_channel'],
+            'msg_out_success' => isset($row['msg_out_success']) ? (int)$row['msg_out_success'] : null,
+            'attendance_flag' => $row['attendance_flag'],
+            'sms_sent_in'     => (bool)$row['sms_sent_in'],
+            'sms_sent_out'    => (bool)$row['sms_sent_out'],
+            'date'            => $row['date'],
+            'row_type'        => 'student',
         ];
     }
 

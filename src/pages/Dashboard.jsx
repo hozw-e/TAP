@@ -91,6 +91,7 @@ function Dashboard() {
         attendance_flag: event.attendance_flag,
         msg_channel: null,
         msg_success: null,
+        msg_out_channel: null,
         msg_out_success: null,
       };
       return [newLog, ...prev];
@@ -453,12 +454,16 @@ function Dashboard() {
 
   const getNotificationStatus = (log) => {
     if (log.row_type === 'visitor') return 'N/A';
-    if (log.msg_channel && log.msg_success) {
-      return 'SMS';
-    }
-    if (log.msg_success === 0 || log.msg_success === false) {
-      return 'FAILED';
-    }
+    if (log.msg_channel && log.msg_success === 1) return 'SMS';
+    if (log.msg_success === 0) return 'FAILED';
+    return 'N/A';
+  };
+
+  const getOutNotificationStatus = (log) => {
+    if (log.row_type === 'visitor') return 'N/A';
+    if (!log.time_out) return null; // no checkout yet — render '---'
+    if (log.msg_out_channel && log.msg_out_success === 1) return 'SMS';
+    if (log.msg_out_success === 0) return 'FAILED';
     return 'N/A';
   };
 
@@ -649,14 +654,14 @@ function Dashboard() {
                           <td>
                             <span className={`sms-dot ${
                               log.row_type === 'visitor' ? 'dot-na' :
-                              !log.time_out ? 'dot-na' :
-                              log.msg_out_success ? 'dot-sent' :
-                              log.msg_out_success === 0 ? 'dot-failed' : 'dot-na'
+                              getOutNotificationStatus(log) === null ? 'dot-na' :
+                              getOutNotificationStatus(log) === 'SMS' ? 'dot-sent' :
+                              getOutNotificationStatus(log) === 'FAILED' ? 'dot-failed' : 'dot-na'
                             }`}>
                               {log.row_type === 'visitor' ? 'N/A' :
-                                !log.time_out ? '---' :
-                                log.msg_out_success ? 'Sent' :
-                                log.msg_out_success === 0 ? 'Failed' : 'N/A'}
+                                getOutNotificationStatus(log) === null ? '---' :
+                                getOutNotificationStatus(log) === 'SMS' ? 'Sent' :
+                                getOutNotificationStatus(log) === 'FAILED' ? 'Failed' : 'N/A'}
                             </span>
                           </td>
                         </tr>
