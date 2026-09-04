@@ -367,10 +367,10 @@ function ViewRecord() {
                         {paginatedLogs.map((log, index) => {
                           const status = getLogStatus(log);
                           const timeInSms = log.time_in
-                            ? (log.sms_sent_in === true || log.sms_sent_in === 1) ? 'SENT' : 'FAILED'
+                            ? (log.msg_success === 1) ? 'SENT' : 'FAILED'
                             : null;
                           const timeOutSms = log.time_out
-                            ? (log.sms_sent_out === true || log.sms_sent_out === 1) ? 'SENT' : 'FAILED'
+                            ? (log.msg_out_success === 1) ? 'SENT' : 'FAILED'
                             : null;
                           return (
                             <tr key={`${log.attendance_id || 'log'}-${index}`}>

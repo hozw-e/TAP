@@ -294,6 +294,8 @@ function EditRecord() {
         student_birthdate: formData.birthdate || null,
         student_address: formData.address,
         student_cellnum: formData.contactNumber || null,
+        student_course: student.student_course || null,
+        course_duration: student.course_duration || null,
       });
       if (!studentResponse.success) {
         throw new Error(studentResponse.message || 'Failed to update student');
