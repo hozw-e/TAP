@@ -101,6 +101,23 @@
   box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.12);
 }
 
+.schedule-form-hint {
+  font-weight: 400;
+  font-size: 11px;
+  color: #95a5a6;
+  margin-left: 4px;
+  text-transform: lowercase;
+  letter-spacing: 0;
+}
+
+.schedule-input-readonly {
+  background: #f4f7fb !important;
+  border-color: #dde3ee !important;
+  color: #8898aa !important;
+  cursor: default !important;
+  box-shadow: none !important;
+}
+
 .schedule-form-row {
   display: flex;
   gap: 16px;

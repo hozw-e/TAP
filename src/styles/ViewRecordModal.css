@@ -203,6 +203,42 @@
   background: #fff;
 }
 
+.info-item select {
+  width: 100%;
+  border: 1px solid #dde3ee;
+  border-radius: 6px;
+  background: #f4f7fb;
+  font-size: 13.5px;
+  color: #2f3f58;
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238898aa' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+  cursor: pointer;
+}
+
+.info-item select:focus {
+  border-color: #3d7bd4;
+  background-color: #fff;
+}
+
+/* Edit mode — white editable select */
+.edit-record-page .info-item select {
+  background-color: #fff;
+  border-color: #c8d3e8;
+}
+
+.edit-record-page .info-item select:focus {
+  border-color: #3d7bd4;
+  box-shadow: 0 0 0 3px rgba(61, 123, 212, 0.12);
+}
+
 /* Edit mode — white editable inputs */
 .edit-record-page .info-item input:not([readonly]) {
   background: #fff;

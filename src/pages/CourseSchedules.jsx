@@ -14,6 +14,30 @@ const DAYS_OF_WEEK = [
   'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 ];
 
+// Total course hours per course — drives the session duration (total_hours / 4 per session).
+// Research: 6 h total → 1.5 h (90 min) per session.
+// All others: 12 h total → 3 h per session.
+const COURSE_TOTAL_HOURS = {
+  'Research': 6,
+};
+const DEFAULT_TOTAL_HOURS = 12;
+
+/**
+ * Given a start time string ("HH:MM") and total course hours,
+ * returns the auto-computed end time string ("HH:MM").
+ * Session duration = totalHours / 4.
+ */
+function computeEndTime(startTime, totalHours) {
+  if (!startTime) return '';
+  const [h, m] = startTime.split(':').map(Number);
+  const startMinutes = h * 60 + m;
+  const sessionMinutes = Math.round((totalHours / 4) * 60);
+  const endMinutes = startMinutes + sessionMinutes;
+  const endH = Math.floor(endMinutes / 60) % 24;
+  const endM = endMinutes % 60;
+  return `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+}
+
 const EMPTY_FORM = {
   course_name: '',
   day_of_week: '',
@@ -83,13 +107,16 @@ function CourseSchedules() {
 
   // Open Edit modal
   const handleEditClick = (schedule) => {
+    const course     = schedule.course_name;
+    const startTime  = schedule.start_time?.substring(0, 5) || '';
+    const totalHours = COURSE_TOTAL_HOURS[course] ?? DEFAULT_TOTAL_HOURS;
     setFormMode('edit');
     setFormData({
-      course_name: schedule.course_name,
-      day_of_week: schedule.day_of_week,
-      start_time: schedule.start_time?.substring(0, 5) || '',
-      end_time: schedule.end_time?.substring(0, 5) || '',
-      grace_period: schedule.grace_period ?? 15,
+      course_name:   course,
+      day_of_week:   schedule.day_of_week,
+      start_time:    startTime,
+      end_time:      startTime ? computeEndTime(startTime, totalHours) : (schedule.end_time?.substring(0, 5) || ''),
+      grace_period:  schedule.grace_period ?? 15,
     });
     setEditingId(schedule.schedule_id);
     setFormError('');
@@ -102,10 +129,22 @@ function CourseSchedules() {
     setShowDeleteModal(true);
   };
 
-  // Form input change handler
+  // Form input change handler — auto-computes end_time when start_time or course_name changes
   const handleFormChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: value };
+
+      // Recompute end_time whenever start_time or course changes
+      const course = name === 'course_name' ? value : prev.course_name;
+      const start  = name === 'start_time'  ? value : prev.start_time;
+      if ((name === 'start_time' || name === 'course_name') && start) {
+        const totalHours = COURSE_TOTAL_HOURS[course] ?? DEFAULT_TOTAL_HOURS;
+        updated.end_time = computeEndTime(start, totalHours);
+      }
+
+      return updated;
+    });
   };
 
   // Checkbox change handler for multi-day selection
@@ -146,12 +185,14 @@ function CourseSchedules() {
     setFormLoading(true);
     setFormError('');
 
+    const totalHours = COURSE_TOTAL_HOURS[formData.course_name] ?? DEFAULT_TOTAL_HOURS;
     const payload = {
       course_name: formData.course_name,
       day_of_week: formData.day_of_week,
       start_time: formData.start_time,
       end_time: formData.end_time,
       grace_period: parseInt(formData.grace_period, 10),
+      total_hours: totalHours,
     };
 
     try {
@@ -393,7 +434,7 @@ function CourseSchedules() {
                   />
                 </div>
                 <div className="schedule-form-group">
-                  <label htmlFor="end_time">End Time</label>
+                  <label htmlFor="end_time">End Time <span className="schedule-form-hint">(auto-computed)</span></label>
                   <input
                     type="time"
                     id="end_time"
