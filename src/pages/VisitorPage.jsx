@@ -40,6 +40,18 @@ function VisitorPage() {
   // Select mode modal (no mode chosen and NFC tapped)
   const [selectModeModal, setSelectModeModal] = useState({ show: false });
 
+  // Too early to check in modal
+  const [tooEarlyModal, setTooEarlyModal] = useState({ show: false, name: '', sessionStartTime: '' });
+
+  // Session already ended modal
+  const [sessionEndedModal, setSessionEndedModal] = useState({ show: false, name: '', sessionEndTime: '' });
+
+  // Check-out denied: session end time not yet reached (Time-Out Gate)
+  const [checkOutDeniedModal, setCheckOutDeniedModal] = useState({ show: false, name: '', sessionEndTime: '', message: '' });
+
+  // Check-out denied: minimum rendered time not met (Hour-Requirement Gate)
+  const [hourRequirementDeniedModal, setHourRequirementDeniedModal] = useState({ show: false, name: '', renderedMinutes: 0, minimumMinutes: 0, remainingMinutes: 0 });
+
   // Student tap prompt modal (shown when students button is clicked)
   const [studentTapModal, setStudentTapModal] = useState({ show: false });
 
@@ -126,6 +138,38 @@ function VisitorPage() {
     }
   }, [studentTapModal.show]);
 
+  // Auto-dismiss too early modal after 5 seconds
+  useEffect(() => {
+    if (tooEarlyModal.show) {
+      const timer = setTimeout(() => setTooEarlyModal({ show: false, name: '', sessionStartTime: '' }), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [tooEarlyModal.show]);
+
+  // Auto-dismiss session ended modal after 5 seconds
+  useEffect(() => {
+    if (sessionEndedModal.show) {
+      const timer = setTimeout(() => setSessionEndedModal({ show: false, name: '', sessionEndTime: '' }), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [sessionEndedModal.show]);
+
+  // Auto-dismiss check-out denied (Time-Out Gate) modal after 6 seconds
+  useEffect(() => {
+    if (checkOutDeniedModal.show) {
+      const timer = setTimeout(() => setCheckOutDeniedModal({ show: false, name: '', sessionEndTime: '', message: '' }), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [checkOutDeniedModal.show]);
+
+  // Auto-dismiss hour requirement denied modal after 6 seconds
+  useEffect(() => {
+    if (hourRequirementDeniedModal.show) {
+      const timer = setTimeout(() => setHourRequirementDeniedModal({ show: false, name: '', renderedMinutes: 0, minimumMinutes: 0, remainingMinutes: 0 }), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [hourRequirementDeniedModal.show]);
+
   // Keep visitorNameRef in sync with visitorName state
   useEffect(() => {
     visitorNameRef.current = visitorName;
@@ -170,7 +214,16 @@ function VisitorPage() {
             setStudentTapModal({ show: false });
             setSelectModeModal({ show: false });
 
-            const { status, action, student_name, time_since_checkin, required_time, uid: scannedUid, name: scannedVisitorName } = response.data;
+            const {
+              status, action, student_name,
+              time_since_checkin, required_time,
+              uid: scannedUid, name: scannedVisitorName,
+              session_start_time, session_end_time,
+              // Time-Out Gate denial fields
+              message: denial_message,
+              // Hour-Requirement Gate denial fields
+              minimum_required_minutes, rendered_minutes, remaining_minutes,
+            } = response.data;
 
             if (currentMode === 'students') {
               // STUDENTS MODE: Only process assigned student cards
@@ -183,6 +236,18 @@ function VisitorPage() {
               } else if (status === 'denied') {
                 if (action === 'archived_denied') {
                   setModal({ show: true, type: 'archived', name: student_name, subtype: 'student' });
+                } else if (action === 'check_in_denied' && session_start_time) {
+                  // Too early — more than 60 min before session start
+                  setTooEarlyModal({ show: true, name: student_name, sessionStartTime: session_start_time });
+                } else if (action === 'check_in_denied' && session_end_time) {
+                  // Session already ended
+                  setSessionEndedModal({ show: true, name: student_name, sessionEndTime: session_end_time });
+                } else if (action === 'check_out_denied') {
+                  // Time-Out Gate: session end time not yet reached
+                  setCheckOutDeniedModal({ show: true, name: student_name, sessionEndTime: session_end_time || '', message: denial_message || '' });
+                } else if (action === 'hour_requirement_denied') {
+                  // Hour-Requirement Gate: minimum rendered time not met
+                  setHourRequirementDeniedModal({ show: true, name: student_name, renderedMinutes: rendered_minutes ?? 0, minimumMinutes: minimum_required_minutes ?? 0, remainingMinutes: remaining_minutes ?? 0 });
                 } else {
                   setDeniedModal({ show: true, name: student_name });
                 }
@@ -204,6 +269,18 @@ function VisitorPage() {
               } else if (status === 'denied') {
                 if (action === 'archived_denied') {
                   setModal({ show: true, type: 'archived', name: student_name, subtype: 'student' });
+                } else if (action === 'check_in_denied' && session_start_time) {
+                  // Too early — more than 60 min before session start
+                  setTooEarlyModal({ show: true, name: student_name, sessionStartTime: session_start_time });
+                } else if (action === 'check_in_denied' && session_end_time) {
+                  // Session already ended
+                  setSessionEndedModal({ show: true, name: student_name, sessionEndTime: session_end_time });
+                } else if (action === 'check_out_denied') {
+                  // Time-Out Gate: session end time not yet reached
+                  setCheckOutDeniedModal({ show: true, name: student_name, sessionEndTime: session_end_time || '', message: denial_message || '' });
+                } else if (action === 'hour_requirement_denied') {
+                  // Hour-Requirement Gate: minimum rendered time not met
+                  setHourRequirementDeniedModal({ show: true, name: student_name, renderedMinutes: rendered_minutes ?? 0, minimumMinutes: minimum_required_minutes ?? 0, remainingMinutes: remaining_minutes ?? 0 });
                 } else {
                   setDeniedModal({ show: true, name: student_name });
                 }
@@ -486,6 +563,114 @@ function VisitorPage() {
               {deniedModal.name ? `${deniedModal.name} — your` : 'Your'} session is still in progress.
             </p>
             <p className="visitor-modal-timestamp">Tap your card again when you're ready to leave.</p>
+            <div className="result-dismiss-hint">Closes automatically…</div>
+          </div>
+        </div>
+      )}
+
+      {/* Too Early Modal (check-in more than 60 min before session start) */}
+      {tooEarlyModal.show && (
+        <div className="visitor-modal-overlay">
+          <div className="visitor-modal visitor-result-modal denied-modal">
+            <div className="visitor-modal-icon">
+              <i className="fas fa-clock result-icon"></i>
+              <p className="result-label-denied">TOO EARLY</p>
+            </div>
+            <h2 className="result-name denied-name">
+              {tooEarlyModal.name ? tooEarlyModal.name : 'Check-In Denied'}
+            </h2>
+            <p className="visitor-modal-subtext">
+              Session hasn't started yet. Check-in opens 60 minutes before the session begins.
+            </p>
+            {tooEarlyModal.sessionStartTime && (
+              <p className="visitor-modal-timestamp">
+                Session starts at{' '}
+                {new Date('1970-01-01T' + tooEarlyModal.sessionStartTime).toLocaleTimeString('en-US', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </p>
+            )}
+            <div className="result-dismiss-hint">Closes automatically…</div>
+          </div>
+        </div>
+      )}
+
+      {/* Session Ended Modal (check-in at or after session end time) */}
+      {sessionEndedModal.show && (
+        <div className="visitor-modal-overlay">
+          <div className="visitor-modal visitor-result-modal denied-modal">
+            <div className="visitor-modal-icon">
+              <i className="fas fa-calendar-times result-icon"></i>
+              <p className="result-label-denied">SESSION ENDED</p>
+            </div>
+            <h2 className="result-name denied-name">
+              {sessionEndedModal.name ? sessionEndedModal.name : 'Check-In Denied'}
+            </h2>
+            <p className="visitor-modal-subtext">
+              This session has already ended. Please see an admin if you need assistance.
+            </p>
+            {sessionEndedModal.sessionEndTime && (
+              <p className="visitor-modal-timestamp">
+                Session ended at{' '}
+                {new Date('1970-01-01T' + sessionEndedModal.sessionEndTime).toLocaleTimeString('en-US', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </p>
+            )}
+            <div className="result-dismiss-hint">Closes automatically…</div>
+          </div>
+        </div>
+      )}
+
+      {/* Check-Out Denied Modal (Time-Out Gate: session end time not yet reached) */}
+      {checkOutDeniedModal.show && (
+        <div className="visitor-modal-overlay">
+          <div className="visitor-modal visitor-result-modal denied-modal">
+            <div className="visitor-modal-icon">
+              <i className="fas fa-lock result-icon"></i>
+              <p className="result-label-denied">CANNOT CHECK OUT YET</p>
+            </div>
+            <h2 className="result-name denied-name">
+              {checkOutDeniedModal.name || 'Check-Out Denied'}
+            </h2>
+            <p className="visitor-modal-subtext">
+              Check-out is only allowed once the session has ended.
+            </p>
+            {checkOutDeniedModal.sessionEndTime && (
+              <p className="visitor-modal-timestamp">
+                Session ends at{' '}
+                {new Date('1970-01-01T' + checkOutDeniedModal.sessionEndTime).toLocaleTimeString('en-US', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </p>
+            )}
+            <div className="result-dismiss-hint">Closes automatically…</div>
+          </div>
+        </div>
+      )}
+
+      {/* Hour Requirement Denied Modal (Hour-Requirement Gate: minimum rendered time not met) */}
+      {hourRequirementDeniedModal.show && (
+        <div className="visitor-modal-overlay">
+          <div className="visitor-modal visitor-result-modal denied-modal">
+            <div className="visitor-modal-icon">
+              <i className="fas fa-stopwatch result-icon"></i>
+              <p className="result-label-denied">MINIMUM TIME NOT MET</p>
+            </div>
+            <h2 className="result-name denied-name">
+              {hourRequirementDeniedModal.name || 'Check-Out Denied'}
+            </h2>
+            <p className="visitor-modal-subtext">
+              You need to complete at least {hourRequirementDeniedModal.minimumMinutes} minute{hourRequirementDeniedModal.minimumMinutes !== 1 ? 's' : ''} before checking out.
+            </p>
+            <p className="visitor-modal-timestamp">
+              Time rendered: {hourRequirementDeniedModal.renderedMinutes} min
+              {' · '}
+              {hourRequirementDeniedModal.remainingMinutes} min remaining
+            </p>
             <div className="result-dismiss-hint">Closes automatically…</div>
           </div>
         </div>

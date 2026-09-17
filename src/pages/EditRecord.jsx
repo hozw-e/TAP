@@ -23,11 +23,25 @@ function EditRecord() {
   const [filterFrom, setFilterFrom] = useState('');
   const [filterTo, setFilterTo] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
+  const COURSE_OPTIONS = [
+    'Basic Coding',
+    'Research',
+    'EV3',
+    'Rover 2',
+    'AI Steam',
+    'Arduino',
+    'IoT',
+    'Python Programming',
+    'Robotics',
+  ];
+
   const [formData, setFormData] = useState({
     nfcId: '',
     birthdate: '',
     address: '',
     contactNumber: '',
+    course: '',
+    courseDuration: '',
     guardianName: '',
     guardianContact: '',
     guardianAddress: '',
@@ -64,6 +78,8 @@ function EditRecord() {
       birthdate: student.student_birthdate || '',
       address: student.student_address || '',
       contactNumber: student.student_cellnum || '',
+      course: student.student_course || '',
+      courseDuration: student.course_duration || '',
       guardianName: student.guardian_name || '',
       guardianContact: student.guardian_cellnum || '',
       guardianAddress: student.guardian_address || '',
@@ -294,8 +310,8 @@ function EditRecord() {
         student_birthdate: formData.birthdate || null,
         student_address: formData.address,
         student_cellnum: formData.contactNumber || null,
-        student_course: student.student_course || null,
-        course_duration: student.course_duration || null,
+        student_course: formData.course || null,
+        course_duration: formData.courseDuration || null,
       });
       if (!studentResponse.success) {
         throw new Error(studentResponse.message || 'Failed to update student');
@@ -337,8 +353,8 @@ function EditRecord() {
               <div className="view-profile-card">
                 <h2>{student.student_name || 'Unknown Student'}</h2>
                 <p className="view-meta">NFC ID: {student.nfc_uid || 'XXXXXXX'}</p>
-                {student.student_course && (
-                  <div className="view-course-badge">{student.student_course}</div>
+                {(formData.course || student.student_course) && (
+                  <div className="view-course-badge">{formData.course || student.student_course}</div>
                 )}
                 <div className="view-profile-stats">
                   <div>
@@ -374,7 +390,14 @@ function EditRecord() {
 
                 <div className="view-info-grid">
                   <div className="info-item"><label>Name</label><input value={student.student_name || ''} readOnly /></div>
-                  <div className="info-item"><label>Course</label><input value={student.student_course || ''} readOnly /></div>
+                  <div className="info-item"><label>Course</label>
+                    <select name="course" value={formData.course} onChange={handleChange}>
+                      <option value="">— No course assigned —</option>
+                      {COURSE_OPTIONS.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
                   <div className="info-item"><label>NFC ID</label>
                     <div className="nfc-input-wrapper">
                       <input

@@ -73,7 +73,9 @@ try {
         sendErrorResponse('Student not found', 404);
     }
 
-    // Update student
+    // Update student.
+    // COALESCE(:course, student_course) keeps the existing course when the
+    // incoming value is NULL, preventing accidental course deletion.
     $stmt = $conn->prepare("
         UPDATE students
         SET student_name     = :student_name,
@@ -81,8 +83,8 @@ try {
             age              = :age,
             student_address  = :address,
             student_cellnum  = :cellnum,
-            student_course   = :course,
-            course_duration  = :duration
+            student_course   = COALESCE(:course, student_course),
+            course_duration  = COALESCE(:duration, course_duration)
         WHERE student_id = :student_id
     ");
 
@@ -105,6 +107,12 @@ try {
         "Updated student record (ID: $studentId)"
     );
 
+    // Re-fetch the actual stored values so the response reflects what's in the DB
+    // (important when COALESCE preserved a pre-existing course/duration)
+    $stmtFetch = $conn->prepare("SELECT student_course, course_duration FROM students WHERE student_id = :id");
+    $stmtFetch->execute([':id' => $studentId]);
+    $stored = $stmtFetch->fetch(PDO::FETCH_ASSOC);
+
     sendSuccessResponse('Student updated successfully', [
         'student_id'       => $studentId,
         'student_name'     => $studentName,
@@ -112,8 +120,8 @@ try {
         'age'              => $age,
         'student_address'  => $studentAddress,
         'student_cellnum'  => $studentCellnum,
-        'student_course'   => $studentCourse,
-        'course_duration'  => $courseDuration
+        'student_course'   => $stored['student_course'],
+        'course_duration'  => $stored['course_duration']
     ]);
 
 } catch (PDOException $e) {
