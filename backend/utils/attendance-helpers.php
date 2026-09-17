@@ -192,20 +192,27 @@ function formatRemainingTime(string $currentTime, string $endTime): string
  *
  * Rules:
  * - Skip enforcement (allow) when totalHours is NULL
- * - Skip enforcement (allow) when endTime is not NULL and currentTime >= endTime (end-time cap)
- * - Compute rendered_minutes = floor((currentTime - timeIn) in minutes)
+ * - Compute rendered_minutes = floor((currentTime - effectiveStart) in minutes)
+ *   where effectiveStart = max(timeIn, startTime). This ensures early check-ins
+ *   do not count time before the session actually began.
  * - Compute minimum_minutes = floor(totalHours * 60 / 4)
  * - Deny if rendered_minutes < minimum_minutes
  * - Edge: unparseable timeIn → allow + log warning
  * - Edge: negative duration → treat as 0 minutes, deny
  *
+ * Note: The end-time cap bypass was intentionally removed. The Time-Out Gate in
+ * scan.php blocks check-out while currentTime < endTime. The Hour-Requirement Gate
+ * runs after the Time-Out Gate passes (currentTime >= endTime), so it must enforce
+ * the minimum duration unconditionally at that point.
+ *
  * @param string      $timeIn        Student's check-in time (HH:MM:SS)
  * @param string      $currentTime   Current server time (HH:MM:SS)
  * @param float|null  $totalHours    Course total_hours (NULL = no enforcement)
- * @param string|null $endTime       Session end_time (NULL = no cap)
+ * @param string|null $endTime       Reserved — no longer used; kept for call-site compatibility
+ * @param string|null $startTime     Session start_time (HH:MM:SS); caps early check-in credit
  * @return array{allowed: bool, rendered_minutes: int, minimum_minutes: int, remaining_minutes: int}
  */
-function checkHourRequirement(string $timeIn, string $currentTime, ?float $totalHours, ?string $endTime): array
+function checkHourRequirement(string $timeIn, string $currentTime, ?float $totalHours, ?string $endTime, ?string $startTime = null): array
 {
     // Skip enforcement when totalHours is NULL (no hour requirement configured)
     if ($totalHours === null) {
@@ -220,27 +227,6 @@ function checkHourRequirement(string $timeIn, string $currentTime, ?float $total
     // Compute minimum_minutes from totalHours
     $minimum_minutes = (int) floor($totalHours * 60 / 4);
 
-    // Skip enforcement (allow) when endTime is not NULL and currentTime >= endTime (end-time cap override)
-    if ($endTime !== null) {
-        $currentTs = strtotime($currentTime);
-        $endTs = strtotime($endTime);
-        if ($currentTs !== false && $endTs !== false && $currentTs >= $endTs) {
-            // Compute rendered_minutes for informational purposes even when allowing via cap
-            $timeInTs = strtotime($timeIn);
-            $rendered_minutes = 0;
-            if ($timeInTs !== false && $currentTs !== false) {
-                $diffSeconds = $currentTs - $timeInTs;
-                $rendered_minutes = ($diffSeconds < 0) ? 0 : (int) floor($diffSeconds / 60);
-            }
-            return [
-                'allowed' => true,
-                'rendered_minutes' => $rendered_minutes,
-                'minimum_minutes' => $minimum_minutes,
-                'remaining_minutes' => max(0, $minimum_minutes - $rendered_minutes),
-            ];
-        }
-    }
-
     // Parse timeIn — if unparseable, skip enforcement and log warning
     $timeInTs = strtotime($timeIn);
     if ($timeInTs === false) {
@@ -253,13 +239,22 @@ function checkHourRequirement(string $timeIn, string $currentTime, ?float $total
         ];
     }
 
-    // Compute rendered duration in seconds
-    $currentTs = strtotime($currentTime);
-    $diffSeconds = $currentTs - $timeInTs;
+    // Effective start: cap early check-ins so pre-session time doesn't count toward rendered time
+    $effectiveStartTs = $timeInTs;
+    if ($startTime !== null) {
+        $startTs = strtotime($startTime);
+        if ($startTs !== false && $startTs > $timeInTs) {
+            $effectiveStartTs = $startTs;
+        }
+    }
 
-    // Edge case: negative duration (timeIn is later than currentTime)
+    // Compute rendered duration in seconds from effective start
+    $currentTs = strtotime($currentTime);
+    $diffSeconds = $currentTs - $effectiveStartTs;
+
+    // Edge case: negative duration
     if ($diffSeconds < 0) {
-        error_log("checkHourRequirement: Negative duration detected (timeIn='{$timeIn}', currentTime='{$currentTime}'). Possible clock or data inconsistency.");
+        error_log("checkHourRequirement: Negative duration detected (effectiveStart='{$startTime}', currentTime='{$currentTime}'). Possible clock or data inconsistency.");
         $rendered_minutes = 0;
     } else {
         $rendered_minutes = (int) floor($diffSeconds / 60);

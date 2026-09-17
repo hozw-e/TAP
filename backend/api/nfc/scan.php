@@ -292,6 +292,7 @@ try {
             // --- Hour_Requirement_Gate: deny check-out if minimum session duration not met ---
             $totalHours = $schedule ? (isset($schedule['total_hours']) ? $schedule['total_hours'] : null) : null;
             $endTime = $schedule ? $schedule['end_time'] : null;
+            $startTime = $schedule ? $schedule['start_time'] : null;
             $timeIn = $openRecord['time_in'];
 
             if ($totalHours !== null) {
@@ -302,7 +303,8 @@ try {
                 $timeIn ?? '',
                 $now,
                 $totalHours,
-                $endTime
+                $endTime,
+                $startTime
             );
 
             if (!$hourCheck['allowed']) {
