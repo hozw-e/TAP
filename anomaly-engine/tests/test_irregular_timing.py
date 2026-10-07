@@ -21,11 +21,19 @@ def config():
 class TestIrregularTimingDetector:
     """Tests for IrregularTimingDetector.detect()."""
 
-    def test_no_course_returns_empty(self, detector, config):
-        """Should return empty list when course is None."""
-        event = {"timestamp": "2024-01-15T08:30:00", "course": None}
+    @patch.object(IrregularTimingDetector, "_query_historical_times")
+    def test_course_is_ignored_history_pooled(self, mock_query, detector, config):
+        """Course is no longer used for segmentation.
+
+        Even with course=None, detection proceeds using the student's pooled
+        cross-enrollment history. An anomalous check-in must still be detected.
+        """
+        mock_query.return_value = [478, 480, 482, 484, 476]
+        # Current check-in at 10:00 AM (600 min) — far outside the ~480 baseline
+        event = {"timestamp": "2024-01-15T10:00:00", "course": None}
         result = detector.detect(1, event, config)
-        assert result == []
+        assert len(result) == 1
+        assert result[0]["pattern_type"] == "irregular_timing"
 
     def test_no_timestamp_returns_empty(self, detector, config):
         """Should return empty list when timestamp is missing."""
@@ -41,8 +49,8 @@ class TestIrregularTimingDetector:
 
     @patch.object(IrregularTimingDetector, "_query_historical_times")
     def test_insufficient_records_returns_empty(self, mock_query, detector, config):
-        """Should return empty when fewer than 4 historical records."""
-        mock_query.return_value = [480, 485, 490]  # Only 3 records
+        """Should return empty when fewer than 3 historical records."""
+        mock_query.return_value = [480, 485]  # Only 2 records
         event = {"timestamp": "2024-01-15T08:30:00", "course": "Arduino"}
         result = detector.detect(1, event, config)
         assert result == []

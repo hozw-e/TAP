@@ -32,6 +32,7 @@ function ActivityLogs() {
     { value: 'DELETE', label: 'Delete' },
     { value: 'ARCHIVE', label: 'Archive' },
     { value: 'UNARCHIVE', label: 'Unarchive' },
+    { value: 'REENROLL', label: 'Reenroll' },
     { value: 'LOGIN', label: 'Login' },
     { value: 'LOGOUT', label: 'Logout' },
     { value: 'NFC_ASSIGN', label: 'NFC Assignment' },
@@ -175,6 +176,8 @@ function ActivityLogs() {
         return 'badge-archive';
       case 'UNARCHIVE':
         return 'badge-unarchive';
+      case 'REENROLL':
+        return 'badge-reenroll';
       case 'LOGIN':
         return 'badge-login';
       case 'LOGOUT':

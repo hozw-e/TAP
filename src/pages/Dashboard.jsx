@@ -69,6 +69,10 @@ function Dashboard() {
   // Anomaly engine availability state
   const [engineAvailable, setEngineAvailable] = useState(true);
 
+  // Manual batch analysis state
+  const [batchRunning, setBatchRunning] = useState(false);
+  const [batchNotification, setBatchNotification] = useState({ isOpen: false, message: '', type: 'success' });
+
   // Toast alerts queue (new alerts shown as toasts then cleared)
   const [toastAlerts, setToastAlerts] = useState([]);
 
@@ -138,6 +142,45 @@ function Dashboard() {
   const handleToastDismiss = useCallback((idx) => {
     setToastAlerts(prev => prev.filter((_, i) => i !== idx));
   }, []);
+
+  // Trigger an on-demand batch analysis of all active students against the
+  // attendance data already in the database. Results are written to each
+  // student's anomaly history (viewable on their record page). In the future
+  // this same endpoint will be run automatically by a daily cron job.
+  const handleRunAnalysis = useCallback(async () => {
+    if (batchRunning) return;
+    setBatchRunning(true);
+    try {
+      const response = await api.post('/anomaly/analyze-batch.php', {});
+      const data = response.data?.data ?? {};
+      if (!response.data?.success) {
+        throw new Error(response.data?.message || 'Batch analysis failed');
+      }
+      const created = data.alerts_created ?? 0;
+      const analyzed = data.students_analyzed ?? 0;
+      const skipped = data.duplicates_skipped ?? 0;
+      setBatchNotification({
+        isOpen: true,
+        type: 'success',
+        message: created > 0
+          ? `Analysis complete: ${created} alert(s) across ${analyzed} student(s). ` +
+            `View details in each student's record.` +
+            (skipped > 0 ? ` (${skipped} already flagged today.)` : '')
+          : `Analysis complete: ${analyzed} student(s) checked, no new anomalies found.` +
+            (skipped > 0 ? ` (${skipped} already flagged today.)` : ''),
+      });
+    } catch (err) {
+      console.error('Batch analysis error:', err);
+      const msg = err?.response?.data?.message || err.message || 'Batch analysis failed';
+      setBatchNotification({
+        isOpen: true,
+        type: 'error',
+        message: `Could not run analysis: ${msg}`,
+      });
+    } finally {
+      setBatchRunning(false);
+    }
+  }, [batchRunning]);
 
   // Live clock
   const [clock, setClock] = useState('');
@@ -492,6 +535,24 @@ function Dashboard() {
           <div>
             <h1>Dashboard</h1>
           </div>
+          <button
+            className="run-analysis-btn"
+            onClick={handleRunAnalysis}
+            disabled={batchRunning}
+            title="Analyze all active students against existing attendance data"
+          >
+            {batchRunning ? (
+              <>
+                <i className="fas fa-spinner fa-spin"></i>
+                Analyzing...
+              </>
+            ) : (
+              <>
+                <i className="fas fa-magnifying-glass-chart"></i>
+                Run Anomaly Analysis
+              </>
+            )}
+          </button>
         </div>
 
         {/* Two-column dashboard layout */}
@@ -722,6 +783,13 @@ function Dashboard() {
         onClose={() => setShowLoginSuccessToast(false)}
         message="Login successful. Welcome to the Admin Dashboard!"
         type="success"
+      />
+
+      <Notification
+        isOpen={batchNotification.isOpen}
+        onClose={() => setBatchNotification({ ...batchNotification, isOpen: false })}
+        message={batchNotification.message}
+        type={batchNotification.type}
       />
 
       {/* Real-time anomaly toast notifications */}

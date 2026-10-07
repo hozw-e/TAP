@@ -53,17 +53,17 @@ class TestChronicTardinessDetector:
         """Pattern type constant is correct."""
         assert self.detector.PATTERN_TYPE == "chronic_tardiness"
 
-    def test_min_records_is_five(self):
-        """Minimum records threshold is 5."""
-        assert self.detector.MIN_RECORDS == 5
+    def test_min_records_is_three(self):
+        """Minimum records threshold is 3 (lowered for 4-session courses)."""
+        assert self.detector.MIN_RECORDS == 3
 
     @patch("src.detectors.chronic_tardiness.get_connection")
     def test_returns_empty_when_insufficient_records(self, mock_conn):
-        """Returns empty list when fewer than 5 records."""
+        """Returns empty list when fewer than 3 records."""
         mock_cursor = MagicMock()
         mock_cursor.fetchone.return_value = {
-            "total_records": 4,
-            "tardy_count": 3,
+            "total_records": 2,
+            "tardy_count": 2,
         }
         mock_conn.return_value.cursor.return_value = mock_cursor
 

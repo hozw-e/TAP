@@ -18,6 +18,9 @@ dist
 # Database credentials (database.php now uses env vars, safe to commit)
 apdc_attendance.sql
 
+# Database dumps/exports (contain real guardian PII — do not commit)
+railwaydb.sql
+
 # Database backups
 db_backup/
 

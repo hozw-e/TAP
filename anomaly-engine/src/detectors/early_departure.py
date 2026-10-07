@@ -56,15 +56,17 @@ class EarlyDepartureDetector(BaseDetector):
 
             # Query sessions with both time_in and time_out, joined with
             # course_schedules to get the scheduled duration.
+            # course is resolved via the students table (attendance_logs has no course column).
             # Join on course name and day of week matching.
             cursor.execute(
                 "SELECT "
                 "  TIMESTAMPDIFF(MINUTE, al.time_in, al.time_out) AS actual_minutes, "
                 "  TIMESTAMPDIFF(MINUTE, cs.start_time, cs.end_time) AS scheduled_minutes "
                 "FROM attendance_logs al "
+                "INNER JOIN students s ON s.student_id = al.student_id "
                 "INNER JOIN course_schedules cs "
-                "  ON al.course = cs.course_name "
-                "  AND DAYOFWEEK(al.session_date) = CASE cs.day_of_week "
+                "  ON cs.course_name = s.student_course "
+                "  AND DAYOFWEEK(al.date) = CASE cs.day_of_week "
                 "    WHEN 'Sunday' THEN 1 "
                 "    WHEN 'Monday' THEN 2 "
                 "    WHEN 'Tuesday' THEN 3 "
@@ -74,7 +76,7 @@ class EarlyDepartureDetector(BaseDetector):
                 "    WHEN 'Saturday' THEN 7 "
                 "  END "
                 "WHERE al.student_id = %s "
-                "  AND al.session_date >= %s "
+                "  AND al.date >= %s "
                 "  AND al.time_out IS NOT NULL",
                 (student_id, window_start.strftime("%Y-%m-%d")),
             )

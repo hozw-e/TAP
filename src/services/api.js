@@ -77,6 +77,14 @@ export const studentsAPI = {
     const response = await api.post(`/students/unarchive.php?id=${studentId}`, {});
     return response.data;
   },
+
+  // Reenroll an archived student into a (possibly new) course.
+  // Reuses the same student_id so prior attendance history is preserved for
+  // the anomaly detection service. Resets remaining_sessions to 4.
+  reenroll: async (studentId, data) => {
+    const response = await api.post(`/students/reenroll.php?id=${studentId}`, data);
+    return response.data;
+  },
 };
 
 

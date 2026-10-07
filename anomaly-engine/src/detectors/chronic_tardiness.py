@@ -24,7 +24,8 @@ class ChronicTardinessDetector(BaseDetector):
     """Detects chronic tardiness pattern in student attendance."""
 
     PATTERN_TYPE = "chronic_tardiness"
-    MIN_RECORDS = 5
+    # Lowered from 5 to 3: courses run only 4 sessions, so 5 was unreachable.
+    MIN_RECORDS = 3
 
     def detect(self, student_id, event, config):
         """Analyze student's tardy ratio over the historical window.
@@ -49,7 +50,7 @@ class ChronicTardinessDetector(BaseDetector):
                 "  COUNT(*) AS total_records, "
                 "  SUM(CASE WHEN attendance_flag = 'tardy' THEN 1 ELSE 0 END) AS tardy_count "
                 "FROM attendance_logs "
-                "WHERE student_id = %s AND session_date >= %s",
+                "WHERE student_id = %s AND date >= %s",
                 (student_id, window_start.strftime("%Y-%m-%d")),
             )
             row = cursor.fetchone()

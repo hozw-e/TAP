@@ -78,3 +78,27 @@
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
 }
+
+/* Reenroll modal — course picker field */
+.confirm-modal-field {
+  text-align: left;
+  margin-bottom: 25px;
+}
+
+.confirm-modal-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.confirm-modal-field .course-filter-select {
+  width: 100%;
+}
+
+.confirm-modal-error {
+  color: #e74c3c;
+  font-size: 13px;
+  margin-top: 8px;
+}

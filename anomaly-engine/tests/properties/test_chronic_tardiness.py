@@ -106,12 +106,12 @@ def test_no_detection_when_ratio_at_or_below_half(mock_get_conn, total_records, 
 
 
 @given(
-    total_records=st.integers(min_value=0, max_value=4),
-    tardy_count=st.integers(min_value=0, max_value=4),
+    total_records=st.integers(min_value=0, max_value=2),
+    tardy_count=st.integers(min_value=0, max_value=2),
 )
 @patch("src.detectors.chronic_tardiness.get_connection")
 def test_no_detection_when_insufficient_records(mock_get_conn, total_records, tardy_count):
-    """Detection MUST NOT occur when total_records < 5 regardless of tardy_count."""
+    """Detection MUST NOT occur when total_records < 3 regardless of tardy_count."""
     # Constrain tardy_count to valid range
     tardy_count = min(tardy_count, total_records)
 
@@ -121,12 +121,12 @@ def test_no_detection_when_insufficient_records(mock_get_conn, total_records, ta
     result = detector.detect(1, make_event(), make_config())
 
     assert result == [], (
-        f"Expected no detection with only {total_records} records (minimum is 5)"
+        f"Expected no detection with only {total_records} records (minimum is 3)"
     )
 
 
 @given(
-    total_records=st.integers(min_value=5, max_value=1000),
+    total_records=st.integers(min_value=3, max_value=1000),
     tardy_count=st.integers(min_value=0, max_value=1000),
 )
 @patch("src.detectors.chronic_tardiness.get_connection")

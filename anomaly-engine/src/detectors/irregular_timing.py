@@ -1,13 +1,25 @@
 """Irregular timing anomaly detector.
 
 Detects when a student's check-in time deviates significantly from their
-personal average for the same course and day of week.
+personal average for a given day of week, pooled across ALL of the student's
+enrollments.
+
+Design note (4-session courses):
+    The academy caps each course at 4 sessions, then auto-archives the student.
+    Segmenting history by course would leave at most 3 prior records per course,
+    which is too thin for a meaningful baseline. Because attendance_logs does not
+    store a per-record course, and because arrival-time habits are a personal
+    behavioural trait rather than a course-specific one, this detector pools a
+    student's entire attendance history (across every course they have enrolled
+    in) and segments only by day of week. Students who re-enroll therefore build
+    a usable baseline over time.
 
 Algorithm:
-    1. Get the course and day_of_week from the event
-    2. Query attendance_logs for past check-ins (same student, same course, same day of week)
+    1. Get the day_of_week from the event timestamp
+    2. Query attendance_logs for the student's past check-ins on the same weekday
+       (all courses/enrollments pooled)
     3. Convert time_in to minutes from midnight
-    4. Require at least 4 historical records (excluding current)
+    4. Require at least 3 historical records (excluding current)
     5. If stddev is 0, skip detection (no anomaly)
     6. Compute z-score for the current check-in time
     7. If z_score > 2.0, flag as anomaly
@@ -27,7 +39,9 @@ from src.detectors.base import BaseDetector
 
 logger = logging.getLogger(__name__)
 
-MINIMUM_RECORDS = 4
+# Lowered from 4 to 3: with only 4 sessions per course, requiring 4 prior
+# records meant the detector could never fire. 3 lets it evaluate the 4th session.
+MINIMUM_RECORDS = 3
 
 
 class IrregularTimingDetector(BaseDetector):
@@ -38,17 +52,13 @@ class IrregularTimingDetector(BaseDetector):
 
         Args:
             student_id: The student's ID.
-            event: Dict with 'timestamp' (ISO 8601) and 'course' (str|None).
+            event: Dict with 'timestamp' (ISO 8601). 'course' is accepted but no
+                longer used for segmentation (history is pooled across courses).
             config: Dict with 'historical_window_days' (int).
 
         Returns:
             List of alert dicts. Empty if no anomaly or insufficient data.
         """
-        course = event.get("course")
-        if not course:
-            # Cannot detect irregular timing without a course
-            return []
-
         timestamp_str = event.get("timestamp")
         if not timestamp_str:
             return []
@@ -69,15 +79,16 @@ class IrregularTimingDetector(BaseDetector):
         # Compute current check-in as minutes from midnight
         current_minutes = current_time.hour * 60 + current_time.minute
 
-        # Query historical check-in times for same student, course, and day of week
+        # Query historical check-in times for the same student and day of week,
+        # pooled across all of the student's enrollments (no course filter).
         historical_window_days = config.get("historical_window_days", 30)
         window_start = current_time - timedelta(days=historical_window_days)
 
         historical_minutes = self._query_historical_times(
-            student_id, course, day_of_week, window_start, current_time
+            student_id, day_of_week, window_start, current_time
         )
 
-        # Need at least 4 historical records (excluding the current one)
+        # Need at least MINIMUM_RECORDS historical records (excluding the current one)
         if len(historical_minutes) < MINIMUM_RECORDS:
             return []
 
@@ -101,11 +112,24 @@ class IrregularTimingDetector(BaseDetector):
         detected = z_score > 2.0
 
         if detected:
+            student_name = event.get("student_name", "Unknown")
+            # Format the current and average check-in times as HH:MM for the
+            # human-readable description.
+            avg_h, avg_m = divmod(int(round(mean)), 60)
+            cur_h, cur_m = divmod(int(current_minutes), 60)
             return [
                 {
                     "student_id": student_id,
+                    "student_name": student_name,
                     "pattern_type": "irregular_timing",
                     "score": round(score, 4),
+                    "description": (
+                        f"{student_name} checked in at "
+                        f"{cur_h:02d}:{cur_m:02d}, which deviates sharply from "
+                        f"their usual ~{avg_h:02d}:{avg_m:02d} for this weekday "
+                        f"(z-score {z_score:.1f})"
+                    ),
+                    "detected_at": datetime.now().isoformat(),
                     "detected": True,
                 }
             ]
@@ -113,13 +137,15 @@ class IrregularTimingDetector(BaseDetector):
         return []
 
     def _query_historical_times(
-        self, student_id, course, day_of_week, window_start, current_time
+        self, student_id, day_of_week, window_start, current_time
     ):
         """Query historical check-in times from attendance_logs.
 
+        Pools the student's entire attendance history (all courses/enrollments)
+        and filters only by day of week.
+
         Args:
             student_id: The student's ID.
-            course: The course name to filter by.
             day_of_week: Integer day of week (0=Monday, 6=Sunday).
             window_start: Start of the historical window (datetime).
             current_time: Current check-in time (datetime), used to exclude current record.
@@ -141,22 +167,25 @@ class IrregularTimingDetector(BaseDetector):
             if mysql_day_of_week == 0:
                 mysql_day_of_week = 7
 
+            # History is pooled across all of the student's enrollments — no
+            # course filter. Day-of-week is derived from the `date` column, and
+            # time_in (a TIME value) is combined with `date` to build the full
+            # datetime used for windowing.
             query = """
-                SELECT time_in
-                FROM attendance_logs
-                WHERE student_id = %s
-                  AND course = %s
-                  AND DAYOFWEEK(time_in) = %s
-                  AND time_in >= %s
-                  AND time_in < %s
-                ORDER BY time_in ASC
+                SELECT al.date, al.time_in
+                FROM attendance_logs al
+                WHERE al.student_id = %s
+                  AND DAYOFWEEK(al.date) = %s
+                  AND al.time_in IS NOT NULL
+                  AND TIMESTAMP(al.date, al.time_in) >= %s
+                  AND TIMESTAMP(al.date, al.time_in) < %s
+                ORDER BY al.date ASC, al.time_in ASC
             """
 
             cursor.execute(
                 query,
                 (
                     student_id,
-                    course,
                     mysql_day_of_week,
                     window_start,
                     current_time,
@@ -167,22 +196,33 @@ class IrregularTimingDetector(BaseDetector):
             cursor.close()
             conn.close()
 
-            # Convert time_in (DATETIME) to minutes from midnight
+            # Convert time_in to minutes from midnight. A MySQL TIME column is
+            # returned by mysql-connector as a datetime.timedelta, but we also
+            # defensively handle datetime, time, and string forms.
             minutes_list = []
             for row in rows:
                 time_in = row["time_in"]
                 if time_in is None:
                     continue
-                if isinstance(time_in, datetime):
+
+                minutes = None
+                if isinstance(time_in, timedelta):
+                    minutes = int(time_in.total_seconds() // 60)
+                elif isinstance(time_in, datetime):
+                    minutes = time_in.hour * 60 + time_in.minute
+                elif hasattr(time_in, "hour") and hasattr(time_in, "minute"):
+                    # datetime.time
                     minutes = time_in.hour * 60 + time_in.minute
                 else:
-                    # Handle case where time_in might be returned as string
+                    # Handle case where time_in might be returned as a string
                     try:
-                        dt = datetime.fromisoformat(str(time_in))
-                        minutes = dt.hour * 60 + dt.minute
-                    except (ValueError, TypeError):
+                        parts = str(time_in).split(":")
+                        minutes = int(parts[0]) * 60 + int(parts[1])
+                    except (ValueError, IndexError, TypeError):
                         continue
-                minutes_list.append(minutes)
+
+                if minutes is not None:
+                    minutes_list.append(minutes)
 
             return minutes_list
 

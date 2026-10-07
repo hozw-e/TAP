@@ -284,6 +284,17 @@
   box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
 }
 
+.action-btn-reenroll {
+  background: #6c5ce7;
+  color: white;
+}
+
+.action-btn-reenroll:hover {
+  background: #5a4bd1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
+}
+
 /* NFC Badge */
 .nfc-badge {
   display: inline-block;

@@ -4,11 +4,19 @@ Detects when a student's recent attendance frequency drops significantly
 compared to their historical average. Requires at least 14 days of history.
 
 Algorithm:
-    avg_weekly_frequency = total_attendances / (historical_window_days / 7)
-    recent_7day_frequency = attendances_in_last_7_days
+    avg_weekly_frequency = attended_sessions / (historical_window_days / 7)
+    recent_7day_frequency = attended_sessions_in_last_7_days
     dropoff_ratio = recent_7day_frequency / avg_weekly_frequency
     score = max(0, 1.0 - (dropoff_ratio / 0.4))
     detected = dropoff_ratio < 0.4
+
+Only ATTENDED sessions (time_in IS NOT NULL) are counted. Rows written by
+the nightly absent-flag job (attendance_flag = 'absent', time_in = NULL) are
+excluded, so missed scheduled sessions correctly register as a drop in the
+student's attendance rate rather than inflating their count. Because the
+ratio compares a student's recent rate against their OWN historical rate,
+the detector self-normalizes to each student's cadence — a once-a-week
+student is judged against their own weekly baseline, not a fixed expectation.
 """
 
 import logging
@@ -24,7 +32,8 @@ class AttendanceDropoffDetector(BaseDetector):
     """Detects significant drops in attendance frequency."""
 
     PATTERN_TYPE = "attendance_dropoff"
-    MIN_HISTORY_DAYS = 14
+    # Lowered from 14 to 7: 4-session courses rarely span 14 days of history.
+    MIN_HISTORY_DAYS = 7
 
     def detect(self, student_id, event, config):
         """Analyze attendance frequency for dropoff pattern.
@@ -47,11 +56,12 @@ class AttendanceDropoffDetector(BaseDetector):
             window_start = now - timedelta(days=historical_window_days)
             seven_days_ago = now - timedelta(days=7)
 
-            # Check if student has at least 14 days of history
+            # Check how many days of ATTENDED history the student has
             cursor.execute(
-                "SELECT MIN(session_date) AS first_date "
+                "SELECT MIN(date) AS first_date "
                 "FROM attendance_logs "
-                "WHERE student_id = %s AND session_date >= %s",
+                "WHERE student_id = %s AND date >= %s "
+                "AND time_in IS NOT NULL",
                 (student_id, window_start.date()),
             )
             row = cursor.fetchone()
@@ -72,11 +82,12 @@ class AttendanceDropoffDetector(BaseDetector):
                 conn.close()
                 return []
 
-            # Count total attendances in the historical window
+            # Count total ATTENDED sessions in the historical window
             cursor.execute(
                 "SELECT COUNT(*) AS total_count "
                 "FROM attendance_logs "
-                "WHERE student_id = %s AND session_date >= %s",
+                "WHERE student_id = %s AND date >= %s "
+                "AND time_in IS NOT NULL",
                 (student_id, window_start.date()),
             )
             total_row = cursor.fetchone()
@@ -87,11 +98,12 @@ class AttendanceDropoffDetector(BaseDetector):
                 conn.close()
                 return []
 
-            # Count attendances in the last 7 days
+            # Count ATTENDED sessions in the last 7 days
             cursor.execute(
                 "SELECT COUNT(*) AS recent_count "
                 "FROM attendance_logs "
-                "WHERE student_id = %s AND session_date >= %s",
+                "WHERE student_id = %s AND date >= %s "
+                "AND time_in IS NOT NULL",
                 (student_id, seven_days_ago.date()),
             )
             recent_row = cursor.fetchone()

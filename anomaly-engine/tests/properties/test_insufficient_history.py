@@ -55,15 +55,15 @@ def make_config(window_days=30):
 
 
 @given(
-    total_records=st.integers(min_value=0, max_value=4),
-    tardy_count=st.integers(min_value=0, max_value=4),
+    total_records=st.integers(min_value=0, max_value=2),
+    tardy_count=st.integers(min_value=0, max_value=2),
 )
 @settings(max_examples=100)
 @patch("src.detectors.chronic_tardiness.get_connection")
 def test_chronic_tardiness_no_score_below_min_records(
     mock_get_conn, total_records, tardy_count
 ):
-    """Chronic tardiness MUST return empty list when total_records < 5."""
+    """Chronic tardiness MUST return empty list when total_records < 3."""
     # Ensure tardy_count doesn't exceed total_records
     tardy_count = min(tardy_count, total_records)
 
@@ -81,7 +81,7 @@ def test_chronic_tardiness_no_score_below_min_records(
 
     assert result == [], (
         f"Expected no alerts for chronic_tardiness with {total_records} records "
-        f"(minimum is 5), but got {result}"
+        f"(minimum is 3), but got {result}"
     )
 
 
@@ -89,14 +89,14 @@ def test_chronic_tardiness_no_score_below_min_records(
 
 
 @given(
-    days_of_history=st.integers(min_value=0, max_value=13),
+    days_of_history=st.integers(min_value=0, max_value=6),
 )
 @settings(max_examples=100)
 @patch("src.detectors.attendance_dropoff.get_connection")
 def test_attendance_dropoff_no_score_below_min_days(
     mock_get_conn, days_of_history
 ):
-    """Attendance dropoff MUST return empty list when days_of_history < 14."""
+    """Attendance dropoff MUST return empty list when days_of_history < 7."""
     # Mock DB to return a first_date that gives us < 14 days of history
     now = datetime.now()
     first_date = (now - timedelta(days=days_of_history)).date()
@@ -117,7 +117,7 @@ def test_attendance_dropoff_no_score_below_min_days(
 
     assert result == [], (
         f"Expected no alerts for attendance_dropoff with {days_of_history} days "
-        f"of history (minimum is 14), but got {result}"
+        f"of history (minimum is 7), but got {result}"
     )
 
 
@@ -125,11 +125,11 @@ def test_attendance_dropoff_no_score_below_min_days(
 
 
 @given(
-    num_historical_times=st.integers(min_value=0, max_value=3),
+    num_historical_times=st.integers(min_value=0, max_value=2),
     minutes_values=st.lists(
         st.integers(min_value=0, max_value=1439),
         min_size=0,
-        max_size=3,
+        max_size=2,
     ),
 )
 @settings(max_examples=100)
@@ -137,7 +137,7 @@ def test_attendance_dropoff_no_score_below_min_days(
 def test_irregular_timing_no_score_below_min_records(
     mock_query, num_historical_times, minutes_values
 ):
-    """Irregular timing MUST return empty list when historical_times < 4."""
+    """Irregular timing MUST return empty list when historical_times < 3."""
     # Trim the list to the desired length
     historical_times = minutes_values[:num_historical_times]
     mock_query.return_value = historical_times
@@ -147,5 +147,5 @@ def test_irregular_timing_no_score_below_min_records(
 
     assert result == [], (
         f"Expected no alerts for irregular_timing with {len(historical_times)} "
-        f"historical records (minimum is 4), but got {result}"
+        f"historical records (minimum is 3), but got {result}"
     )

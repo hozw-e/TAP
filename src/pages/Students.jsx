@@ -5,6 +5,7 @@ import NewRecordModal from '../components/NewRecordModal';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import ArchiveConfirmModal from '../components/ArchiveConfirmModal';
 import UnarchiveConfirmModal from '../components/UnarchiveConfirmModal';
+import ReenrollConfirmModal from '../components/ReenrollConfirmModal';
 import Notification from '../components/Notification';
 import { studentsAPI } from '../services/api';
 import '../styles/Students.css';
@@ -25,6 +26,7 @@ function Students() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [showUnarchiveModal, setShowUnarchiveModal] = useState(false);
+  const [showReenrollModal, setShowReenrollModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -141,8 +143,10 @@ function Students() {
       deleted: 'Record deleted successfully!',
       archived: 'Student archived successfully!',
       unarchived: 'Student unarchived successfully!',
+      reenrolled: 'Student reenrolled successfully!',
       archive_error: 'Failed to archive student. Please try again.',
-      unarchive_error: 'Failed to unarchive student. Please try again.'
+      unarchive_error: 'Failed to unarchive student. Please try again.',
+      reenroll_error: 'Failed to reenroll student. Please try again.'
     };
 
     const type = action.includes('error') ? 'error' : 'success';
@@ -182,6 +186,11 @@ function Students() {
     setShowUnarchiveModal(true);
   };
 
+  const handleReenrollClick = (student) => {
+    setSelectedStudent(student);
+    setShowReenrollModal(true);
+  };
+
   const handleDeleteSuccess = (action) => {
     loadStudents();
     showNotification(action);
@@ -193,6 +202,11 @@ function Students() {
   };
 
   const handleUnarchiveSuccess = (action) => {
+    loadStudents();
+    showNotification(action);
+  };
+
+  const handleReenrollSuccess = (action) => {
     loadStudents();
     showNotification(action);
   };
@@ -304,6 +318,9 @@ function Students() {
                               <button className="action-btn action-btn-unarchive" onClick={() => handleUnarchiveClick(student)} title="Unarchive">
                                 <i className="fas fa-undo"></i>
                               </button>
+                              <button className="action-btn action-btn-reenroll" onClick={() => handleReenrollClick(student)} title="Reenroll">
+                                <i className="fas fa-user-plus"></i>
+                              </button>
                               <button className="action-btn action-btn-delete" onClick={() => handleDeleteClick(student)} title="Delete">
                                 <i className="fas fa-trash"></i>
                               </button>
@@ -358,6 +375,7 @@ function Students() {
       <DeleteConfirmModal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} onSuccess={handleDeleteSuccess} student={selectedStudent} />
       <ArchiveConfirmModal isOpen={showArchiveModal} onClose={() => setShowArchiveModal(false)} onSuccess={handleArchiveSuccess} student={selectedStudent} />
       <UnarchiveConfirmModal isOpen={showUnarchiveModal} onClose={() => setShowUnarchiveModal(false)} onSuccess={handleUnarchiveSuccess} student={selectedStudent} />
+      <ReenrollConfirmModal isOpen={showReenrollModal} onClose={() => setShowReenrollModal(false)} onSuccess={handleReenrollSuccess} student={selectedStudent} />
       <Notification isOpen={notification.isOpen} onClose={() => setNotification({ ...notification, isOpen: false })} message={notification.message} type={notification.type} />
     </AdminLayout>
   );

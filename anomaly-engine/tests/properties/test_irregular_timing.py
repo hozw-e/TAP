@@ -4,7 +4,7 @@
 **Validates: Requirements 3.4**
 
 Tests verify that irregular timing detection occurs if and only if
-the z-score exceeds 2.0, with a minimum of 4 historical records for
+the z-score exceeds 2.0, with a minimum of 3 historical records for
 the same course and day of week.
 """
 
@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 import numpy as np
 import pytest
-from hypothesis import given, assume, settings
+from hypothesis import given, assume, settings, HealthCheck
 from hypothesis import strategies as st
 
 from src.detectors.irregular_timing import IrregularTimingDetector
@@ -21,14 +21,14 @@ from src.detectors.irregular_timing import IrregularTimingDetector
 # Strategy: generate minutes from midnight (0-1439)
 minutes_from_midnight = st.integers(min_value=0, max_value=1439)
 
-# Strategy: list of historical times with at least 4 records
+# Strategy: list of historical times with at least 3 records
 historical_times_min4 = st.lists(
-    minutes_from_midnight, min_size=4, max_size=50
+    minutes_from_midnight, min_size=3, max_size=50
 )
 
-# Strategy: list of historical times with fewer than 4 records
+# Strategy: list of historical times with fewer than 3 records
 historical_times_insufficient = st.lists(
-    minutes_from_midnight, min_size=0, max_size=3
+    minutes_from_midnight, min_size=0, max_size=2
 )
 
 
@@ -49,13 +49,13 @@ class TestIrregularTimingDetectionProperty:
         historical_times=historical_times_min4,
         current_minutes=minutes_from_midnight,
     )
-    @settings(max_examples=200)
+    @settings(max_examples=200, suppress_health_check=[HealthCheck.filter_too_much])
     def test_detection_when_zscore_above_threshold(
         self, historical_times, current_minutes
     ):
-        """Detection MUST occur when z_score > 2.0 with >= 4 records.
+        """Detection MUST occur when z_score > 2.0 with >= 3 records.
 
-        For any set of >= 4 historical times and a current time where
+        For any set of >= 3 historical times and a current time where
         z_score > 2.0: detection MUST occur.
         """
         times_array = np.array(historical_times, dtype=np.float64)
@@ -96,7 +96,7 @@ class TestIrregularTimingDetectionProperty:
         historical_times=historical_times_min4,
         current_minutes=minutes_from_midnight,
     )
-    @settings(max_examples=200)
+    @settings(max_examples=200, suppress_health_check=[HealthCheck.filter_too_much])
     def test_no_detection_when_zscore_at_or_below_threshold(
         self, historical_times, current_minutes
     ):
@@ -145,9 +145,9 @@ class TestIrregularTimingDetectionProperty:
     def test_no_detection_with_insufficient_records(
         self, historical_times, current_minutes
     ):
-        """Detection MUST NOT occur with fewer than 4 historical records.
+        """Detection MUST NOT occur with fewer than 3 historical records.
 
-        For fewer than 4 historical records: detection MUST NOT occur
+        For fewer than 3 historical records: detection MUST NOT occur
         regardless of the current check-in time.
         """
         # Convert current_minutes to a timestamp string
