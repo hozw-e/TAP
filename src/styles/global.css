@@ -63,7 +63,7 @@ input {
 .logs-header .refresh-btn,
 .filters-section .filter-search-btn,
 .visitor-filters-section .filter-search-btn {
-  background: #3498db;
+  background: #6c5ce7;
   color: white;
   border: none;
   border-radius: 4px;
@@ -78,7 +78,7 @@ input {
 .logs-header .refresh-btn:hover:not(:disabled),
 .filters-section .filter-search-btn:hover:not(:disabled),
 .visitor-filters-section .filter-search-btn:hover:not(:disabled) {
-  background: #2980b9;
+  background: #5a4bd1;
 }
 
 /* Unified header export button (red) */
@@ -221,9 +221,9 @@ input {
 }
 
 .pagination-btn.active {
-  background: #34495e;
+  background: #6c5ce7;
   color: #fff;
-  border-color: #34495e;
+  border-color: #6c5ce7;
 }
 
 .pagination-btn:disabled {

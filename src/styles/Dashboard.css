@@ -275,7 +275,7 @@
 }
 
 .logs-section .pagination-btn.active {
-  background: #34495e;
+  background: #6c5ce7;
   color: #fff;
   border-color: #34495e;
 }
@@ -701,7 +701,7 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: #2c3e50;
+  background: #6c5ce7;
   color: white;
   border: none;
   font-size: 20px;
@@ -715,7 +715,7 @@
 }
 
 .help-float-btn:hover {
-  background: #34495e;
+  background: #5a4bd1;
   transform: scale(1.1);
 }
 

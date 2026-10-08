@@ -59,11 +59,24 @@ if ($response === false || $curlError) {
 }
 
 if ($httpCode < 200 || $httpCode >= 300) {
+    $engineBody = json_decode($response, true);
+    // Surface the engine's actual error detail so failures are diagnosable
+    // from the UI instead of a generic message.
+    $detail = null;
+    if (is_array($engineBody)) {
+        $detail = $engineBody['error'] ?? $engineBody['message'] ?? null;
+    }
+    if ($detail === null && is_string($response) && $response !== '') {
+        $detail = substr($response, 0, 300);
+    }
+
     http_response_code($httpCode);
     echo json_encode([
         'success' => false,
-        'message' => 'Anomaly engine returned an error',
-        'engine_response' => json_decode($response, true),
+        'message' => $detail
+            ? ('Anomaly engine error: ' . $detail)
+            : ('Anomaly engine returned HTTP ' . $httpCode),
+        'engine_response' => $engineBody,
     ]);
     exit();
 }

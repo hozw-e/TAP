@@ -22,7 +22,7 @@
 }
 
 .filter-search-btn:hover:not(:disabled) {
-  background: #2980b9;
+  background: #5a4bd1;
 }
 
 .filter-search-btn:disabled {

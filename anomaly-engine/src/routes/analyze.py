@@ -227,13 +227,17 @@ def analyze_batch():
     """
     global last_analysis_at
 
-    config = load_config()
+    try:
+        config = load_config()
+    except Exception as e:
+        logger.exception("Batch analyze: failed to load config")
+        return jsonify({"error": f"Failed to load config: {e}"}), 500
 
     try:
         students = _fetch_students_for_batch()
     except Exception as e:
-        logger.error("Batch analyze: failed to fetch students: %s", e)
-        return jsonify({"error": "Failed to load students"}), 500
+        logger.exception("Batch analyze: failed to fetch students")
+        return jsonify({"error": f"Failed to load students: {e}"}), 500
 
     students_analyzed = 0
     alerts_created = 0
@@ -262,23 +266,22 @@ def analyze_batch():
 
         try:
             alerts = _run_detectors_for_event(event, config)
+
+            # Deduplicate against alerts already written today, then persist.
+            fresh = []
+            for alert in alerts:
+                if _already_alerted_today(alert["student_id"], alert["pattern_type"]):
+                    duplicates_skipped += 1
+                else:
+                    fresh.append(alert)
+
+            alerts_created += _persist_alerts(fresh)
         except Exception as e:
-            logger.error(
-                "Batch analyze: detectors failed for student %s: %s",
+            logger.exception(
+                "Batch analyze: processing failed for student %s",
                 student["student_id"],
-                e,
             )
             continue
-
-        # Deduplicate against alerts already written today, then persist.
-        fresh = []
-        for alert in alerts:
-            if _already_alerted_today(alert["student_id"], alert["pattern_type"]):
-                duplicates_skipped += 1
-            else:
-                fresh.append(alert)
-
-        alerts_created += _persist_alerts(fresh)
 
     last_analysis_at = datetime.now().isoformat()
 
