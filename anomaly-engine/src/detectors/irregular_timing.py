@@ -113,10 +113,16 @@ class IrregularTimingDetector(BaseDetector):
 
         if detected:
             student_name = event.get("student_name", "Unknown")
-            # Format the current and average check-in times as HH:MM for the
-            # human-readable description.
-            avg_h, avg_m = divmod(int(round(mean)), 60)
-            cur_h, cur_m = divmod(int(current_minutes), 60)
+
+            # Format minutes-from-midnight as HH:MM, clamped to a valid
+            # 00:00..23:59 range so the description can never show a negative
+            # or overflowed time even if the inputs are unexpected.
+            def _fmt(total_minutes):
+                m = max(0, min(1439, int(round(total_minutes))))
+                return f"{m // 60:02d}:{m % 60:02d}"
+
+            avg_time = _fmt(mean)
+            cur_time = _fmt(current_minutes)
             return [
                 {
                     "student_id": student_id,
@@ -125,8 +131,8 @@ class IrregularTimingDetector(BaseDetector):
                     "score": round(score, 4),
                     "description": (
                         f"{student_name} checked in at "
-                        f"{cur_h:02d}:{cur_m:02d}, which deviates sharply from "
-                        f"their usual ~{avg_h:02d}:{avg_m:02d} for this weekday "
+                        f"{cur_time}, which deviates sharply from "
+                        f"their usual ~{avg_time} for this weekday "
                         f"(z-score {z_score:.1f})"
                     ),
                     "detected_at": datetime.now().isoformat(),
@@ -221,8 +227,13 @@ class IrregularTimingDetector(BaseDetector):
                     except (ValueError, IndexError, TypeError):
                         continue
 
-                if minutes is not None:
-                    minutes_list.append(minutes)
+                # Guard against malformed/out-of-range values. A valid wall-clock
+                # time is 0..1439 minutes from midnight. MySQL TIME can store
+                # negative or >24h values; such rows must not poison the mean.
+                if minutes is None or minutes < 0 or minutes > 1439:
+                    continue
+
+                minutes_list.append(minutes)
 
             return minutes_list
 

@@ -90,6 +90,26 @@ class TestIrregularTimingDetector:
         assert 0.0 <= result[0]["score"] <= 1.0
 
     @patch.object(IrregularTimingDetector, "_query_historical_times")
+    def test_description_times_are_valid_clock_values(self, mock_query, detector, config):
+        """The description must never render a negative or overflowed time.
+
+        Guards the earlier '-13:58' bug: HH:MM values in the description are
+        clamped to 00:00..23:59 regardless of the underlying mean.
+        """
+        import re
+
+        mock_query.return_value = [478, 480, 482, 484, 476]
+        event = {"timestamp": "2024-01-15T10:00:00", "course": "Arduino"}
+        result = detector.detect(1, event, config)
+
+        desc = result[0]["description"]
+        # Every HH:MM in the description must be a real clock time.
+        for hh, mm in re.findall(r"(\d{2}):(\d{2})", desc):
+            assert 0 <= int(hh) <= 23
+            assert 0 <= int(mm) <= 59
+        assert "-" not in desc.split("z-score")[0]  # no negative time before z-score
+
+    @patch.object(IrregularTimingDetector, "_query_historical_times")
     def test_score_clamped_at_1(self, mock_query, detector, config):
         """Score should be clamped at 1.0 even for extreme deviations."""
         # Very tight cluster with extreme deviation
