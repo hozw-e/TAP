@@ -46,7 +46,12 @@ def make_config(window_days=30):
 
 
 def mock_db_row(total_records, tardy_count):
-    """Create a mock connection that returns the specified row."""
+    """Create a mock connection that returns the specified row.
+
+    The connection also behaves as a context manager (``with connection()
+    as conn``) by yielding itself, so ``conn.cursor()`` inside the ``with``
+    block resolves to the configured cursor.
+    """
     mock_conn = MagicMock()
     mock_cursor = MagicMock()
     mock_cursor.fetchone.return_value = {
@@ -54,6 +59,8 @@ def mock_db_row(total_records, tardy_count):
         "tardy_count": tardy_count,
     }
     mock_conn.cursor.return_value = mock_cursor
+    mock_conn.__enter__.return_value = mock_conn
+    mock_conn.__exit__.return_value = False
     return mock_conn
 
 
@@ -64,7 +71,7 @@ def mock_db_row(total_records, tardy_count):
     total_records=st.integers(min_value=5, max_value=1000),
     tardy_count=st.integers(min_value=0, max_value=1000),
 )
-@patch("src.detectors.chronic_tardiness.get_connection")
+@patch("src.detectors.chronic_tardiness.connection")
 def test_detects_when_ratio_exceeds_half(mock_get_conn, total_records, tardy_count):
     """Detection MUST occur when tardy_ratio > 0.5 with >= 5 records."""
     # Constrain tardy_count to valid range and ensure ratio > 0.5
@@ -87,7 +94,7 @@ def test_detects_when_ratio_exceeds_half(mock_get_conn, total_records, tardy_cou
     total_records=st.integers(min_value=5, max_value=1000),
     tardy_count=st.integers(min_value=0, max_value=1000),
 )
-@patch("src.detectors.chronic_tardiness.get_connection")
+@patch("src.detectors.chronic_tardiness.connection")
 def test_no_detection_when_ratio_at_or_below_half(mock_get_conn, total_records, tardy_count):
     """Detection MUST NOT occur when tardy_ratio <= 0.5 with >= 5 records."""
     # Constrain tardy_count to valid range and ensure ratio <= 0.5
@@ -109,7 +116,7 @@ def test_no_detection_when_ratio_at_or_below_half(mock_get_conn, total_records, 
     total_records=st.integers(min_value=0, max_value=2),
     tardy_count=st.integers(min_value=0, max_value=2),
 )
-@patch("src.detectors.chronic_tardiness.get_connection")
+@patch("src.detectors.chronic_tardiness.connection")
 def test_no_detection_when_insufficient_records(mock_get_conn, total_records, tardy_count):
     """Detection MUST NOT occur when total_records < 3 regardless of tardy_count."""
     # Constrain tardy_count to valid range
@@ -129,7 +136,7 @@ def test_no_detection_when_insufficient_records(mock_get_conn, total_records, ta
     total_records=st.integers(min_value=3, max_value=1000),
     tardy_count=st.integers(min_value=0, max_value=1000),
 )
-@patch("src.detectors.chronic_tardiness.get_connection")
+@patch("src.detectors.chronic_tardiness.connection")
 def test_score_equals_tardy_ratio_capped_at_one(mock_get_conn, total_records, tardy_count):
     """When detected, score == min(1.0, tardy_ratio)."""
     # Constrain tardy_count to valid range and ensure detection occurs
@@ -151,3 +158,4 @@ def test_score_equals_tardy_ratio_capped_at_one(mock_get_conn, total_records, ta
         f"Expected score={round(expected_score, 4)} "
         f"(ratio={expected_ratio:.6f}), got {actual_score}"
     )
+

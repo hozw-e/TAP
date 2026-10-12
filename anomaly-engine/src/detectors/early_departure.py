@@ -19,7 +19,7 @@ Sessions without a matching schedule or without time_out are skipped.
 import logging
 from datetime import datetime, timedelta
 
-from src.db.connection import get_connection
+from src.db.connection import connection
 from src.detectors.base import BaseDetector
 
 logger = logging.getLogger(__name__)
@@ -51,38 +51,37 @@ class EarlyDepartureDetector(BaseDetector):
         window_start = datetime.now() - timedelta(days=historical_window_days)
 
         try:
-            conn = get_connection()
-            cursor = conn.cursor(dictionary=True)
+            with connection() as conn:
+                cursor = conn.cursor(dictionary=True)
 
-            # Query sessions with both time_in and time_out, joined with
-            # course_schedules to get the scheduled duration.
-            # course is resolved via the students table (attendance_logs has no course column).
-            # Join on course name and day of week matching.
-            cursor.execute(
-                "SELECT "
-                "  TIMESTAMPDIFF(MINUTE, al.time_in, al.time_out) AS actual_minutes, "
-                "  TIMESTAMPDIFF(MINUTE, cs.start_time, cs.end_time) AS scheduled_minutes "
-                "FROM attendance_logs al "
-                "INNER JOIN students s ON s.student_id = al.student_id "
-                "INNER JOIN course_schedules cs "
-                "  ON cs.course_name = s.student_course "
-                "  AND DAYOFWEEK(al.date) = CASE cs.day_of_week "
-                "    WHEN 'Sunday' THEN 1 "
-                "    WHEN 'Monday' THEN 2 "
-                "    WHEN 'Tuesday' THEN 3 "
-                "    WHEN 'Wednesday' THEN 4 "
-                "    WHEN 'Thursday' THEN 5 "
-                "    WHEN 'Friday' THEN 6 "
-                "    WHEN 'Saturday' THEN 7 "
-                "  END "
-                "WHERE al.student_id = %s "
-                "  AND al.date >= %s "
-                "  AND al.time_out IS NOT NULL",
-                (student_id, window_start.strftime("%Y-%m-%d")),
-            )
-            rows = cursor.fetchall()
-            cursor.close()
-            conn.close()
+                # Query sessions with both time_in and time_out, joined with
+                # course_schedules to get the scheduled duration.
+                # course is resolved via the students table (attendance_logs has no course column).
+                # Join on course name and day of week matching.
+                cursor.execute(
+                    "SELECT "
+                    "  TIMESTAMPDIFF(MINUTE, al.time_in, al.time_out) AS actual_minutes, "
+                    "  TIMESTAMPDIFF(MINUTE, cs.start_time, cs.end_time) AS scheduled_minutes "
+                    "FROM attendance_logs al "
+                    "INNER JOIN students s ON s.student_id = al.student_id "
+                    "INNER JOIN course_schedules cs "
+                    "  ON cs.course_name = s.student_course "
+                    "  AND DAYOFWEEK(al.date) = CASE cs.day_of_week "
+                    "    WHEN 'Sunday' THEN 1 "
+                    "    WHEN 'Monday' THEN 2 "
+                    "    WHEN 'Tuesday' THEN 3 "
+                    "    WHEN 'Wednesday' THEN 4 "
+                    "    WHEN 'Thursday' THEN 5 "
+                    "    WHEN 'Friday' THEN 6 "
+                    "    WHEN 'Saturday' THEN 7 "
+                    "  END "
+                    "WHERE al.student_id = %s "
+                    "  AND al.date >= %s "
+                    "  AND al.time_out IS NOT NULL",
+                    (student_id, window_start.strftime("%Y-%m-%d")),
+                )
+                rows = cursor.fetchall()
+                cursor.close()
 
         except Exception as e:
             logger.error(

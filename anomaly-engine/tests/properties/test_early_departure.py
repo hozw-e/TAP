@@ -83,8 +83,12 @@ def run_detector_with_rows(rows):
 
     mock_conn = MagicMock()
     mock_conn.cursor.return_value = mock_cursor
+    # Production code uses `with connection() as conn`, so the context manager
+    # must yield the connection carrying the mocked cursor.
+    mock_conn.__enter__.return_value = mock_conn
+    mock_conn.__exit__.return_value = False
 
-    with patch("src.detectors.early_departure.get_connection", return_value=mock_conn):
+    with patch("src.detectors.early_departure.connection", return_value=mock_conn):
         return detector.detect(student_id=1, event=event, config=config)
 
 

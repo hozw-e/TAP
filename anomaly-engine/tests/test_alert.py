@@ -42,12 +42,12 @@ class TestAlertDataclass:
             "detected_at": "2024-01-15T11:00:00",
         }
 
-    @patch("src.models.alert.get_connection")
-    def test_persist_to_db(self, mock_get_connection):
-        mock_conn = MagicMock()
+    @patch("src.models.alert.connection")
+    def test_persist_to_db(self, mock_connection):
+        # connection() is a context manager: `with connection() as conn`.
+        mock_conn = mock_connection.return_value.__enter__.return_value
         mock_cursor = MagicMock()
         mock_conn.cursor.return_value = mock_cursor
-        mock_get_connection.return_value = mock_conn
 
         alert = Alert(
             student_id=1,
@@ -59,7 +59,7 @@ class TestAlertDataclass:
         )
         alert.persist_to_db()
 
-        mock_get_connection.assert_called_once()
+        mock_connection.assert_called_once()
         mock_conn.cursor.assert_called_once()
         mock_cursor.execute.assert_called_once()
 
@@ -73,4 +73,5 @@ class TestAlertDataclass:
 
         mock_conn.commit.assert_called_once()
         mock_cursor.close.assert_called_once()
-        mock_conn.close.assert_called_once()
+        # The context manager returns the connection to the pool on exit.
+        mock_connection.return_value.__exit__.assert_called_once()

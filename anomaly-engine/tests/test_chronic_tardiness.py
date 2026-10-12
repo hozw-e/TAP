@@ -10,6 +10,7 @@ sys.path.insert(0, "c:/xampp/htdocs/apdc/anomaly-engine")
 
 from src.detectors.base import BaseDetector
 from src.detectors.chronic_tardiness import ChronicTardinessDetector
+from tests.conftest import make_connection_mock
 
 
 class TestBaseDetector:
@@ -57,7 +58,7 @@ class TestChronicTardinessDetector:
         """Minimum records threshold is 3 (lowered for 4-session courses)."""
         assert self.detector.MIN_RECORDS == 3
 
-    @patch("src.detectors.chronic_tardiness.get_connection")
+    @patch("src.detectors.chronic_tardiness.connection", new_callable=make_connection_mock)
     def test_returns_empty_when_insufficient_records(self, mock_conn):
         """Returns empty list when fewer than 3 records."""
         mock_cursor = MagicMock()
@@ -70,7 +71,7 @@ class TestChronicTardinessDetector:
         result = self.detector.detect(1, self.event, self.config)
         assert result == []
 
-    @patch("src.detectors.chronic_tardiness.get_connection")
+    @patch("src.detectors.chronic_tardiness.connection", new_callable=make_connection_mock)
     def test_returns_empty_when_tardy_ratio_at_or_below_threshold(self, mock_conn):
         """Returns empty list when tardy ratio is exactly 0.5."""
         mock_cursor = MagicMock()
@@ -83,7 +84,7 @@ class TestChronicTardinessDetector:
         result = self.detector.detect(1, self.event, self.config)
         assert result == []
 
-    @patch("src.detectors.chronic_tardiness.get_connection")
+    @patch("src.detectors.chronic_tardiness.connection", new_callable=make_connection_mock)
     def test_returns_alert_when_tardy_ratio_exceeds_threshold(self, mock_conn):
         """Returns alert when tardy ratio exceeds 0.5."""
         mock_cursor = MagicMock()
@@ -106,7 +107,7 @@ class TestChronicTardinessDetector:
         assert "Juan Dela Cruz" in alert["description"]
         assert "detected_at" in alert
 
-    @patch("src.detectors.chronic_tardiness.get_connection")
+    @patch("src.detectors.chronic_tardiness.connection", new_callable=make_connection_mock)
     def test_score_is_tardy_ratio(self, mock_conn):
         """Score equals tardy_ratio directly."""
         mock_cursor = MagicMock()
@@ -120,7 +121,7 @@ class TestChronicTardinessDetector:
 
         assert result[0]["score"] == 0.8
 
-    @patch("src.detectors.chronic_tardiness.get_connection")
+    @patch("src.detectors.chronic_tardiness.connection", new_callable=make_connection_mock)
     def test_score_capped_at_one(self, mock_conn):
         """Score is capped at 1.0 even though ratio can't exceed 1.0."""
         mock_cursor = MagicMock()
@@ -134,7 +135,7 @@ class TestChronicTardinessDetector:
 
         assert result[0]["score"] == 1.0
 
-    @patch("src.detectors.chronic_tardiness.get_connection")
+    @patch("src.detectors.chronic_tardiness.connection", new_callable=make_connection_mock)
     def test_returns_empty_on_db_error(self, mock_conn):
         """Returns empty list when database query fails."""
         mock_conn.side_effect = Exception("Connection failed")
@@ -142,7 +143,7 @@ class TestChronicTardinessDetector:
         result = self.detector.detect(1, self.event, self.config)
         assert result == []
 
-    @patch("src.detectors.chronic_tardiness.get_connection")
+    @patch("src.detectors.chronic_tardiness.connection", new_callable=make_connection_mock)
     def test_returns_empty_when_no_row(self, mock_conn):
         """Returns empty list when query returns None."""
         mock_cursor = MagicMock()
@@ -152,7 +153,7 @@ class TestChronicTardinessDetector:
         result = self.detector.detect(1, self.event, self.config)
         assert result == []
 
-    @patch("src.detectors.chronic_tardiness.get_connection")
+    @patch("src.detectors.chronic_tardiness.connection", new_callable=make_connection_mock)
     def test_uses_config_historical_window(self, mock_conn):
         """Uses historical_window_days from config."""
         mock_cursor = MagicMock()
@@ -170,7 +171,7 @@ class TestChronicTardinessDetector:
         call_args = mock_cursor.execute.call_args
         assert call_args[1] is None or len(call_args[0]) == 2
 
-    @patch("src.detectors.chronic_tardiness.get_connection")
+    @patch("src.detectors.chronic_tardiness.connection", new_callable=make_connection_mock)
     def test_alert_description_contains_context(self, mock_conn):
         """Alert description includes student name and quantified stats."""
         mock_cursor = MagicMock()
@@ -187,3 +188,4 @@ class TestChronicTardinessDetector:
         assert "6" in desc
         assert "10" in desc
         assert "30 days" in desc
+

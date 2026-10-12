@@ -5,7 +5,7 @@ import time
 
 from flask import Blueprint, jsonify
 
-from src.db.connection import get_connection
+from src.db.connection import connection
 
 logger = logging.getLogger(__name__)
 
@@ -36,12 +36,11 @@ def health():
     # Check DB connectivity
     status = "healthy"
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT 1")
-        cursor.fetchone()
-        cursor.close()
-        conn.close()
+        with connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+            cursor.close()
     except Exception as e:
         logger.warning("Health check DB probe failed: %s", e)
         status = "degraded"

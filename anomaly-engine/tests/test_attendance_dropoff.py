@@ -26,19 +26,19 @@ class TestAttendanceDropoffDetector(unittest.TestCase):
             "attendance_flag": "present",
         }
 
-    @patch("src.detectors.attendance_dropoff.get_connection")
+    @patch("src.detectors.attendance_dropoff.connection")
     def test_no_history_returns_empty(self, mock_get_conn):
         """Student with no attendance records returns no alerts."""
         mock_cursor = MagicMock()
         mock_cursor.fetchone.return_value = {"first_date": None}
         mock_conn = MagicMock()
         mock_conn.cursor.return_value = mock_cursor
-        mock_get_conn.return_value = mock_conn
+        mock_get_conn.return_value.__enter__.return_value = mock_conn
 
         result = self.detector.detect(1, self.event, self.config)
         self.assertEqual(result, [])
 
-    @patch("src.detectors.attendance_dropoff.get_connection")
+    @patch("src.detectors.attendance_dropoff.connection")
     def test_insufficient_history_returns_empty(self, mock_get_conn):
         """Student with less than 14 days history returns no alerts."""
         now = datetime.utcnow()
@@ -49,12 +49,12 @@ class TestAttendanceDropoffDetector(unittest.TestCase):
         mock_cursor.fetchone.return_value = {"first_date": first_date}
         mock_conn = MagicMock()
         mock_conn.cursor.return_value = mock_cursor
-        mock_get_conn.return_value = mock_conn
+        mock_get_conn.return_value.__enter__.return_value = mock_conn
 
         result = self.detector.detect(1, self.event, self.config)
         self.assertEqual(result, [])
 
-    @patch("src.detectors.attendance_dropoff.get_connection")
+    @patch("src.detectors.attendance_dropoff.connection")
     def test_no_dropoff_returns_empty(self, mock_get_conn):
         """Student with normal attendance returns no alerts."""
         now = datetime.utcnow()
@@ -69,12 +69,12 @@ class TestAttendanceDropoffDetector(unittest.TestCase):
         ]
         mock_conn = MagicMock()
         mock_conn.cursor.return_value = mock_cursor
-        mock_get_conn.return_value = mock_conn
+        mock_get_conn.return_value.__enter__.return_value = mock_conn
 
         result = self.detector.detect(1, self.event, self.config)
         self.assertEqual(result, [])
 
-    @patch("src.detectors.attendance_dropoff.get_connection")
+    @patch("src.detectors.attendance_dropoff.connection")
     def test_significant_dropoff_detected(self, mock_get_conn):
         """Student with significant attendance drop triggers alert."""
         now = datetime.utcnow()
@@ -90,7 +90,7 @@ class TestAttendanceDropoffDetector(unittest.TestCase):
         ]
         mock_conn = MagicMock()
         mock_conn.cursor.return_value = mock_cursor
-        mock_get_conn.return_value = mock_conn
+        mock_get_conn.return_value.__enter__.return_value = mock_conn
 
         result = self.detector.detect(1, self.event, self.config)
         self.assertEqual(len(result), 1)
@@ -103,7 +103,7 @@ class TestAttendanceDropoffDetector(unittest.TestCase):
         self.assertIn("Juan Dela Cruz", alert["description"])
         self.assertIn("detected_at", alert)
 
-    @patch("src.detectors.attendance_dropoff.get_connection")
+    @patch("src.detectors.attendance_dropoff.connection")
     def test_zero_recent_attendance_max_score(self, mock_get_conn):
         """Student with zero recent attendance gets maximum score."""
         now = datetime.utcnow()
@@ -117,7 +117,7 @@ class TestAttendanceDropoffDetector(unittest.TestCase):
         ]
         mock_conn = MagicMock()
         mock_conn.cursor.return_value = mock_cursor
-        mock_get_conn.return_value = mock_conn
+        mock_get_conn.return_value.__enter__.return_value = mock_conn
 
         result = self.detector.detect(1, self.event, self.config)
         self.assertEqual(len(result), 1)
@@ -125,7 +125,7 @@ class TestAttendanceDropoffDetector(unittest.TestCase):
         # dropoff_ratio = 0/4.67 = 0, score = max(0, 1.0 - 0/0.4) = 1.0
         self.assertEqual(alert["score"], 1.0)
 
-    @patch("src.detectors.attendance_dropoff.get_connection")
+    @patch("src.detectors.attendance_dropoff.connection")
     def test_borderline_ratio_not_detected(self, mock_get_conn):
         """Ratio exactly at 0.4 boundary should not trigger detection."""
         now = datetime.utcnow()
@@ -144,12 +144,12 @@ class TestAttendanceDropoffDetector(unittest.TestCase):
         ]
         mock_conn = MagicMock()
         mock_conn.cursor.return_value = mock_cursor
-        mock_get_conn.return_value = mock_conn
+        mock_get_conn.return_value.__enter__.return_value = mock_conn
 
         result = self.detector.detect(1, self.event, self.config)
         self.assertEqual(result, [])
 
-    @patch("src.detectors.attendance_dropoff.get_connection")
+    @patch("src.detectors.attendance_dropoff.connection")
     def test_score_clamped_between_0_and_1(self, mock_get_conn):
         """Score is always between 0.0 and 1.0."""
         now = datetime.utcnow()
@@ -167,14 +167,14 @@ class TestAttendanceDropoffDetector(unittest.TestCase):
         ]
         mock_conn = MagicMock()
         mock_conn.cursor.return_value = mock_cursor
-        mock_get_conn.return_value = mock_conn
+        mock_get_conn.return_value.__enter__.return_value = mock_conn
 
         result = self.detector.detect(1, self.event, self.config)
         self.assertEqual(len(result), 1)
         self.assertGreaterEqual(result[0]["score"], 0.0)
         self.assertLessEqual(result[0]["score"], 1.0)
 
-    @patch("src.detectors.attendance_dropoff.get_connection")
+    @patch("src.detectors.attendance_dropoff.connection")
     def test_db_error_returns_empty(self, mock_get_conn):
         """Database errors are handled gracefully and return empty list."""
         mock_get_conn.side_effect = Exception("Connection failed")
@@ -185,3 +185,4 @@ class TestAttendanceDropoffDetector(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

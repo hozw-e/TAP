@@ -5,7 +5,7 @@ import logging
 from flask import Blueprint, jsonify, request
 
 from src.config import load_config
-from src.db.connection import get_connection
+from src.db.connection import connection
 
 logger = logging.getLogger(__name__)
 
@@ -86,45 +86,46 @@ def put_config():
                              f"Valid patterns: {VALID_PATTERNS}"
                 }), 400
 
+    # Build the SET clause dynamically based on provided fields
+    set_parts = []
+    params = []
+
+    if alert_threshold is not None:
+        set_parts.append("alert_threshold = %s")
+        params.append(alert_threshold)
+
+    if historical_window_days is not None:
+        set_parts.append("historical_window_days = %s")
+        params.append(historical_window_days)
+
+    if enabled_patterns is not None:
+        # Update boolean columns based on which patterns are enabled
+        set_parts.append("chronic_tardiness_enabled = %s")
+        params.append("chronic_tardiness" in enabled_patterns)
+
+        set_parts.append("attendance_dropoff_enabled = %s")
+        params.append("attendance_dropoff" in enabled_patterns)
+
+        set_parts.append("irregular_timing_enabled = %s")
+        params.append("irregular_timing" in enabled_patterns)
+
+        set_parts.append("early_departure_enabled = %s")
+        params.append("early_departure" in enabled_patterns)
+
+    if not set_parts:
+        return jsonify({"error": "No valid fields provided to update"}), 400
+
     # Update the database
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        # Build the SET clause dynamically based on provided fields
-        set_parts = []
-        params = []
-
-        if alert_threshold is not None:
-            set_parts.append("alert_threshold = %s")
-            params.append(alert_threshold)
-
-        if historical_window_days is not None:
-            set_parts.append("historical_window_days = %s")
-            params.append(historical_window_days)
-
-        if enabled_patterns is not None:
-            # Update boolean columns based on which patterns are enabled
-            set_parts.append("chronic_tardiness_enabled = %s")
-            params.append("chronic_tardiness" in enabled_patterns)
-
-            set_parts.append("attendance_dropoff_enabled = %s")
-            params.append("attendance_dropoff" in enabled_patterns)
-
-            set_parts.append("irregular_timing_enabled = %s")
-            params.append("irregular_timing" in enabled_patterns)
-
-            set_parts.append("early_departure_enabled = %s")
-            params.append("early_departure" in enabled_patterns)
-
-        if not set_parts:
-            return jsonify({"error": "No valid fields provided to update"}), 400
-
-        query = f"UPDATE anomaly_config SET {', '.join(set_parts)} WHERE config_id = 1"
-        cursor.execute(query, params)
-        conn.commit()
-        cursor.close()
-        conn.close()
+        with connection() as conn:
+            cursor = conn.cursor()
+            query = (
+                f"UPDATE anomaly_config SET {', '.join(set_parts)} "
+                "WHERE config_id = 1"
+            )
+            cursor.execute(query, params)
+            conn.commit()
+            cursor.close()
 
     except Exception as e:
         logger.error("Failed to update config in DB: %s", e)

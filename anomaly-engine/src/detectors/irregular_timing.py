@@ -34,7 +34,7 @@ from datetime import datetime, timedelta
 
 import numpy as np
 
-from src.db.connection import get_connection
+from src.db.connection import connection
 from src.detectors.base import BaseDetector
 
 logger = logging.getLogger(__name__)
@@ -160,47 +160,46 @@ class IrregularTimingDetector(BaseDetector):
             List of integers representing minutes from midnight for each historical check-in.
         """
         try:
-            conn = get_connection()
-            cursor = conn.cursor(dictionary=True)
+            with connection() as conn:
+                cursor = conn.cursor(dictionary=True)
 
-            # Query attendance_logs for same student, same course, same day of week
-            # DAYOFWEEK in MySQL returns 1=Sunday, 2=Monday, ..., 7=Saturday
-            # Python weekday(): 0=Monday, 6=Sunday
-            # Convert Python weekday to MySQL DAYOFWEEK: (python_weekday + 2) % 7 or map directly
-            # MySQL: 1=Sun, 2=Mon, 3=Tue, 4=Wed, 5=Thu, 6=Fri, 7=Sat
-            # Python: 0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri, 5=Sat, 6=Sun
-            mysql_day_of_week = (day_of_week + 2) % 7
-            if mysql_day_of_week == 0:
-                mysql_day_of_week = 7
+                # Query attendance_logs for same student, same course, same day of week
+                # DAYOFWEEK in MySQL returns 1=Sunday, 2=Monday, ..., 7=Saturday
+                # Python weekday(): 0=Monday, 6=Sunday
+                # Convert Python weekday to MySQL DAYOFWEEK: (python_weekday + 2) % 7 or map directly
+                # MySQL: 1=Sun, 2=Mon, 3=Tue, 4=Wed, 5=Thu, 6=Fri, 7=Sat
+                # Python: 0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri, 5=Sat, 6=Sun
+                mysql_day_of_week = (day_of_week + 2) % 7
+                if mysql_day_of_week == 0:
+                    mysql_day_of_week = 7
 
-            # History is pooled across all of the student's enrollments — no
-            # course filter. Day-of-week is derived from the `date` column, and
-            # time_in (a TIME value) is combined with `date` to build the full
-            # datetime used for windowing.
-            query = """
-                SELECT al.date, al.time_in
-                FROM attendance_logs al
-                WHERE al.student_id = %s
-                  AND DAYOFWEEK(al.date) = %s
-                  AND al.time_in IS NOT NULL
-                  AND TIMESTAMP(al.date, al.time_in) >= %s
-                  AND TIMESTAMP(al.date, al.time_in) < %s
-                ORDER BY al.date ASC, al.time_in ASC
-            """
+                # History is pooled across all of the student's enrollments — no
+                # course filter. Day-of-week is derived from the `date` column, and
+                # time_in (a TIME value) is combined with `date` to build the full
+                # datetime used for windowing.
+                query = """
+                    SELECT al.date, al.time_in
+                    FROM attendance_logs al
+                    WHERE al.student_id = %s
+                      AND DAYOFWEEK(al.date) = %s
+                      AND al.time_in IS NOT NULL
+                      AND TIMESTAMP(al.date, al.time_in) >= %s
+                      AND TIMESTAMP(al.date, al.time_in) < %s
+                    ORDER BY al.date ASC, al.time_in ASC
+                """
 
-            cursor.execute(
-                query,
-                (
-                    student_id,
-                    mysql_day_of_week,
-                    window_start,
-                    current_time,
-                ),
-            )
+                cursor.execute(
+                    query,
+                    (
+                        student_id,
+                        mysql_day_of_week,
+                        window_start,
+                        current_time,
+                    ),
+                )
 
-            rows = cursor.fetchall()
-            cursor.close()
-            conn.close()
+                rows = cursor.fetchall()
+                cursor.close()
 
             # Convert time_in to minutes from midnight. A MySQL TIME column is
             # returned by mysql-connector as a datetime.timedelta, but we also

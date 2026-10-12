@@ -45,7 +45,11 @@ insufficient_history_days_st = st.integers(min_value=0, max_value=13)
 
 
 def _make_mock_connection(first_date, total_count, recent_count):
-    """Create a mock DB connection returning the specified values."""
+    """Create a mock DB connection returning the specified values.
+
+    Behaves as a context manager (``with connection() as conn``) by yielding
+    itself, matching the production code's use of the ``connection()`` helper.
+    """
     mock_cursor = MagicMock()
     mock_cursor.fetchone.side_effect = [
         {"first_date": first_date},
@@ -54,6 +58,8 @@ def _make_mock_connection(first_date, total_count, recent_count):
     ]
     mock_conn = MagicMock()
     mock_conn.cursor.return_value = mock_cursor
+    mock_conn.__enter__.return_value = mock_conn
+    mock_conn.__exit__.return_value = False
     return mock_conn
 
 
@@ -87,7 +93,7 @@ class TestAttendanceDropoffDetectionProperty:
         days_of_history=sufficient_history_days_st,
     )
     @settings(max_examples=200)
-    @patch("src.detectors.attendance_dropoff.get_connection")
+    @patch("src.detectors.attendance_dropoff.connection")
     def test_detection_when_dropoff_ratio_below_threshold(
         self,
         mock_get_conn,
@@ -136,7 +142,7 @@ class TestAttendanceDropoffDetectionProperty:
         days_of_history=sufficient_history_days_st,
     )
     @settings(max_examples=200)
-    @patch("src.detectors.attendance_dropoff.get_connection")
+    @patch("src.detectors.attendance_dropoff.connection")
     def test_no_detection_when_dropoff_ratio_at_or_above_threshold(
         self,
         mock_get_conn,
@@ -181,7 +187,7 @@ class TestAttendanceDropoffDetectionProperty:
         days_of_history=insufficient_history_days_st,
     )
     @settings(max_examples=200)
-    @patch("src.detectors.attendance_dropoff.get_connection")
+    @patch("src.detectors.attendance_dropoff.connection")
     def test_no_detection_with_insufficient_history(
         self,
         mock_get_conn,
@@ -222,7 +228,7 @@ class TestAttendanceDropoffDetectionProperty:
         days_of_history=sufficient_history_days_st,
     )
     @settings(max_examples=200)
-    @patch("src.detectors.attendance_dropoff.get_connection")
+    @patch("src.detectors.attendance_dropoff.connection")
     def test_score_bounded_when_detected(
         self,
         mock_get_conn,
@@ -260,3 +266,4 @@ class TestAttendanceDropoffDetectionProperty:
             f"ratio={ratio:.4f}, total={total_attendances}, "
             f"recent={recent_7day_frequency}, window={historical_window_days}"
         )
+

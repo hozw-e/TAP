@@ -6,7 +6,7 @@ from datetime import datetime
 from flask import Blueprint, jsonify, request
 
 from src.config import load_config
-from src.db.connection import get_connection
+from src.db.connection import connection
 from src.detectors.attendance_dropoff import AttendanceDropoffDetector
 from src.detectors.chronic_tardiness import ChronicTardinessDetector
 from src.detectors.early_departure import EarlyDepartureDetector
@@ -176,20 +176,19 @@ def _fetch_students_for_batch():
     last_time_in (if any) seeds the synthetic event timestamp so detectors
     like irregular_timing evaluate the student's most recent attended session.
     """
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute(
-        "SELECT s.student_id, s.student_name, s.student_course AS course, "
-        "  ( SELECT MAX(TIMESTAMP(al.date, al.time_in)) "
-        "    FROM attendance_logs al "
-        "    WHERE al.student_id = s.student_id AND al.time_in IS NOT NULL "
-        "  ) AS last_time_in "
-        "FROM students s "
-        "WHERE s.is_archived = 0 OR s.is_archived IS NULL"
-    )
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
+    with connection() as conn:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT s.student_id, s.student_name, s.student_course AS course, "
+            "  ( SELECT MAX(TIMESTAMP(al.date, al.time_in)) "
+            "    FROM attendance_logs al "
+            "    WHERE al.student_id = s.student_id AND al.time_in IS NOT NULL "
+            "  ) AS last_time_in "
+            "FROM students s "
+            "WHERE s.is_archived = 0 OR s.is_archived IS NULL"
+        )
+        rows = cursor.fetchall()
+        cursor.close()
     return rows
 
 
@@ -199,17 +198,16 @@ def _already_alerted_today(student_id, pattern_type):
     Keeps the batch run idempotent: running it multiple times in one day
     (manually and then via the future daily cron) won't create duplicates.
     """
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT 1 FROM anomaly_alerts "
-        "WHERE student_id = %s AND pattern_type = %s "
-        "AND DATE(detected_at) = CURDATE() LIMIT 1",
-        (student_id, pattern_type),
-    )
-    found = cursor.fetchone() is not None
-    cursor.close()
-    conn.close()
+    with connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT 1 FROM anomaly_alerts "
+            "WHERE student_id = %s AND pattern_type = %s "
+            "AND DATE(detected_at) = CURDATE() LIMIT 1",
+            (student_id, pattern_type),
+        )
+        found = cursor.fetchone() is not None
+        cursor.close()
     return found
 
 

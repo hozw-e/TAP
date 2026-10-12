@@ -59,7 +59,7 @@ def make_config(window_days=30):
     tardy_count=st.integers(min_value=0, max_value=2),
 )
 @settings(max_examples=100)
-@patch("src.detectors.chronic_tardiness.get_connection")
+@patch("src.detectors.chronic_tardiness.connection")
 def test_chronic_tardiness_no_score_below_min_records(
     mock_get_conn, total_records, tardy_count
 ):
@@ -74,6 +74,8 @@ def test_chronic_tardiness_no_score_below_min_records(
         "tardy_count": tardy_count,
     }
     mock_conn.cursor.return_value = mock_cursor
+    mock_conn.__enter__.return_value = mock_conn
+    mock_conn.__exit__.return_value = False
     mock_get_conn.return_value = mock_conn
 
     detector = ChronicTardinessDetector()
@@ -92,7 +94,7 @@ def test_chronic_tardiness_no_score_below_min_records(
     days_of_history=st.integers(min_value=0, max_value=6),
 )
 @settings(max_examples=100)
-@patch("src.detectors.attendance_dropoff.get_connection")
+@patch("src.detectors.attendance_dropoff.connection")
 def test_attendance_dropoff_no_score_below_min_days(
     mock_get_conn, days_of_history
 ):
@@ -110,6 +112,8 @@ def test_attendance_dropoff_no_score_below_min_days(
     # Since days_of_history < 14, we'll only hit the first query before returning
     mock_cursor.fetchone.return_value = {"first_date": first_date}
     mock_conn.cursor.return_value = mock_cursor
+    mock_conn.__enter__.return_value = mock_conn
+    mock_conn.__exit__.return_value = False
     mock_get_conn.return_value = mock_conn
 
     detector = AttendanceDropoffDetector()
@@ -149,3 +153,4 @@ def test_irregular_timing_no_score_below_min_records(
         f"Expected no alerts for irregular_timing with {len(historical_times)} "
         f"historical records (minimum is 3), but got {result}"
     )
+

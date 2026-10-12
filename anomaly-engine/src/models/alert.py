@@ -5,7 +5,7 @@ Represents an anomaly alert and provides persistence to the anomaly_alerts table
 
 from dataclasses import dataclass
 
-from src.db.connection import get_connection
+from src.db.connection import connection
 
 
 @dataclass
@@ -35,23 +35,22 @@ class Alert:
         Uses the connection pool from src.db.connection. The connection
         is returned to the pool after the operation completes.
         """
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO anomaly_alerts "
-            "(student_id, pattern_type, score, description, detected_at) "
-            "VALUES (%s, %s, %s, %s, %s)",
-            (
-                self.student_id,
-                self.pattern_type,
-                self.score,
-                self.description,
-                self.detected_at,
-            ),
-        )
-        conn.commit()
-        cursor.close()
-        conn.close()
+        with connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO anomaly_alerts "
+                "(student_id, pattern_type, score, description, detected_at) "
+                "VALUES (%s, %s, %s, %s, %s)",
+                (
+                    self.student_id,
+                    self.pattern_type,
+                    self.score,
+                    self.description,
+                    self.detected_at,
+                ),
+            )
+            conn.commit()
+            cursor.close()
 
     def to_dict(self) -> dict:
         """Convert the alert to a dictionary for JSON serialization."""

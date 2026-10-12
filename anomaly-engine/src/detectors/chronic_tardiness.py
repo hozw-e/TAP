@@ -14,7 +14,7 @@ Minimum 5 records required in the historical window.
 import logging
 from datetime import datetime, timedelta
 
-from src.db.connection import get_connection
+from src.db.connection import connection
 from src.detectors.base import BaseDetector
 
 logger = logging.getLogger(__name__)
@@ -42,20 +42,19 @@ class ChronicTardinessDetector(BaseDetector):
         window_start = datetime.now() - timedelta(days=historical_window_days)
 
         try:
-            conn = get_connection()
-            cursor = conn.cursor(dictionary=True)
+            with connection() as conn:
+                cursor = conn.cursor(dictionary=True)
 
-            cursor.execute(
-                "SELECT "
-                "  COUNT(*) AS total_records, "
-                "  SUM(CASE WHEN attendance_flag = 'tardy' THEN 1 ELSE 0 END) AS tardy_count "
-                "FROM attendance_logs "
-                "WHERE student_id = %s AND date >= %s",
-                (student_id, window_start.strftime("%Y-%m-%d")),
-            )
-            row = cursor.fetchone()
-            cursor.close()
-            conn.close()
+                cursor.execute(
+                    "SELECT "
+                    "  COUNT(*) AS total_records, "
+                    "  SUM(CASE WHEN attendance_flag = 'tardy' THEN 1 ELSE 0 END) AS tardy_count "
+                    "FROM attendance_logs "
+                    "WHERE student_id = %s AND date >= %s",
+                    (student_id, window_start.strftime("%Y-%m-%d")),
+                )
+                row = cursor.fetchone()
+                cursor.close()
 
         except Exception as e:
             logger.error(

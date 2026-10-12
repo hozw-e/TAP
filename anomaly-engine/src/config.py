@@ -2,7 +2,7 @@
 
 import logging
 
-from src.db.connection import get_connection
+from src.db.connection import connection
 
 logger = logging.getLogger(__name__)
 
@@ -29,17 +29,16 @@ def load_config():
         dict with keys: alert_threshold, historical_window_days, enabled_patterns
     """
     try:
-        conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute(
-            "SELECT alert_threshold, historical_window_days, "
-            "chronic_tardiness_enabled, attendance_dropoff_enabled, "
-            "irregular_timing_enabled, early_departure_enabled "
-            "FROM anomaly_config WHERE config_id = 1"
-        )
-        row = cursor.fetchone()
-        cursor.close()
-        conn.close()
+        with connection() as conn:
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute(
+                "SELECT alert_threshold, historical_window_days, "
+                "chronic_tardiness_enabled, attendance_dropoff_enabled, "
+                "irregular_timing_enabled, early_departure_enabled "
+                "FROM anomaly_config WHERE config_id = 1"
+            )
+            row = cursor.fetchone()
+            cursor.close()
 
         if row is None:
             logger.warning("No config row found in anomaly_config, using defaults")

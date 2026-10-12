@@ -22,7 +22,7 @@ student is judged against their own weekly baseline, not a fixed expectation.
 import logging
 from datetime import datetime, timedelta, timezone
 
-from src.db.connection import get_connection
+from src.db.connection import connection
 from src.detectors.base import BaseDetector
 
 logger = logging.getLogger(__name__)
@@ -49,68 +49,64 @@ class AttendanceDropoffDetector(BaseDetector):
         historical_window_days = config.get("historical_window_days", 30)
 
         try:
-            conn = get_connection()
-            cursor = conn.cursor(dictionary=True)
+            with connection() as conn:
+                cursor = conn.cursor(dictionary=True)
 
-            now = datetime.now(timezone.utc)
-            window_start = now - timedelta(days=historical_window_days)
-            seven_days_ago = now - timedelta(days=7)
+                now = datetime.now(timezone.utc)
+                window_start = now - timedelta(days=historical_window_days)
+                seven_days_ago = now - timedelta(days=7)
 
-            # Check how many days of ATTENDED history the student has
-            cursor.execute(
-                "SELECT MIN(date) AS first_date "
-                "FROM attendance_logs "
-                "WHERE student_id = %s AND date >= %s "
-                "AND time_in IS NOT NULL",
-                (student_id, window_start.date()),
-            )
-            row = cursor.fetchone()
+                # Check how many days of ATTENDED history the student has
+                cursor.execute(
+                    "SELECT MIN(date) AS first_date "
+                    "FROM attendance_logs "
+                    "WHERE student_id = %s AND date >= %s "
+                    "AND time_in IS NOT NULL",
+                    (student_id, window_start.date()),
+                )
+                row = cursor.fetchone()
 
-            if row is None or row["first_date"] is None:
+                if row is None or row["first_date"] is None:
+                    cursor.close()
+                    return []
+
+                first_date = row["first_date"]
+                # Ensure first_date is a date object
+                if isinstance(first_date, str):
+                    first_date = datetime.strptime(first_date, "%Y-%m-%d").date()
+
+                days_of_history = (now.date() - first_date).days
+                if days_of_history < self.MIN_HISTORY_DAYS:
+                    cursor.close()
+                    return []
+
+                # Count total ATTENDED sessions in the historical window
+                cursor.execute(
+                    "SELECT COUNT(*) AS total_count "
+                    "FROM attendance_logs "
+                    "WHERE student_id = %s AND date >= %s "
+                    "AND time_in IS NOT NULL",
+                    (student_id, window_start.date()),
+                )
+                total_row = cursor.fetchone()
+                total_attendances = total_row["total_count"] if total_row else 0
+
+                if total_attendances == 0:
+                    cursor.close()
+                    return []
+
+                # Count ATTENDED sessions in the last 7 days
+                cursor.execute(
+                    "SELECT COUNT(*) AS recent_count "
+                    "FROM attendance_logs "
+                    "WHERE student_id = %s AND date >= %s "
+                    "AND time_in IS NOT NULL",
+                    (student_id, seven_days_ago.date()),
+                )
+                recent_row = cursor.fetchone()
+                recent_7day_frequency = recent_row["recent_count"] if recent_row else 0
+
                 cursor.close()
-                conn.close()
-                return []
-
-            first_date = row["first_date"]
-            # Ensure first_date is a date object
-            if isinstance(first_date, str):
-                first_date = datetime.strptime(first_date, "%Y-%m-%d").date()
-
-            days_of_history = (now.date() - first_date).days
-            if days_of_history < self.MIN_HISTORY_DAYS:
-                cursor.close()
-                conn.close()
-                return []
-
-            # Count total ATTENDED sessions in the historical window
-            cursor.execute(
-                "SELECT COUNT(*) AS total_count "
-                "FROM attendance_logs "
-                "WHERE student_id = %s AND date >= %s "
-                "AND time_in IS NOT NULL",
-                (student_id, window_start.date()),
-            )
-            total_row = cursor.fetchone()
-            total_attendances = total_row["total_count"] if total_row else 0
-
-            if total_attendances == 0:
-                cursor.close()
-                conn.close()
-                return []
-
-            # Count ATTENDED sessions in the last 7 days
-            cursor.execute(
-                "SELECT COUNT(*) AS recent_count "
-                "FROM attendance_logs "
-                "WHERE student_id = %s AND date >= %s "
-                "AND time_in IS NOT NULL",
-                (student_id, seven_days_ago.date()),
-            )
-            recent_row = cursor.fetchone()
-            recent_7day_frequency = recent_row["recent_count"] if recent_row else 0
-
-            cursor.close()
-            conn.close()
 
         except Exception as e:
             logger.error(
