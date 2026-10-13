@@ -39,8 +39,14 @@ function publishAttendanceEvent($eventData) {
         CURLOPT_POST => true,
         CURLOPT_POSTFIELDS => json_encode($eventData),
         CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-        CURLOPT_TIMEOUT_MS => 200,
-        CURLOPT_CONNECTTIMEOUT_MS => 100,
+        // Timeouts sized for a cross-service call over the public internet + TLS.
+        // The old 100ms/200ms budget could never complete a TLS handshake to a
+        // separate Railway service, so events were silently dropped and the
+        // dashboard only updated on manual refresh. 3s connect / 5s total is a
+        // safe ceiling: the WS server replies in a few ms once reached, and this
+        // only approaches the ceiling if the WS server is actually unreachable.
+        CURLOPT_CONNECTTIMEOUT => 3,
+        CURLOPT_TIMEOUT => 5,
         CURLOPT_RETURNTRANSFER => true,
     ]);
     curl_exec($ch);
