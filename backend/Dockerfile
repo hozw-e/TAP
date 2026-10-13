@@ -1,7 +1,12 @@
 FROM php:8.2-fpm-alpine
 
-# Install nginx and required packages
-RUN apk add --no-cache nginx curl-dev
+# Install nginx and required packages.
+# ca-certificates is REQUIRED: the alpine image ships without a root CA bundle,
+# so PHP's cURL fails TLS verification instantly on any outbound https:// call
+# (e.g. publishing attendance events to the WebSocket server). Without it,
+# real-time dashboard updates silently break.
+RUN apk add --no-cache nginx curl-dev ca-certificates \
+    && update-ca-certificates
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo pdo_mysql curl

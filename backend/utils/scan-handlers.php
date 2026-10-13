@@ -34,24 +34,29 @@ function storeScanResult($conn, $scanId, array $data) {
  */
 function publishAttendanceEvent($eventData) {
     $wsUrl = getenv('WEBSOCKET_SERVER_URL') ?: 'https://tap-web-socket.up.railway.app';
-    $ch = curl_init($wsUrl . '/internal/event');
+    $target = $wsUrl . '/internal/event';
+
+    // Diagnostic: log the target URL so we can confirm WHERE scan.php is publishing.
+    error_log("[WS-PUBLISH] POST -> {$target}");
+
+    $ch = curl_init($target);
     curl_setopt_array($ch, [
         CURLOPT_POST => true,
         CURLOPT_POSTFIELDS => json_encode($eventData),
         CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
         // Timeouts sized for a cross-service call over the public internet + TLS.
-        // The old 100ms/200ms budget could never complete a TLS handshake to a
-        // separate Railway service, so events were silently dropped and the
-        // dashboard only updated on manual refresh. 3s connect / 5s total is a
-        // safe ceiling: the WS server replies in a few ms once reached, and this
-        // only approaches the ceiling if the WS server is actually unreachable.
         CURLOPT_CONNECTTIMEOUT => 3,
         CURLOPT_TIMEOUT => 5,
         CURLOPT_RETURNTRANSFER => true,
     ]);
-    curl_exec($ch);
+    $body = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     if (curl_errno($ch)) {
-        error_log("WebSocket publish failed: " . curl_error($ch));
+        // Diagnostic: surface the exact cURL failure reason + the URL that failed.
+        error_log("[WS-PUBLISH] FAILED -> {$target} : " . curl_error($ch));
+    } else {
+        // Diagnostic: confirm success + what the WS server replied.
+        error_log("[WS-PUBLISH] OK -> {$target} : HTTP {$httpCode} : {$body}");
     }
     curl_close($ch);
 }
