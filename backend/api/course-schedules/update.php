@@ -23,6 +23,7 @@ require_once '../../utils/attendance-helpers.php';
 
 header('Content-Type: application/json');
 requireAdminAuth();
+requireCsrfToken();
 
 // Only allow PUT requests
 if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {

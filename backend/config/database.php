@@ -42,6 +42,11 @@ define('DB_PORT', getenv('DB_PORT') ?: '3306');
 // IProgSMS API token
 define('SMS_API_TOKEN', getenv('SMS_API_TOKEN') ?: '');
 
+// Shared secret the ESP32 reader must present (X-Device-Secret header) when
+// POSTing to the public NFC scan endpoint. Empty in local dev means the check
+// is skipped; set it in production to lock the endpoint to the device.
+define('NFC_DEVICE_SECRET', getenv('NFC_DEVICE_SECRET') ?: '');
+
 // Set PHP timezone to Asia/Manila
 date_default_timezone_set('Asia/Manila');
 

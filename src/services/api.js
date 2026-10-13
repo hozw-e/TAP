@@ -13,6 +13,55 @@ const api = axios.create({
 });
 
 // ============================================
+// CSRF PROTECTION
+// ============================================
+// The backend issues a per-session CSRF token at login / session-check and
+// requires it echoed back in the X-CSRF-Token header on every state-changing
+// (POST/PUT/DELETE) request. We cache it in memory and in sessionStorage so it
+// survives a page reload (where App.jsx re-runs check-session on mount).
+
+const CSRF_STORAGE_KEY = 'csrf_token';
+const SAFE_METHODS = ['get', 'head', 'options'];
+
+export const setCsrfToken = (token) => {
+  if (token) {
+    sessionStorage.setItem(CSRF_STORAGE_KEY, token);
+  }
+};
+
+export const getCsrfToken = () => sessionStorage.getItem(CSRF_STORAGE_KEY);
+
+export const clearCsrfToken = () => sessionStorage.removeItem(CSRF_STORAGE_KEY);
+
+// Request interceptor: attach the CSRF token to every mutating request.
+api.interceptors.request.use(
+  (config) => {
+    const method = (config.method || 'get').toLowerCase();
+    if (!SAFE_METHODS.includes(method)) {
+      const token = getCsrfToken();
+      if (token) {
+        config.headers['X-CSRF-Token'] = token;
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response interceptor: whenever the backend hands back a fresh CSRF token
+// (login + check-session), cache it transparently.
+api.interceptors.response.use(
+  (response) => {
+    const token = response?.data?.data?.csrf_token;
+    if (token) {
+      setCsrfToken(token);
+    }
+    return response;
+  },
+  (error) => Promise.reject(error)
+);
+
+// ============================================
 // AUTHENTICATION API
 // ============================================
 
@@ -26,12 +75,21 @@ export const authAPI = {
   // Logout admin
   logout: async () => {
     const response = await api.post('/auth/logout.php');
+    clearCsrfToken();
+    sessionStorage.removeItem('ws_token');
     return response.data;
   },
 
   // Check if admin is logged in
   checkSession: async () => {
     const response = await api.get('/auth/check-session.php');
+    return response.data;
+  },
+
+  // Fetch a dedicated, short-lived WebSocket token for the logged-in admin.
+  // This replaces exposing the raw PHP session ID to the client.
+  getWsToken: async () => {
+    const response = await api.get('/auth/ws-token.php');
     return response.data;
   },
 };
@@ -232,6 +290,8 @@ api.interceptors.response.use(
       const url = error.config?.url || '';
       const isKioskEndpoint = url.includes('set-mode') || url.includes('get-last-scan') || url.includes('clear-scan');
       if (error.response.status === 401 && !isKioskEndpoint) {
+        clearCsrfToken();
+        sessionStorage.removeItem('ws_token');
         window.location.href = '/';
       }
     } else if (error.request) {

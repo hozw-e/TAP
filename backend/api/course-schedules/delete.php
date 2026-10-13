@@ -14,6 +14,7 @@ require_once '../../utils/activity-logger.php';
 
 header('Content-Type: application/json');
 requireAdminAuth();
+requireCsrfToken();
 
 // Only allow DELETE requests
 if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {

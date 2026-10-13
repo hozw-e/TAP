@@ -21,6 +21,9 @@ $input = json_decode(file_get_contents('php://input'), true);
 $requestedMode = $input['mode'] ?? '';
 if ($requestedMode === 'assign') {
     requireAdminAuth();
+    // Only the authenticated admin path is CSRF-protected; the public kiosk
+    // (visitor/attendance modes) has no session token to present.
+    requireCsrfToken();
 }
 
 // Only allow POST
@@ -40,15 +43,7 @@ try {
         sendErrorResponse('Database connection failed', 500);
     }
 
-    // Create table if it doesn't exist
-    $conn->exec("
-        CREATE TABLE IF NOT EXISTS scanner_mode (
-            id INT PRIMARY KEY DEFAULT 1,
-            mode VARCHAR(20) NOT NULL DEFAULT 'attendance',
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        )
-    ");
-
+    // (scanner_mode table is provisioned by migration 009_runtime_tables.sql)
     // Upsert the mode (always id=1, single row)
     $stmt = $conn->prepare("
         INSERT INTO scanner_mode (id, mode) VALUES (1, :mode)

@@ -874,6 +874,23 @@
   display: none !important;
 }
 
+/* Highlight style: no rectangle/outline around the target — just contrast.
+   In intro.js the page-dimming comes from the helper layer's huge box-shadow
+   (it darkens everything EXCEPT the element it sits over). So we KEEP that
+   box-shadow (that's what makes the target look brighter) and only remove the
+   visible border so there's no boxy outline. */
+.introjs-helperLayer {
+  border: none !important;
+  background: transparent !important;
+  /* Large soft shadow dims the rest of the page; the element shows through bright. */
+  box-shadow: 0 0 0 5000px rgba(20, 30, 48, 0.6) !important;
+}
+
+/* Keep the arrow/connector hidden so there's no pointer to the (now borderless) area. */
+.custom-tour-tooltip .introjs-arrow {
+  display: none !important;
+}
+
 /* Engine Unavailable Indicator */
 .engine-unavailable-indicator {
   display: flex;

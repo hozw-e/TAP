@@ -7,6 +7,7 @@ require_once '../../utils/activity-logger.php';
 
 // Check if admin is logged in
 requireAdminAuth();
+requireCsrfToken();
 
 // Get student ID from query parameter
 $studentId = isset($_GET['id']) ? intval($_GET['id']) : 0;

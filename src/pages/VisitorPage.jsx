@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { nfcAPI, authAPI, visitorsAPI } from '../services/api';
+import { useAutoDismiss } from '../hooks/useAutoDismiss';
 import '../styles/VisitorPage.css';
 
 function VisitorPage() {
@@ -66,109 +67,21 @@ function VisitorPage() {
   const pollFailCountRef = useRef(0);
   const [nfcActive, setNfcActive] = useState(true);
 
-  // Auto-dismiss NFC modal after 5 seconds
-  useEffect(() => {
-    if (modal.show) {
-      const timer = setTimeout(() => setModal({ show: false, type: '', name: '', subtype: '' }), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [modal.show]);
-
-  // Auto-dismiss farewell modal after 5 seconds
-  useEffect(() => {
-    if (farewellModal.show) {
-      const timer = setTimeout(() => setFarewellModal({ show: false, name: '', timeOut: '' }), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [farewellModal.show]);
-
-  // Auto-dismiss denied modal after 5 seconds
-  useEffect(() => {
-    if (deniedModal.show) {
-      const timer = setTimeout(() => setDeniedModal({ show: false, name: '', remainingTime: 0 }), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [deniedModal.show]);
-
-  // Auto-dismiss unassigned NFC modal after 4 seconds
-  useEffect(() => {
-    if (unassignedModal.show) {
-      const timer = setTimeout(() => setUnassignedModal({ show: false }), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [unassignedModal.show]);
-
-  // Auto-dismiss name required modal after 4 seconds
-  useEffect(() => {
-    if (nameRequiredModal.show) {
-      const timer = setTimeout(() => setNameRequiredModal({ show: false }), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [nameRequiredModal.show]);
-
-  // Auto-dismiss tap reminder modal after 4 seconds
-  useEffect(() => {
-    if (tapReminderModal.show) {
-      const timer = setTimeout(() => setTapReminderModal({ show: false }), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [tapReminderModal.show]);
-
-  // Auto-dismiss already checked in modal after 4 seconds
-  useEffect(() => {
-    if (alreadyCheckedInModal.show) {
-      const timer = setTimeout(() => setAlreadyCheckedInModal({ show: false, name: '' }), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [alreadyCheckedInModal.show]);
-
-  // Auto-dismiss select mode modal after 4 seconds
-  useEffect(() => {
-    if (selectModeModal.show) {
-      const timer = setTimeout(() => setSelectModeModal({ show: false }), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [selectModeModal.show]);
-
-  // Auto-dismiss student tap modal after 4 seconds
-  useEffect(() => {
-    if (studentTapModal.show) {
-      const timer = setTimeout(() => setStudentTapModal({ show: false }), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [studentTapModal.show]);
-
-  // Auto-dismiss too early modal after 5 seconds
-  useEffect(() => {
-    if (tooEarlyModal.show) {
-      const timer = setTimeout(() => setTooEarlyModal({ show: false, name: '', sessionStartTime: '' }), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [tooEarlyModal.show]);
-
-  // Auto-dismiss session ended modal after 5 seconds
-  useEffect(() => {
-    if (sessionEndedModal.show) {
-      const timer = setTimeout(() => setSessionEndedModal({ show: false, name: '', sessionEndTime: '' }), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [sessionEndedModal.show]);
-
-  // Auto-dismiss check-out denied (Time-Out Gate) modal after 6 seconds
-  useEffect(() => {
-    if (checkOutDeniedModal.show) {
-      const timer = setTimeout(() => setCheckOutDeniedModal({ show: false, name: '', sessionEndTime: '', message: '' }), 6000);
-      return () => clearTimeout(timer);
-    }
-  }, [checkOutDeniedModal.show]);
-
-  // Auto-dismiss hour requirement denied modal after 6 seconds
-  useEffect(() => {
-    if (hourRequirementDeniedModal.show) {
-      const timer = setTimeout(() => setHourRequirementDeniedModal({ show: false, name: '', renderedMinutes: 0, minimumMinutes: 0, remainingMinutes: 0 }), 6000);
-      return () => clearTimeout(timer);
-    }
-  }, [hourRequirementDeniedModal.show]);
+  // Auto-dismiss all transient modals (see hooks/useAutoDismiss.js).
+  // Each mirrors the original timing and reset payload exactly.
+  useAutoDismiss(modal.show, () => setModal({ show: false, type: '', name: '', subtype: '' }), 5000);
+  useAutoDismiss(farewellModal.show, () => setFarewellModal({ show: false, name: '', timeOut: '' }), 5000);
+  useAutoDismiss(deniedModal.show, () => setDeniedModal({ show: false, name: '', remainingTime: 0 }), 5000);
+  useAutoDismiss(unassignedModal.show, () => setUnassignedModal({ show: false }), 4000);
+  useAutoDismiss(nameRequiredModal.show, () => setNameRequiredModal({ show: false }), 4000);
+  useAutoDismiss(tapReminderModal.show, () => setTapReminderModal({ show: false }), 4000);
+  useAutoDismiss(alreadyCheckedInModal.show, () => setAlreadyCheckedInModal({ show: false, name: '' }), 4000);
+  useAutoDismiss(selectModeModal.show, () => setSelectModeModal({ show: false }), 4000);
+  useAutoDismiss(studentTapModal.show, () => setStudentTapModal({ show: false }), 4000);
+  useAutoDismiss(tooEarlyModal.show, () => setTooEarlyModal({ show: false, name: '', sessionStartTime: '' }), 5000);
+  useAutoDismiss(sessionEndedModal.show, () => setSessionEndedModal({ show: false, name: '', sessionEndTime: '' }), 5000);
+  useAutoDismiss(checkOutDeniedModal.show, () => setCheckOutDeniedModal({ show: false, name: '', sessionEndTime: '', message: '' }), 6000);
+  useAutoDismiss(hourRequirementDeniedModal.show, () => setHourRequirementDeniedModal({ show: false, name: '', renderedMinutes: 0, minimumMinutes: 0, remainingMinutes: 0 }), 6000);
 
   // Keep visitorNameRef in sync with visitorName state
   useEffect(() => {
@@ -345,8 +258,14 @@ function VisitorPage() {
     try {
       const response = await authAPI.login(adminUsername, adminPassword);
       if (response.success) {
-        if (response.data?.session_token) {
-          sessionStorage.setItem('session_token', response.data.session_token);
+        // Fetch a dedicated WebSocket token (no raw PHP session ID is exposed).
+        try {
+          const wsResp = await authAPI.getWsToken();
+          if (wsResp?.data?.ws_token) {
+            sessionStorage.setItem('ws_token', wsResp.data.ws_token);
+          }
+        } catch (wsErr) {
+          console.warn('Failed to obtain WebSocket token:', wsErr);
         }
         if (response.data?.admin_name) {
           sessionStorage.setItem('admin_name', response.data.admin_name);

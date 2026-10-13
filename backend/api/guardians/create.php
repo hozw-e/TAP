@@ -20,6 +20,7 @@ require_once '../../utils/activity-logger.php';
 
 // Check admin authentication
 requireAdminAuth();
+requireCsrfToken();
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

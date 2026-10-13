@@ -9,14 +9,22 @@ import { useAnomalyAlerts } from '../hooks/useAnomalyAlerts';
 import api, { dashboardAPI, nfcAPI } from '../services/api';
 import '../styles/Dashboard.css';
 import { useLocation, useNavigate } from 'react-router-dom';
-import introJs from 'intro.js';
-import 'intro.js/introjs.css';
+import { startDashboardTour } from '../utils/dashboardTour';
+import {
+  formatTime,
+  formatScheduleTime,
+  isSchedulePast,
+  isScheduleOngoing,
+  getNotificationStatus,
+  getOutNotificationStatus,
+  getPageNumbers as computePageNumbers,
+} from '../utils/dashboardFormatters';
 
 /**
- * Get session token from sessionStorage for WebSocket authentication.
+ * Get the WebSocket token from sessionStorage for WebSocket authentication.
  */
 function getSessionToken() {
-  return sessionStorage.getItem('session_token') || '';
+  return sessionStorage.getItem('ws_token') || '';
 }
 
 const COURSES = [
@@ -190,31 +198,7 @@ function Dashboard() {
   const indexOfFirstRecord = (currentPage - 1) * ITEMS_PER_PAGE;
   const indexOfLastRecord = currentPage * ITEMS_PER_PAGE;
 
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisiblePages = 5;
-    
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 4; i++) pages.push(i);
-        pages.push('...');
-        pages.push(totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1);
-        pages.push('...');
-        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
-      } else {
-        pages.push(1);
-        pages.push('...');
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
-        pages.push('...');
-        pages.push(totalPages);
-      }
-    }
-    return pages;
-  };
+  const getPageNumbers = () => computePageNumbers(currentPage, totalPages);
 
   // Ensure scanner is in attendance mode whenever the dashboard is active.
   // This recovers from cases where VisitorPage left the mode as 'visitor'.
@@ -397,129 +381,8 @@ function Dashboard() {
     }
   };
 
-  const startTour = () => {
-    const intro = introJs();
-    
-    const buildIntro = (step, total, description) => {
-      return `<div class="tour-card">
-        <div class="tour-header">
-          <span class="tour-title">${description.split('|')[0]}</span>
-          <span class="tour-step">${step} of ${total}</span>
-        </div>
-        <div class="tour-body">${description.split('|')[1]}</div>
-        <div class="tour-skip"><a href="javascript:void(0)" class="tour-skip-btn" onclick="document.querySelector('.introjs-skipbutton')?.click()">Skip Tour</a></div>
-      </div>`;
-    };
-
-    const totalSteps = 16;
-
-    intro.setOptions({
-      steps: [
-        { intro: buildIntro(1, totalSteps, 'Welcome to Dashboard!|This is your main control center for monitoring attendance and system activity. Let me show you around!') },
-        { element: '.dashboard-col-left', intro: buildIntro(2, totalSteps, 'Overview Panel|The left side shows your key statistics, attendance trends, at-risk alerts, and quick-glance info panels.') },
-        { element: '.stats-grid', intro: buildIntro(3, totalSteps, 'Statistics Cards|These cards give you a quick snapshot of your facility\'s current status.') },
-        { element: '.stat-card:nth-child(1)', intro: buildIntro(4, totalSteps, 'Total Students|Shows the total number of students registered in the system.') },
-        { element: '.stat-card:nth-child(2)', intro: buildIntro(5, totalSteps, 'Students Present|Displays how many students are currently inside the facility right now.') },
-        { element: '.stat-card:nth-child(3)', intro: buildIntro(6, totalSteps, 'Visitors Present|Shows the number of visitors currently checked in at the facility.') },
-        { element: '.visit-trend-container', intro: buildIntro(7, totalSteps, 'Visit Trend Graph|Visualizes attendance patterns over time. Use the filter to view All, Students only, or Visitors only.') },
-        { element: '.compact-panels', intro: buildIntro(8, totalSteps, 'Info Panels|These panels show today\'s absent students and scheduled classes so you can quickly see who\'s missing and what\'s coming up.') },
-        { element: '.compact-panel:nth-child(1)', intro: buildIntro(9, totalSteps, 'Expected But Absent|Lists students who have a scheduled class today but haven\'t checked in yet. Helps you track attendance gaps in real time.') },
-        { element: '.compact-panel:nth-child(2)', intro: buildIntro(10, totalSteps, 'Today\'s Schedules|Shows all courses scheduled for today with their start times. Live classes are highlighted with a pulsing dot, and past classes are dimmed.') },
-        { element: '.at-risk-panel', intro: buildIntro(11, totalSteps, 'At-Risk Students|Powered by the anomaly detection engine, this panel flags students showing behavioral patterns like chronic tardiness, attendance drop-off, or irregular timing. Click any alert to go to their record.') },
-        { element: '.logs-section', intro: buildIntro(12, totalSteps, 'Attendance Logs|Today\'s real-time attendance records showing Name, Time In, SMS notification status, Time Out, and Out SMS status. Updates automatically when a student taps their NFC card.') },
-        { element: '.logs-table', intro: buildIntro(13, totalSteps, 'Logs Table|Each row shows a student or visitor entry. The colored dot indicates student (purple) or visitor (blue). SMS columns show notification status for check-in and check-out.') },
-        { element: '.topbar-left', intro: buildIntro(14, totalSteps, 'Connection Status|Shows whether the system is connected to the real-time server. A green dot means live updates are active. If disconnected, click Retry to reconnect.') },
-        { element: '.sidebar', intro: buildIntro(15, totalSteps, 'Navigation Menu|Use the sidebar to navigate to Student Records, Attendance Logs, Visitor Logs, Activity Logs, Course Schedules, and the Login Panel.') },
-        { element: '.help-float-btn', intro: buildIntro(16, totalSteps, 'Help Button|Click this button anytime to restart this tour and review the dashboard features. That\'s it! You\'re all set!') }
-      ],
-      showProgress: false,
-      showBullets: false,
-      showStepNumbers: false,
-      exitOnOverlayClick: false,
-      doneLabel: 'Done',
-      nextLabel: 'Next',
-      prevLabel: 'Back',
-      skipLabel: 'Skip Tour',
-      allowHtml: true,
-      tooltipClass: 'custom-tour-tooltip'
-    });
-    
-    intro.start();
-  };
-
-  const formatTime = (timeStr) => {
-    if (!timeStr) return '---';
-    try {
-      const [h, m] = timeStr.split(':').map(Number);
-      if (isNaN(h) || isNaN(m)) return '---';
-      const ampm = h >= 12 ? 'PM' : 'AM';
-      return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`;
-    } catch { return '---'; }
-  };
-
-  const formatScheduleTime = (timeStr) => {
-    if (!timeStr) return '';
-    const [h, m] = timeStr.split(':').map(Number);
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`;
-  };
-
-  const isSchedulePast = (endTime) => {
-    if (!endTime) return false;
-    const now = new Date();
-    const [h, m] = endTime.split(':').map(Number);
-    const endDate = new Date();
-    endDate.setHours(h, m, 0, 0);
-    return now > endDate;
-  };
-
-  const isScheduleOngoing = (startTime, endTime) => {
-    if (!startTime || !endTime) return false;
-    const now = new Date();
-    const [sh, sm] = startTime.split(':').map(Number);
-    const [eh, em] = endTime.split(':').map(Number);
-    const start = new Date();
-    start.setHours(sh, sm, 0, 0);
-    const end = new Date();
-    end.setHours(eh, em, 0, 0);
-    return now >= start && now <= end;
-  };
-
-  const calculateDuration = (timeIn, timeOut) => {
-    if (!timeIn || !timeOut) return '---';
-    try {
-      const toSec = t => { const [h,m,s] = t.split(':').map(Number); return h*3600+m*60+(s||0); };
-      const diff = toSec(timeOut) - toSec(timeIn);
-      if (diff < 0) return '---';
-      return `${Math.floor(diff/3600)} hrs ${Math.floor((diff%3600)/60)} mins`;
-    } catch { return '---'; }
-  };
-
-  const getNotificationStatus = (log) => {
-    if (log.row_type === 'visitor') return 'N/A';
-    if (log.msg_channel && log.msg_success === 1) return 'SMS';
-    if (log.msg_success === 0) return 'FAILED';
-    return 'N/A';
-  };
-
-  const getOutNotificationStatus = (log) => {
-    if (log.row_type === 'visitor') return 'N/A';
-    if (!log.time_out) return null; // no checkout yet — render '---'
-    if (log.msg_out_channel && log.msg_out_success === 1) return 'SMS';
-    if (log.msg_out_success === 0) return 'FAILED';
-    return 'N/A';
-  };
-
-  const getStatus = (log) => {
-    if (log.row_type === 'visitor') return 'VISITOR';
-    if (log.auto_closed) return 'NO TIME OUT';
-    if (!log.time_out) {
-      const today = new Date().toISOString().split('T')[0];
-      if (log.date && log.date < today) return 'NO TIME OUT';
-      return 'PRESENT';
-    }
-    return 'LEFT';
-  };
+  // Guided onboarding tour (implementation extracted to utils/dashboardTour.js).
+  const startTour = () => startDashboardTour();
 
   useEffect(() => {
     if (location.state?.justLoggedIn) {

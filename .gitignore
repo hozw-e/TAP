@@ -20,6 +20,7 @@ apdc_attendance.sql
 
 # Database dumps/exports (contain real guardian PII — do not commit)
 railwaydb.sql
+*.sql.bak
 
 # Database backups
 db_backup/

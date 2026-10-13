@@ -19,6 +19,21 @@ ESP32 NFC Reader
 - **Python** 3.10+ installed
 - **npm** packages installed in both root and `websocket-server/`
 
+## Database Migrations
+
+Schema changes live in `backend/migrations/*.sql`. Request handlers no longer
+create tables at runtime, so each migration must be applied once per database
+(e.g. via TablePlus, the `mysql` client, or phpMyAdmin).
+
+Apply migration files in filename order. Each is safe to re-run
+(`CREATE TABLE IF NOT EXISTS` / idempotent seeds), so running one that was
+already applied is a no-op.
+
+Recently added (apply these if your database predates them):
+- `008_ws_tokens.sql` — tokens for WebSocket authentication
+- `009_runtime_tables.sql` — `login_attempts`, `scanner_mode`, `temp_nfc_scans`
+- `010_rate_limit_hits.sql` — per-IP rate limiting
+
 ## Environment Variables
 
 All environment variables are configured in the root `.env` file:
@@ -33,6 +48,7 @@ All environment variables are configured in the root `.env` file:
 | `PHP_SESSION_VALIDATE_URL` | `http://localhost:80/api/auth/validate-session.php` | Session validation endpoint |
 | `PHP_SESSION_RECHECK_INTERVAL` | `60000` | Session re-check interval (ms) |
 | `VITE_WEBSOCKET_URL` | `ws://localhost:3001` | WebSocket URL for React frontend |
+| `NFC_DEVICE_SECRET` | (empty) | Shared secret the ESP32 must send (`X-Device-Secret`) to `scan.php`. Empty = check disabled (dev). Must match `DEVICE_SECRET` in `esp32.ino`. |
 
 ## Starting the Services
 

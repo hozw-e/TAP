@@ -1,18 +1,25 @@
 <?php
 /**
- * Session Validation Endpoint for WebSocket Server
- * 
- * GET /api/auth/validate-session.php?session_id=<token>
- * 
- * Used by the Node.js WebSocket server to validate PHP session tokens
- * on connection and during periodic re-checks (every 60s).
- * 
+ * WebSocket Token Validation Endpoint
+ *
+ * GET /api/auth/validate-session.php?token=<ws_token>
+ * (legacy ?session_id=<ws_token> is still accepted)
+ *
+ * Used by the Node.js WebSocket server to validate the opaque WebSocket token
+ * presented by a browser on connect and during periodic re-checks (every 60s).
+ *
+ * This no longer loads a PHP session by ID. Instead it looks the token up in
+ * the ws_tokens table (populated by /api/auth/ws-token.php), so the raw PHP
+ * session ID is never exposed to JavaScript, URLs, or logs.
+ *
  * Returns:
  *   200 { "valid": true, "admin_id": <id>, "admin_name": "<name>" }
  *   401 { "valid": false }
  */
 
 require_once '../../utils/cors.php';
+require_once '../../config/database.php';
+require_once '../../utils/session.php';
 
 header('Content-Type: application/json');
 
@@ -23,44 +30,35 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     exit();
 }
 
-// Get session_id from query parameter
-$sessionId = $_GET['session_id'] ?? null;
+// Accept the token under either param name for compatibility.
+$token = $_GET['token'] ?? $_GET['session_id'] ?? null;
 
-if (empty($sessionId)) {
+if (empty($token)) {
     http_response_code(401);
     echo json_encode(['valid' => false]);
     exit();
 }
 
-// Validate the session_id format (PHP session IDs are alphanumeric + comma + dash)
-if (!preg_match('/^[a-zA-Z0-9,\-]{22,256}$/', $sessionId)) {
-    http_response_code(401);
-    echo json_encode(['valid' => false]);
+$conn = getDBConnection();
+if (!$conn) {
+    http_response_code(500);
+    echo json_encode(['valid' => false, 'error' => 'Database connection failed']);
     exit();
 }
 
-// Set the session ID from the query parameter before starting the session
-session_id($sessionId);
-session_start();
+$admin = validateWsToken($conn, $token);
 
-// Check if the session contains valid admin data
-$isValid = isset($_SESSION['admin_logged_in']) 
-    && $_SESSION['admin_logged_in'] === true
-    && isset($_SESSION['admin_id']);
-
-if ($isValid) {
+if ($admin !== null) {
     http_response_code(200);
     echo json_encode([
         'valid' => true,
-        'admin_id' => $_SESSION['admin_id'],
-        'admin_name' => $_SESSION['admin_name'] ?? null
+        'admin_id' => $admin['admin_id'],
+        'admin_name' => $admin['admin_name'],
     ]);
 } else {
     http_response_code(401);
     echo json_encode(['valid' => false]);
 }
 
-// Close the session without modifying it
-session_abort();
 exit();
 ?>

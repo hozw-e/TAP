@@ -9,7 +9,7 @@ function LogoutModal({ isOpen, onClose }) {
     try {
       await authAPI.logout();
       onClose();
-      sessionStorage.removeItem('session_token');
+      sessionStorage.removeItem('ws_token');
       sessionStorage.removeItem('admin_name');
       sessionStorage.setItem('showLoggedOutToast', 'true');
       setTimeout(() => {
@@ -18,7 +18,7 @@ function LogoutModal({ isOpen, onClose }) {
       }, 1500);
     } catch (error) {
       console.error('Logout error:', error);
-      sessionStorage.removeItem('session_token');
+      sessionStorage.removeItem('ws_token');
       sessionStorage.removeItem('admin_name');
       sessionStorage.setItem('showLoggedOutToast', 'true');
       navigate('/login');

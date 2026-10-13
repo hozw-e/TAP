@@ -7,6 +7,8 @@ header('Content-Type: application/json');
 
 // Require admin authentication
 requireAdminAuth();
+// CSRF: enforced on state-changing methods (POST); GET is exempt.
+requireCsrfToken();
 
 $engineUrl = getenv('ANOMALY_ENGINE_URL') ?: 'http://localhost:5000';
 $method = $_SERVER['REQUEST_METHOD'];

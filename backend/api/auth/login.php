@@ -26,17 +26,8 @@ try {
     }
 
     // --- Rate limiting: max 5 failed attempts per IP in 15 minutes ---
+    // (login_attempts table is provisioned by migration 009_runtime_tables.sql)
     $clientIP = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-
-    // Create login_attempts table if it doesn't exist
-    $conn->exec("
-        CREATE TABLE IF NOT EXISTS login_attempts (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            ip_address VARCHAR(45) NOT NULL,
-            attempted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            INDEX idx_ip_time (ip_address, attempted_at)
-        )
-    ");
 
     // Clean up old attempts (older than 15 minutes)
     $conn->exec("DELETE FROM login_attempts WHERE attempted_at < DATE_SUB(NOW(), INTERVAL 15 MINUTE)");
@@ -92,7 +83,7 @@ try {
         'admin_id'   => $admin['admin_id'],
         'admin_name' => $admin['admin_name'],
         'username'   => $admin['username'],
-        'session_token' => session_id(),
+        'csrf_token' => getCsrfToken(),
     ]);
 
 } catch (PDOException $e) {

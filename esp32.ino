@@ -21,6 +21,11 @@ const char* API_URL = "https://thesisi-production.up.railway.app/api/nfc/scan.ph
 // Example: "http://192.168.1.100/apdc/backend/api/nfc/scan.php"
 // Find your IP: Open CMD → type "ipconfig" → look for IPv4 Address
 
+// Shared device secret — must match NFC_DEVICE_SECRET on the backend.
+// Leave empty ("") only if the backend secret is also empty (local dev).
+// In production, set this to the same long random value configured on the server.
+const char* DEVICE_SECRET = "";
+
 // ============================================
 // PIN DEFINITIONS
 // ============================================
@@ -282,6 +287,10 @@ void sendToBackend(String uid) {
   // Start connection
   http.begin(API_URL);
   http.addHeader("Content-Type", "application/json");
+  // Authenticate this device to the backend (skipped server-side if empty).
+  if (strlen(DEVICE_SECRET) > 0) {
+    http.addHeader("X-Device-Secret", DEVICE_SECRET);
+  }
   
   // Prepare JSON payload
   String jsonPayload = "{\"uid\":\"" + uid + "\"}";

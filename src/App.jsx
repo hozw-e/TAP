@@ -32,10 +32,18 @@ function App() {
         response?.logged_in ??
         false;
 
-      // Store session token for WebSocket authentication
-      const sessionToken = response?.data?.session_token;
-      if (loggedIn && sessionToken) {
-        sessionStorage.setItem('session_token', sessionToken);
+      // Fetch a dedicated WebSocket token (the raw PHP session ID is no longer
+      // exposed to the client). Best-effort: WS auth failing shouldn't block login.
+      if (loggedIn) {
+        try {
+          const wsResp = await authAPI.getWsToken();
+          const wsToken = wsResp?.data?.ws_token;
+          if (wsToken) {
+            sessionStorage.setItem('ws_token', wsToken);
+          }
+        } catch (e) {
+          console.warn('Failed to obtain WebSocket token', e);
+        }
       }
 
       setIsAuthenticated(loggedIn === true);

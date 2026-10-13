@@ -190,9 +190,14 @@ function Login({ setIsAuthenticated }) {
     try {
       const response = await authAPI.login(username, password);
       if (response.success) {
-        // Store session token for WebSocket authentication
-        if (response.data?.session_token) {
-          sessionStorage.setItem('session_token', response.data.session_token);
+        // Fetch a dedicated WebSocket token (no raw PHP session ID is exposed).
+        try {
+          const wsResp = await authAPI.getWsToken();
+          if (wsResp?.data?.ws_token) {
+            sessionStorage.setItem('ws_token', wsResp.data.ws_token);
+          }
+        } catch (wsErr) {
+          console.warn('Failed to obtain WebSocket token:', wsErr);
         }
         // Store admin name for display in the sidebar
         if (response.data?.admin_name) {

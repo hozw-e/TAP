@@ -2,16 +2,18 @@ const config = require('../config');
 const logger = require('../utils/logger');
 
 /**
- * Validates a PHP session token by calling the PHP validate-session endpoint.
- * @param {string} sessionId - The PHP session ID token to validate
+ * Validates an opaque WebSocket token by calling the PHP validate endpoint.
+ * The token is a dedicated credential (see /api/auth/ws-token.php), NOT the
+ * raw PHP session ID — the session ID never leaves the backend.
+ * @param {string} wsToken - The opaque WebSocket token to validate
  * @returns {Promise<{valid: boolean, admin_id?: number, admin_name?: string}>}
  */
-async function validateSession(sessionId) {
-  if (!sessionId) {
+async function validateSession(wsToken) {
+  if (!wsToken) {
     return { valid: false };
   }
 
-  const url = `${config.phpSessionValidateUrl}?session_id=${encodeURIComponent(sessionId)}`;
+  const url = `${config.phpSessionValidateUrl}?token=${encodeURIComponent(wsToken)}`;
 
   try {
     const controller = new AbortController();
@@ -27,7 +29,7 @@ async function validateSession(sessionId) {
     if (!response.ok) {
       logger.warn('Session validation returned non-OK status', {
         statusCode: response.status,
-        sessionId: sessionId.substring(0, 8) + '...',
+        token: wsToken.substring(0, 8) + '...',
       });
       return { valid: false };
     }
@@ -46,12 +48,12 @@ async function validateSession(sessionId) {
   } catch (err) {
     if (err.name === 'AbortError') {
       logger.warn('Session validation timed out', {
-        sessionId: sessionId.substring(0, 8) + '...',
+        token: wsToken.substring(0, 8) + '...',
       });
     } else {
       logger.error('Session validation failed', {
         error: err.message,
-        sessionId: sessionId.substring(0, 8) + '...',
+        token: wsToken.substring(0, 8) + '...',
       });
     }
     return { valid: false };
