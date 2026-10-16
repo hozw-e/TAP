@@ -5,7 +5,7 @@
  *
  * Query Parameters:
  * - student_id (required): Integer student ID
- * - pattern_type (optional): One of chronic_tardiness, attendance_dropoff, irregular_timing, early_departure
+ * - pattern_type (optional): One of chronic_tardiness, attendance_dropoff, course_delay
  * - date_start (optional): Start date filter (Y-m-d format)
  * - date_end (optional): End date filter (Y-m-d format)
  * - page (optional): Page number (default 1)
@@ -37,7 +37,7 @@ if ($studentId === false || $studentId <= 0) {
 }
 
 // Validate optional pattern_type
-$validPatternTypes = ['chronic_tardiness', 'attendance_dropoff', 'irregular_timing', 'early_departure'];
+$validPatternTypes = ['chronic_tardiness', 'attendance_dropoff', 'course_delay', 'ml_behavioral'];
 $patternType = null;
 if (isset($_GET['pattern_type']) && $_GET['pattern_type'] !== '') {
     $patternType = $_GET['pattern_type'];

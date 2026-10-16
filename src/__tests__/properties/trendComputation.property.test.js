@@ -139,7 +139,7 @@ describe('Property 18: Trend Computation Correctness', () => {
         fc.array(fc.double({ min: 0.5, max: 1.0, noNaN: true }), { minLength: 2, maxLength: 10 }),
         (scores) => {
           // Alerts exist but for a different pattern type
-          const alerts = scores.map((score, i) => makeAlert(i + 1, score, 'early_departure'));
+          const alerts = scores.map((score, i) => makeAlert(i + 1, score, 'course_delay'));
           const result = computeTrend(alerts, PATTERN_TYPE);
           expect(result.trend).toBe('insufficient');
         }

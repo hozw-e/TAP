@@ -57,7 +57,7 @@ if ($method === 'GET') {
 
     // Validate input fields
     $errors = [];
-    $validPatterns = ['chronic_tardiness', 'attendance_dropoff', 'irregular_timing', 'early_departure'];
+    $validPatterns = ['chronic_tardiness', 'attendance_dropoff', 'course_delay', 'ml_behavioral'];
 
     // Validate alert_threshold
     if (isset($data['alert_threshold'])) {

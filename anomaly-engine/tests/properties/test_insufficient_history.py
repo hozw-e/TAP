@@ -6,7 +6,6 @@
 Properties verified:
 1. Chronic tardiness: total_records < 5 → no alert returned
 2. Attendance dropoff: days_of_history < 14 → no alert returned
-3. Irregular timing: historical_times count < 4 → no alert returned
 
 All detectors MUST return empty list when history is below their minimum.
 """
@@ -21,7 +20,6 @@ sys.path.insert(0, "c:/xampp/htdocs/apdc/anomaly-engine")
 
 from src.detectors.chronic_tardiness import ChronicTardinessDetector
 from src.detectors.attendance_dropoff import AttendanceDropoffDetector
-from src.detectors.irregular_timing import IrregularTimingDetector
 
 
 # --- Shared helpers ---
@@ -46,7 +44,7 @@ def make_config(window_days=30):
         "enabled_patterns": [
             "chronic_tardiness",
             "attendance_dropoff",
-            "irregular_timing",
+            "course_delay",
         ],
     }
 
@@ -125,32 +123,5 @@ def test_attendance_dropoff_no_score_below_min_days(
     )
 
 
-# --- Property: Irregular Timing with insufficient historical records ---
 
-
-@given(
-    num_historical_times=st.integers(min_value=0, max_value=2),
-    minutes_values=st.lists(
-        st.integers(min_value=0, max_value=1439),
-        min_size=0,
-        max_size=2,
-    ),
-)
-@settings(max_examples=100)
-@patch("src.detectors.irregular_timing.IrregularTimingDetector._query_historical_times")
-def test_irregular_timing_no_score_below_min_records(
-    mock_query, num_historical_times, minutes_values
-):
-    """Irregular timing MUST return empty list when historical_times < 3."""
-    # Trim the list to the desired length
-    historical_times = minutes_values[:num_historical_times]
-    mock_query.return_value = historical_times
-
-    detector = IrregularTimingDetector()
-    result = detector.detect(1, make_event(), make_config())
-
-    assert result == [], (
-        f"Expected no alerts for irregular_timing with {len(historical_times)} "
-        f"historical records (minimum is 3), but got {result}"
-    )
 

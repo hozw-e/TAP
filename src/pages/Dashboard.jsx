@@ -72,7 +72,7 @@ function Dashboard() {
   // --- Real-time WebSocket integration ---
   const sessionToken = getSessionToken();
   const { connectionState, lastMessage, retryConnection } = useWebSocket(sessionToken);
-  const { alerts, dismissAlert } = useAnomalyAlerts(lastMessage);
+  const { alerts, addAlert, dismissAlert } = useAnomalyAlerts(lastMessage);
 
   // Anomaly engine availability state
   const [engineAvailable, setEngineAvailable] = useState(true);
@@ -167,15 +167,32 @@ function Dashboard() {
       const created = data.alerts_created ?? 0;
       const analyzed = data.students_analyzed ?? 0;
       const skipped = data.duplicates_skipped ?? 0;
+      const flagged = Array.isArray(data.flagged_students) ? data.flagged_students : [];
+
+      // Build a readable list of who was flagged so the admin doesn't have to
+      // open each record to find them. Cap the names shown to keep the toast
+      // compact; summarize the remainder as "+N more".
+      const MAX_NAMES = 5;
+      const names = flagged
+        .map((s) => s?.student_name)
+        .filter((n) => typeof n === 'string' && n.trim() !== '');
+      const shownNames = names.slice(0, MAX_NAMES);
+      const extraCount = names.length - shownNames.length;
+      const nameList = shownNames.join(', ') +
+        (extraCount > 0 ? `, +${extraCount} more` : '');
+
+      const skippedSuffix = skipped > 0 ? ` (${skipped} already flagged today.)` : '';
+
       setBatchNotification({
         isOpen: true,
         type: 'success',
         message: created > 0
-          ? `Analysis complete: ${created} alert(s) across ${analyzed} student(s). ` +
-            `View details in each student's record.` +
-            (skipped > 0 ? ` (${skipped} already flagged today.)` : '')
-          : `Analysis complete: ${analyzed} student(s) checked, no new anomalies found.` +
-            (skipped > 0 ? ` (${skipped} already flagged today.)` : ''),
+          ? (nameList
+              ? `Analysis complete: ${created} alert(s) across ${analyzed} student(s). ` +
+                `Flagged: ${nameList}.${skippedSuffix}`
+              : `Analysis complete: ${created} alert(s) across ${analyzed} student(s). ` +
+                `View details in each student's record.${skippedSuffix}`)
+          : `Analysis complete: ${analyzed} student(s) checked, no new anomalies found.${skippedSuffix}`,
       });
     } catch (err) {
       console.error('Batch analysis error:', err);
@@ -210,6 +227,32 @@ function Dashboard() {
   useEffect(() => {
     loadDashboardData();
   }, []);
+
+  // Hydrate the At-Risk panel on mount with today's already-detected alerts.
+  // Without this the panel starts empty every page load and only fills from
+  // live WebSocket broadcasts received *after* load, hiding anomalies that
+  // were detected earlier today (e.g. by the morning batch run). Each alert is
+  // pushed through addAlert so it flows through the same dedup/sort path as a
+  // live broadcast — a later live alert for the same student+pattern is then
+  // correctly suppressed as a duplicate.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await api.get('/anomaly/alerts-today.php');
+        if (cancelled) return;
+        const todays = response.data?.alerts;
+        if (response.data?.success && Array.isArray(todays)) {
+          todays.forEach((alert) => addAlert(alert));
+        }
+      } catch (err) {
+        // Non-fatal: the panel still fills from live broadcasts. Log for
+        // diagnostics but don't surface a UI error for a background hydrate.
+        console.warn('At-Risk hydration failed:', err?.message || err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [addAlert]);
 
   // Auto-refresh at midnight so dashboard resets to the new day
   useEffect(() => {

@@ -15,8 +15,8 @@ config_bp = Blueprint("config", __name__)
 VALID_PATTERNS = [
     "chronic_tardiness",
     "attendance_dropoff",
-    "irregular_timing",
-    "early_departure",
+    "course_delay",
+    "ml_behavioral",
 ]
 
 
@@ -106,11 +106,11 @@ def put_config():
         set_parts.append("attendance_dropoff_enabled = %s")
         params.append("attendance_dropoff" in enabled_patterns)
 
-        set_parts.append("irregular_timing_enabled = %s")
-        params.append("irregular_timing" in enabled_patterns)
+        set_parts.append("course_delay_enabled = %s")
+        params.append("course_delay" in enabled_patterns)
 
-        set_parts.append("early_departure_enabled = %s")
-        params.append("early_departure" in enabled_patterns)
+        set_parts.append("ml_behavioral_enabled = %s")
+        params.append("ml_behavioral" in enabled_patterns)
 
     if not set_parts:
         return jsonify({"error": "No valid fields provided to update"}), 400

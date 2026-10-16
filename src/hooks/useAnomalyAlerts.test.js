@@ -6,7 +6,7 @@ describe('sortAlerts', () => {
     const alerts = [
       { student_id: 1, student_name: 'Alice', pattern_type: 'chronic_tardiness', score: 0.7, description: 'test', detected_at: '2024-01-01T10:00:00Z' },
       { student_id: 2, student_name: 'Bob', pattern_type: 'attendance_dropoff', score: 0.9, description: 'test', detected_at: '2024-01-01T10:00:00Z' },
-      { student_id: 3, student_name: 'Charlie', pattern_type: 'irregular_timing', score: 0.8, description: 'test', detected_at: '2024-01-01T10:00:00Z' },
+      { student_id: 3, student_name: 'Charlie', pattern_type: 'course_delay', score: 0.8, description: 'test', detected_at: '2024-01-01T10:00:00Z' },
     ];
 
     const sorted = sortAlerts(alerts);
@@ -19,7 +19,7 @@ describe('sortAlerts', () => {
     const alerts = [
       { student_id: 1, student_name: 'Alice', pattern_type: 'chronic_tardiness', score: 0.8, description: 'test', detected_at: '2024-01-01T08:00:00Z' },
       { student_id: 2, student_name: 'Bob', pattern_type: 'attendance_dropoff', score: 0.8, description: 'test', detected_at: '2024-01-01T12:00:00Z' },
-      { student_id: 3, student_name: 'Charlie', pattern_type: 'irregular_timing', score: 0.8, description: 'test', detected_at: '2024-01-01T10:00:00Z' },
+      { student_id: 3, student_name: 'Charlie', pattern_type: 'course_delay', score: 0.8, description: 'test', detected_at: '2024-01-01T10:00:00Z' },
     ];
 
     const sorted = sortAlerts(alerts);
@@ -50,7 +50,7 @@ describe('insertAlertSorted', () => {
       { student_id: 2, student_name: 'Low', pattern_type: 'attendance_dropoff', score: 0.72, description: 'test', detected_at: '2024-01-01T10:00:00Z' },
     ];
 
-    const newAlert = { student_id: 3, student_name: 'Mid', pattern_type: 'irregular_timing', score: 0.85, description: 'test', detected_at: '2024-01-01T10:00:00Z' };
+    const newAlert = { student_id: 3, student_name: 'Mid', pattern_type: 'course_delay', score: 0.85, description: 'test', detected_at: '2024-01-01T10:00:00Z' };
     const result = insertAlertSorted(existing, newAlert);
 
     expect(result.length).toBe(3);
@@ -150,3 +150,4 @@ describe('isDuplicate', () => {
     expect(isDuplicate([], newAlert)).toBe(false);
   });
 });
+

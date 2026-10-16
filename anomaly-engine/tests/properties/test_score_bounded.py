@@ -66,24 +66,13 @@ class TestAttendanceDropoffScoreBounded:
         assert 0.0 <= score <= 1.0
 
 
-class TestIrregularTimingScoreBounded:
-    """Irregular timing score formula: score = min(1.0, z_score / 4.0).
-    Must always be in [0.0, 1.0] for any non-negative z_score."""
+class TestCourseDelayScoreBounded:
+    """Course delay score formula: score = min(1.0, shortfall / 4.0).
+    Must always be in [0.0, 1.0] for any non-negative shortfall."""
 
-    @given(z_score=st.floats(min_value=0.0, max_value=100.0))
+    @given(shortfall=st.integers(min_value=0, max_value=1000))
     @settings(max_examples=200)
-    def test_irregular_timing_score_bounded(self, z_score):
-        score = min(1.0, max(0.0, z_score / 4.0))
-        assert 0.0 <= score <= 1.0
-
-
-class TestEarlyDepartureScoreBounded:
-    """Early departure score formula: score = min(1.0, count / 6.0).
-    Must always be in [0.0, 1.0] for any non-negative count."""
-
-    @given(count=st.integers(min_value=0, max_value=1000))
-    @settings(max_examples=200)
-    def test_early_departure_score_bounded(self, count):
-        score = min(1.0, count / 6.0)
+    def test_course_delay_score_bounded(self, shortfall):
+        score = min(1.0, shortfall / 4.0)
         score = max(0.0, score)
         assert 0.0 <= score <= 1.0

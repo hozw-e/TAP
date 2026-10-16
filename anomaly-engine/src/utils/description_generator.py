@@ -10,19 +10,17 @@ def generate_description(pattern_type: str, student_name: str, **context) -> str
 
     Args:
         pattern_type: one of 'chronic_tardiness', 'attendance_dropoff',
-                      'irregular_timing', 'early_departure'
+                      'course_delay'
         student_name: the student's display name
         **context: pattern-specific data:
             chronic_tardiness: tardy_count, total_records, window_days
             attendance_dropoff: recent_frequency, avg_frequency, drop_percentage
-            irregular_timing: check_in_time, usual_time, deviation_hours, day_of_week, course
-            early_departure: short_count, total_sessions, threshold_percentage
+            course_delay: course, sessions_used, max_sessions, expected_sessions, shortfall
     """
     generators = {
         "chronic_tardiness": _describe_chronic_tardiness,
         "attendance_dropoff": _describe_attendance_dropoff,
-        "irregular_timing": _describe_irregular_timing,
-        "early_departure": _describe_early_departure,
+        "course_delay": _describe_course_delay,
     }
 
     generator = generators.get(pattern_type)
@@ -55,35 +53,16 @@ def _describe_attendance_dropoff(student_name: str, **context) -> str:
     )
 
 
-def _describe_irregular_timing(student_name: str, **context) -> str:
-    """Describe irregular timing with actual vs usual time."""
-    check_in_time = context.get("check_in_time", "unknown")
-    usual_time = context.get("usual_time", "unknown")
-    deviation_hours = context.get("deviation_hours", 0)
-    day_of_week = context.get("day_of_week", "")
-    course = context.get("course", "")
-
-    day_course = ""
-    if day_of_week and course:
-        day_course = f" for {day_of_week} {course}"
-    elif course:
-        day_course = f" for {course}"
+def _describe_course_delay(student_name: str, **context) -> str:
+    """Describe a course that is behind its expected pace."""
+    course = context.get("course", "their course")
+    sessions_used = context.get("sessions_used", 0)
+    max_sessions = context.get("max_sessions", 4)
+    expected_sessions = context.get("expected_sessions", 0)
+    shortfall = context.get("shortfall", 0)
 
     return (
-        f"{student_name} checked in at {check_in_time}, "
-        f"{deviation_hours:.1f} hours later than the usual "
-        f"{usual_time}{day_course}"
-    )
-
-
-def _describe_early_departure(student_name: str, **context) -> str:
-    """Describe early departure with session count."""
-    short_count = context.get("short_count", 0)
-    total_sessions = context.get("total_sessions", 0)
-    threshold_percentage = context.get("threshold_percentage", 50)
-
-    return (
-        f"{student_name} left early in {short_count} of the last "
-        f"{total_sessions} sessions (stayed less than "
-        f"{threshold_percentage}% of scheduled time)"
+        f"{student_name}'s {course} course is running behind: used "
+        f"{sessions_used} of {max_sessions} sessions, but should be at "
+        f"{expected_sessions} by now ({shortfall} session(s) behind schedule)"
     )

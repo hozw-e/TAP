@@ -16,7 +16,7 @@ class Alert:
         student_id: The student's database ID.
         student_name: The student's display name.
         pattern_type: One of 'chronic_tardiness', 'attendance_dropoff',
-                      'irregular_timing', 'early_departure'.
+                      'course_delay'.
         score: Anomaly score between 0.0 and 1.0.
         description: Plain-language description of the anomaly.
         detected_at: ISO 8601 timestamp of detection.

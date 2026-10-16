@@ -78,113 +78,57 @@ class TestAttendanceDropoffDescription:
         assert "7" in desc
 
 
-class TestIrregularTimingDescription:
-    """Tests for irregular timing descriptions."""
+class TestCourseDelayDescription:
+    """Tests for course delay descriptions."""
 
     def test_contains_student_name(self):
         desc = generate_description(
-            "irregular_timing",
-            "Pedro",
-            check_in_time="10:30 AM",
-            usual_time="8:00 AM",
-            deviation_hours=2.5,
-            day_of_week="Monday",
-            course="Arduino",
-        )
-        assert "Pedro" in desc
-
-    def test_contains_check_in_time(self):
-        desc = generate_description(
-            "irregular_timing",
-            "Pedro",
-            check_in_time="10:30 AM",
-            usual_time="8:00 AM",
-            deviation_hours=2.5,
-            day_of_week="Monday",
-            course="Arduino",
-        )
-        assert "10:30 AM" in desc
-
-    def test_contains_usual_time(self):
-        desc = generate_description(
-            "irregular_timing",
-            "Pedro",
-            check_in_time="10:30 AM",
-            usual_time="8:00 AM",
-            deviation_hours=2.5,
-            day_of_week="Monday",
-            course="Arduino",
-        )
-        assert "8:00 AM" in desc
-
-    def test_contains_deviation(self):
-        desc = generate_description(
-            "irregular_timing",
-            "Pedro",
-            check_in_time="10:30 AM",
-            usual_time="8:00 AM",
-            deviation_hours=2.5,
-            day_of_week="Monday",
-            course="Arduino",
-        )
-        assert "2.5" in desc
-
-    def test_contains_course_and_day(self):
-        desc = generate_description(
-            "irregular_timing",
-            "Pedro",
-            check_in_time="10:30 AM",
-            usual_time="8:00 AM",
-            deviation_hours=2.5,
-            day_of_week="Monday",
-            course="Arduino",
-        )
-        assert "Monday" in desc
-        assert "Arduino" in desc
-
-
-class TestEarlyDepartureDescription:
-    """Tests for early departure descriptions."""
-
-    def test_contains_student_name(self):
-        desc = generate_description(
-            "early_departure",
+            "course_delay",
             "Ana",
-            short_count=4,
-            total_sessions=6,
-            threshold_percentage=50,
+            course="Rover 2",
+            sessions_used=1,
+            max_sessions=4,
+            expected_sessions=3,
+            shortfall=2,
         )
         assert "Ana" in desc
 
-    def test_contains_short_count(self):
+    def test_contains_course(self):
         desc = generate_description(
-            "early_departure",
+            "course_delay",
             "Ana",
-            short_count=4,
-            total_sessions=6,
-            threshold_percentage=50,
+            course="Rover 2",
+            sessions_used=1,
+            max_sessions=4,
+            expected_sessions=3,
+            shortfall=2,
         )
+        assert "Rover 2" in desc
+
+    def test_contains_sessions_used_and_max(self):
+        desc = generate_description(
+            "course_delay",
+            "Ana",
+            course="Rover 2",
+            sessions_used=1,
+            max_sessions=4,
+            expected_sessions=3,
+            shortfall=2,
+        )
+        assert "1" in desc
         assert "4" in desc
 
-    def test_contains_total_sessions(self):
+    def test_contains_shortfall(self):
         desc = generate_description(
-            "early_departure",
+            "course_delay",
             "Ana",
-            short_count=4,
-            total_sessions=6,
-            threshold_percentage=50,
+            course="Rover 2",
+            sessions_used=1,
+            max_sessions=4,
+            expected_sessions=3,
+            shortfall=2,
         )
-        assert "6" in desc
-
-    def test_contains_threshold_percentage(self):
-        desc = generate_description(
-            "early_departure",
-            "Ana",
-            short_count=4,
-            total_sessions=6,
-            threshold_percentage=50,
-        )
-        assert "50%" in desc
+        assert "2" in desc
 
 
 class TestUnknownPatternType:

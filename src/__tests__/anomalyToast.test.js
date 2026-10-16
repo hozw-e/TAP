@@ -10,12 +10,8 @@ describe('AnomalyToast - formatPatternType', () => {
     expect(formatPatternType('attendance_dropoff')).toBe('Attendance Dropoff');
   });
 
-  it('should format irregular_timing to "Irregular Timing"', () => {
-    expect(formatPatternType('irregular_timing')).toBe('Irregular Timing');
-  });
-
-  it('should format early_departure to "Early Departure"', () => {
-    expect(formatPatternType('early_departure')).toBe('Early Departure');
+  it('should format course_delay to "Course Delay"', () => {
+    expect(formatPatternType('course_delay')).toBe('Course Delay');
   });
 
   it('should return empty string for null or undefined', () => {
@@ -37,12 +33,8 @@ describe('AnomalyToast - getPatternIcon', () => {
     expect(getPatternIcon('attendance_dropoff')).toBe('fas fa-chart-line-down');
   });
 
-  it('should return random icon for irregular_timing', () => {
-    expect(getPatternIcon('irregular_timing')).toBe('fas fa-random');
-  });
-
-  it('should return sign-out icon for early_departure', () => {
-    expect(getPatternIcon('early_departure')).toBe('fas fa-sign-out-alt');
+  it('should return hourglass icon for course_delay', () => {
+    expect(getPatternIcon('course_delay')).toBe('fas fa-hourglass-half');
   });
 
   it('should return default warning icon for unknown pattern types', () => {

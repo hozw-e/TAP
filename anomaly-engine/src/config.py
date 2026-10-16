@@ -13,8 +13,8 @@ DEFAULTS = {
     "enabled_patterns": [
         "chronic_tardiness",
         "attendance_dropoff",
-        "irregular_timing",
-        "early_departure",
+        "course_delay",
+        "ml_behavioral",
     ],
 }
 
@@ -31,11 +31,11 @@ def load_config():
     try:
         with connection() as conn:
             cursor = conn.cursor(dictionary=True)
+            # Select all columns so this keeps working whether or not the
+            # course_delay_enabled column (migration 011) has been applied
+            # yet; the flag is read defensively below.
             cursor.execute(
-                "SELECT alert_threshold, historical_window_days, "
-                "chronic_tardiness_enabled, attendance_dropoff_enabled, "
-                "irregular_timing_enabled, early_departure_enabled "
-                "FROM anomaly_config WHERE config_id = 1"
+                "SELECT * FROM anomaly_config WHERE config_id = 1"
             )
             row = cursor.fetchone()
             cursor.close()
@@ -49,10 +49,12 @@ def load_config():
             enabled_patterns.append("chronic_tardiness")
         if row["attendance_dropoff_enabled"]:
             enabled_patterns.append("attendance_dropoff")
-        if row["irregular_timing_enabled"]:
-            enabled_patterns.append("irregular_timing")
-        if row["early_departure_enabled"]:
-            enabled_patterns.append("early_departure")
+        # Default to enabled when the column doesn't exist yet (pre-migration).
+        if row.get("course_delay_enabled", True):
+            enabled_patterns.append("course_delay")
+        # Default to enabled when the column doesn't exist yet (pre-migration).
+        if row.get("ml_behavioral_enabled", True):
+            enabled_patterns.append("ml_behavioral")
 
         return {
             "alert_threshold": float(row["alert_threshold"]),

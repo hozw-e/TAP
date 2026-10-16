@@ -21,7 +21,7 @@ function filterAlerts(alerts, { patternType, dateStart, dateEnd }) {
   });
 }
 
-const PATTERN_TYPES = ['chronic_tardiness', 'attendance_dropoff', 'irregular_timing', 'early_departure'];
+const PATTERN_TYPES = ['chronic_tardiness', 'attendance_dropoff', 'course_delay'];
 
 // Generator for a single alert object
 const alertArb = fc.record({

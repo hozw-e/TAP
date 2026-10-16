@@ -2,29 +2,55 @@ import '../styles/ConnectionStatus.css';
 
 /**
  * Determine the display state from a connection state string.
- * Returns { dotColor, label, showRetry }
+ * Returns { dotColor, label, title, showRetry }
+ *
+ * The label distinguishes a true real-time WebSocket link ("Live") from the
+ * degraded Server-Sent-Events fallback ("Live (fallback)"), so an admin can
+ * tell at a glance whether updates are arriving over the primary channel. The
+ * `title` carries a longer explanation for the hover tooltip.
  *
  * @param {string} connectionState
- * @returns {{ dotColor: 'green'|'red'|'none', label: string, showRetry: boolean }}
+ * @returns {{ dotColor: 'green'|'amber'|'red'|'none', label: string, title: string, showRetry: boolean }}
  */
 export function getConnectionDisplay(connectionState) {
-  const isConnected = connectionState === 'connected_ws' || connectionState === 'connected_sse';
   const isReconnecting =
     connectionState === 'connecting_ws' ||
     connectionState === 'connecting_sse' ||
     connectionState === 'reconnecting';
-  const isDisconnected = connectionState === 'disconnected';
 
-  if (isConnected) {
-    return { dotColor: 'green', label: 'Connected', showRetry: false };
+  if (connectionState === 'connected_ws') {
+    return {
+      dotColor: 'green',
+      label: 'Live',
+      title: 'Real-time updates active (WebSocket)',
+      showRetry: false,
+    };
+  }
+  if (connectionState === 'connected_sse') {
+    return {
+      dotColor: 'amber',
+      label: 'Live (fallback)',
+      title: 'Real-time updates active over SSE fallback (WebSocket unavailable)',
+      showRetry: false,
+    };
   }
   if (isReconnecting) {
-    return { dotColor: 'red', label: 'Reconnecting...', showRetry: false };
+    return {
+      dotColor: 'red',
+      label: 'Reconnecting...',
+      title: 'Reconnecting to the real-time server',
+      showRetry: false,
+    };
   }
-  if (isDisconnected) {
-    return { dotColor: 'red', label: 'Disconnected', showRetry: true };
+  if (connectionState === 'disconnected') {
+    return {
+      dotColor: 'red',
+      label: 'Offline',
+      title: 'Not connected — live updates are paused',
+      showRetry: true,
+    };
   }
-  return { dotColor: 'none', label: '', showRetry: false };
+  return { dotColor: 'none', label: '', title: '', showRetry: false };
 }
 
 /**
@@ -36,12 +62,12 @@ export function getConnectionDisplay(connectionState) {
  * - onRetry: callback invoked when the user clicks the Retry button (only shown when disconnected)
  */
 function ConnectionStatus({ connectionState, onRetry }) {
-  const { dotColor, label, showRetry } = getConnectionDisplay(connectionState);
+  const { dotColor, label, title, showRetry } = getConnectionDisplay(connectionState);
 
   const dotClass = `connection-dot${dotColor !== 'none' ? ` connection-dot--${dotColor}` : ''}`;
 
   return (
-    <div className="connection-status" role="status" aria-live="polite">
+    <div className="connection-status" role="status" aria-live="polite" title={title}>
       <span className={dotClass} aria-hidden="true"></span>
       <span className="connection-status-label">{label}</span>
       {showRetry && onRetry && (

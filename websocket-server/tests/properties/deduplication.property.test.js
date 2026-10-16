@@ -8,8 +8,7 @@ const require = createRequire(import.meta.url);
 const PATTERN_TYPES = [
   'chronic_tardiness',
   'attendance_dropoff',
-  'irregular_timing',
-  'early_departure',
+  'course_delay',
 ];
 
 describe('Property 14: Duplicate Suppression Within 24 Hours', () => {

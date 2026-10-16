@@ -9,8 +9,8 @@ from src.config import load_config
 from src.db.connection import connection
 from src.detectors.attendance_dropoff import AttendanceDropoffDetector
 from src.detectors.chronic_tardiness import ChronicTardinessDetector
-from src.detectors.early_departure import EarlyDepartureDetector
-from src.detectors.irregular_timing import IrregularTimingDetector
+from src.detectors.course_delay import CourseDelayDetector
+from src.detectors.ml_behavior import MLBehaviorDetector
 from src.models.alert import Alert
 
 logger = logging.getLogger(__name__)
@@ -24,8 +24,8 @@ last_analysis_at = None
 DETECTOR_MAP = {
     "chronic_tardiness": ChronicTardinessDetector,
     "attendance_dropoff": AttendanceDropoffDetector,
-    "irregular_timing": IrregularTimingDetector,
-    "early_departure": EarlyDepartureDetector,
+    "course_delay": CourseDelayDetector,
+    "ml_behavioral": MLBehaviorDetector,
 }
 
 
@@ -173,8 +173,8 @@ def _fetch_students_for_batch():
     """Fetch all non-archived students with the data detectors need.
 
     Returns a list of dicts: student_id, student_name, course, last_time_in.
-    last_time_in (if any) seeds the synthetic event timestamp so detectors
-    like irregular_timing evaluate the student's most recent attended session.
+    last_time_in (if any) seeds the synthetic event timestamp so time-aware
+    detectors evaluate the student's most recent attended session.
     """
     with connection() as conn:
         cursor = conn.cursor(dictionary=True)
@@ -240,6 +240,9 @@ def analyze_batch():
     students_analyzed = 0
     alerts_created = 0
     duplicates_skipped = 0
+    # Collect who was freshly flagged so the admin UI can name them instead of
+    # just showing a count (which would force a record-by-record hunt).
+    flagged_students = []
 
     for student in students:
         students_analyzed += 1
@@ -273,7 +276,20 @@ def analyze_batch():
                 else:
                     fresh.append(alert)
 
-            alerts_created += _persist_alerts(fresh)
+            persisted = _persist_alerts(fresh)
+            alerts_created += persisted
+
+            # Record the student's name + patterns for the UI summary, but only
+            # for alerts that were actually written (persisted > 0 guards against
+            # counting ones whose INSERT failed).
+            if persisted:
+                flagged_students.append(
+                    {
+                        "student_id": student["student_id"],
+                        "student_name": student.get("student_name", "Unknown"),
+                        "patterns": [a["pattern_type"] for a in fresh],
+                    }
+                )
         except Exception as e:
             logger.exception(
                 "Batch analyze: processing failed for student %s",
@@ -287,6 +303,7 @@ def analyze_batch():
         "students_analyzed": students_analyzed,
         "alerts_created": alerts_created,
         "duplicates_skipped": duplicates_skipped,
+        "flagged_students": flagged_students,
         "ran_at": last_analysis_at,
     }
     logger.info("Batch analyze complete: %s", summary)

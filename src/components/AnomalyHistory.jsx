@@ -6,8 +6,8 @@ const PATTERN_TYPES = [
   { value: '', label: 'All Pattern Types' },
   { value: 'chronic_tardiness', label: 'Chronic Tardiness' },
   { value: 'attendance_dropoff', label: 'Attendance Dropoff' },
-  { value: 'irregular_timing', label: 'Irregular Timing' },
-  { value: 'early_departure', label: 'Early Departure' },
+  { value: 'course_delay', label: 'Course Delay' },
+  { value: 'ml_behavioral', label: 'ML Behavioral' },
 ];
 
 const PER_PAGE = 20;
@@ -68,10 +68,10 @@ function getPatternIcon(patternType) {
       return 'fas fa-clock';
     case 'attendance_dropoff':
       return 'fas fa-chart-line';
-    case 'irregular_timing':
-      return 'fas fa-random';
-    case 'early_departure':
-      return 'fas fa-sign-out-alt';
+    case 'course_delay':
+      return 'fas fa-hourglass-half';
+    case 'ml_behavioral':
+      return 'fas fa-brain';
     default:
       return 'fas fa-exclamation-triangle';
   }
@@ -233,7 +233,7 @@ function AnomalyHistory({ studentId }) {
 
   // Compute trends for each pattern type
   const trends = useMemo(() => {
-    const patternTypes = ['chronic_tardiness', 'attendance_dropoff', 'irregular_timing', 'early_departure'];
+    const patternTypes = ['chronic_tardiness', 'attendance_dropoff', 'course_delay', 'ml_behavioral'];
     const result = {};
     for (const pt of patternTypes) {
       result[pt] = computeTrend(allAlerts, pt);

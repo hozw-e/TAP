@@ -2,17 +2,17 @@ import { describe, it, expect } from 'vitest';
 import { getConnectionDisplay } from '../components/ConnectionStatus.jsx';
 
 describe('ConnectionStatus - getConnectionDisplay', () => {
-  it('should show green dot and "Connected" for connected_ws', () => {
+  it('should show green dot and "Live" for connected_ws (real-time WebSocket)', () => {
     const result = getConnectionDisplay('connected_ws');
     expect(result.dotColor).toBe('green');
-    expect(result.label).toBe('Connected');
+    expect(result.label).toBe('Live');
     expect(result.showRetry).toBe(false);
   });
 
-  it('should show green dot and "Connected" for connected_sse', () => {
+  it('should show amber dot and "Live (fallback)" for connected_sse', () => {
     const result = getConnectionDisplay('connected_sse');
-    expect(result.dotColor).toBe('green');
-    expect(result.label).toBe('Connected');
+    expect(result.dotColor).toBe('amber');
+    expect(result.label).toBe('Live (fallback)');
     expect(result.showRetry).toBe(false);
   });
 
@@ -37,10 +37,10 @@ describe('ConnectionStatus - getConnectionDisplay', () => {
     expect(result.showRetry).toBe(false);
   });
 
-  it('should show red dot, "Disconnected", and retry for disconnected', () => {
+  it('should show red dot, "Offline", and retry for disconnected', () => {
     const result = getConnectionDisplay('disconnected');
     expect(result.dotColor).toBe('red');
-    expect(result.label).toBe('Disconnected');
+    expect(result.label).toBe('Offline');
     expect(result.showRetry).toBe(true);
   });
 

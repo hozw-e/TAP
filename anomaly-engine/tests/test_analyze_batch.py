@@ -22,8 +22,7 @@ BATCH_CONFIG = {
     "enabled_patterns": [
         "chronic_tardiness",
         "attendance_dropoff",
-        "irregular_timing",
-        "early_departure",
+        "course_delay",
     ],
 }
 
@@ -125,8 +124,8 @@ def test_batch_returns_500_on_fetch_failure(mock_fetch, mock_cfg, client):
 def test_normalizer_fills_missing_alert_fields():
     """_run_detectors_for_event backfills name/description/detected_at.
 
-    irregular_timing historically returned a minimal dict; the normalizer
-    must make every alert persistable.
+    A detector may return a minimal dict (just student_id/pattern_type/score);
+    the normalizer must make every alert persistable.
     """
     from src.routes import analyze as analyze_mod
 
@@ -139,10 +138,10 @@ def test_normalizer_fills_missing_alert_fields():
     # Fake a detector that returns a minimal dict above threshold
     with patch.dict(
         analyze_mod.DETECTOR_MAP,
-        {"irregular_timing": _MinimalDetector},
+        {"course_delay": _MinimalDetector},
         clear=True,
     ):
-        cfg = {"alert_threshold": 0.5, "enabled_patterns": ["irregular_timing"]}
+        cfg = {"alert_threshold": 0.5, "enabled_patterns": ["course_delay"]}
         alerts = analyze_mod._run_detectors_for_event(event, cfg)
 
     assert len(alerts) == 1
@@ -157,4 +156,4 @@ class _MinimalDetector:
     """Returns a minimal alert dict (no name/description/detected_at)."""
 
     def detect(self, student_id, event, config):
-        return [{"student_id": student_id, "pattern_type": "irregular_timing", "score": 0.9}]
+        return [{"student_id": student_id, "pattern_type": "course_delay", "score": 0.9}]

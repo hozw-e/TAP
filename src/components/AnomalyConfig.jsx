@@ -5,8 +5,8 @@ import '../styles/AnomalyConfig.css';
 const ALL_PATTERNS = [
   { id: 'chronic_tardiness', label: 'Chronic Tardiness', icon: 'fas fa-clock' },
   { id: 'attendance_dropoff', label: 'Attendance Dropoff', icon: 'fas fa-chart-line' },
-  { id: 'irregular_timing', label: 'Irregular Timing', icon: 'fas fa-random' },
-  { id: 'early_departure', label: 'Early Departure', icon: 'fas fa-sign-out-alt' },
+  { id: 'course_delay', label: 'Course Delay', icon: 'fas fa-hourglass-half' },
+  { id: 'ml_behavioral', label: 'ML Behavioral (Isolation Forest)', icon: 'fas fa-brain' },
 ];
 
 /**

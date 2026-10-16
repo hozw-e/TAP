@@ -15,7 +15,7 @@ import { insertAlertSorted } from '../../hooks/useAnomalyAlerts.js';
 const alertArb = fc.record({
   student_id: fc.integer({ min: 1, max: 1000 }),
   student_name: fc.string({ minLength: 1, maxLength: 50 }),
-  pattern_type: fc.constantFrom('chronic_tardiness', 'attendance_dropoff', 'irregular_timing', 'early_departure'),
+  pattern_type: fc.constantFrom('chronic_tardiness', 'attendance_dropoff', 'course_delay'),
   score: fc.double({ min: 0.0, max: 1.0, noNaN: true }),
   description: fc.string({ minLength: 1, maxLength: 100 }),
   detected_at: fc.integer({

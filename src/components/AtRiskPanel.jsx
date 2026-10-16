@@ -25,10 +25,10 @@ function getPatternIcon(patternType) {
       return 'fas fa-clock';
     case 'attendance_dropoff':
       return 'fas fa-chart-line';
-    case 'irregular_timing':
-      return 'fas fa-random';
-    case 'early_departure':
-      return 'fas fa-sign-out-alt';
+    case 'course_delay':
+      return 'fas fa-hourglass-half';
+    case 'ml_behavioral':
+      return 'fas fa-brain';
     default:
       return 'fas fa-exclamation-triangle';
   }
