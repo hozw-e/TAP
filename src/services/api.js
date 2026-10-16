@@ -1,7 +1,12 @@
 import axios from 'axios';
 
-// Base URL for your PHP backend
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+// Base URL for the PHP backend.
+// Default to a SAME-ORIGIN relative path ('/api') so the browser treats the
+// session cookie as first-party. This is what makes login work in Safari/Brave
+// and inside the installed mobile PWA, where third-party cookies are blocked.
+// An absolute VITE_API_BASE_URL can still override this (e.g. local XAMPP that
+// serves the SPA from a different path), but production should stay relative.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 // Create axios instance with default config
 const api = axios.create({

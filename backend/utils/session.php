@@ -3,15 +3,29 @@
  * Session Utility Functions
  */
 
-// Configure session for cross-domain use
+// Configure the session cookie.
+//
+// The app is now served SAME-ORIGIN (the PHP container serves both the React
+// SPA and the /api backend), so the session cookie is first-party. 'Lax' is the
+// correct, most-compatible policy for first-party cookies and — crucially — it
+// is NOT blocked by Safari/Brave or by iOS/Android installed PWAs, which do
+// block the 'None' (cross-site) cookies the old two-domain setup required.
+//
+// SESSION_COOKIE_SAMESITE can override this (set it to 'None' only if you ever
+// go back to serving the frontend from a different domain than the API).
 if (session_status() === PHP_SESSION_NONE) {
-    // Detect if running over HTTPS
+    // Detect if running over HTTPS (directly or behind Railway's TLS proxy).
     $isSecure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
              || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
              || (!empty($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
 
-    ini_set('session.cookie_samesite', $isSecure ? 'None' : 'Lax');
-    ini_set('session.cookie_secure', $isSecure ? '1' : '0');
+    $sameSite = getenv('SESSION_COOKIE_SAMESITE') ?: ($isSecure ? 'Lax' : 'Lax');
+
+    // 'None' REQUIRES Secure; otherwise browsers reject the cookie entirely.
+    $secure = $isSecure || strcasecmp($sameSite, 'None') === 0;
+
+    ini_set('session.cookie_samesite', $sameSite);
+    ini_set('session.cookie_secure', $secure ? '1' : '0');
     ini_set('session.cookie_httponly', '1');
     session_start();
 }

@@ -1,0 +1,33 @@
+# Dependencies & build output (rebuilt inside the image)
+node_modules
+dist
+
+# Local env / secrets — real values are injected via Railway env vars
+.env
+.env.local
+*.local
+
+# VCS & editor
+.git
+.gitignore
+.vscode
+.kiro
+
+# Python tooling / caches (anomaly-engine is a separate service)
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.hypothesis/
+
+# Database dumps / backups (contain PII — never ship in an image)
+db_backup/
+railwaydb.sql
+railwaydb.sql.bak
+*.sql.bak
+
+# One-off scripts & docs not needed at runtime
+hash-admin-passwords.php
+docs
+tests
+*.log
