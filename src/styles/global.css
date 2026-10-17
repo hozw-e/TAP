@@ -309,3 +309,70 @@ input {
   padding: 30px;
   overflow-y: auto;
 }
+
+/* Dim overlay behind the mobile drawer. Hidden on desktop. */
+.sidebar-overlay {
+  display: none;
+}
+
+/* ============================================================
+ * Mobile layout (<= 768px)
+ * The 180px fixed sidebar becomes a slide-in drawer, the content
+ * reclaims the full width, and padding shrinks so pages aren't cramped.
+ * ============================================================ */
+@media (max-width: 768px) {
+  .admin-content {
+    margin-left: 0;
+  }
+
+  .admin-content-body {
+    padding: 16px;
+  }
+
+  /* Overlay covers the page when the drawer is open. */
+  .sidebar-overlay.show {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 150;
+  }
+
+  /* Let page titles wrap/shrink instead of forcing width. */
+  .page-header h1 {
+    font-size: 22px;
+  }
+
+  /* Tables: never let a wide table blow out the page width. Each table's
+     wrapper scrolls horizontally; the page itself stays put. */
+  .students-section,
+  .activity-logs-container .logs-section,
+  .visitor-table-section {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .students-table,
+  .logs-table,
+  .visitor-table,
+  .view-logs-table {
+    min-width: 640px;
+  }
+
+  /* Dark filter/header bars often lay out horizontally; allow them to wrap
+     and scroll rather than clip controls off the right edge. */
+  .students-header,
+  .logs-header,
+  .filters-section,
+  .visitor-filters-section {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Pagination controls stack a little tighter on small screens. */
+  .pagination {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+}

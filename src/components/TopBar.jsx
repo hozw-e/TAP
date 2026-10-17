@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import ConnectionStatus from './ConnectionStatus';
 import '../styles/TopBar.css';
 
-function TopBar({ connectionState, onRetryConnection }) {
+function TopBar({ connectionState, onRetryConnection, onMenuClick }) {
   const [clock, setClock] = useState('');
 
   useEffect(() => {
@@ -27,6 +27,14 @@ function TopBar({ connectionState, onRetryConnection }) {
   return (
     <div className="topbar">
       <div className="topbar-left">
+        {/* Hamburger — only shown on mobile (see TopBar.css). Opens the drawer. */}
+        <button
+          className="topbar-menu-btn"
+          onClick={onMenuClick}
+          aria-label="Open navigation menu"
+        >
+          <i className="fas fa-bars"></i>
+        </button>
         {connectionState && (
           <ConnectionStatus
             connectionState={connectionState}

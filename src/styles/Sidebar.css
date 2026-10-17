@@ -11,6 +11,52 @@
   z-index: 100;
 }
 
+/* Close (X) button lives inside the drawer; hidden on desktop. */
+.sidebar-close-btn {
+  display: none;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  line-height: 1;
+}
+
+.sidebar-close-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+/* ============================================================
+ * Mobile: sidebar becomes an off-canvas drawer.
+ * Hidden off-screen by default; slides in when `.open` is set.
+ * ============================================================ */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.3);
+    z-index: 200; /* above the overlay (150) */
+    width: 230px;
+    overflow-y: auto;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-close-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
 .logo-circle {
   width: 100px;
   height: 100px;

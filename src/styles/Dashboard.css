@@ -741,6 +741,36 @@
   .stats-grid {
     grid-template-columns: 1fr;
   }
+
+  /* Dashboard header: stack the title and the "Run Analysis" button. */
+  .dashboard-layout .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .run-analysis-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Keep the chart canvas inside its card on narrow screens. */
+  .visit-trend-body {
+    padding: 12px;
+  }
+
+  .visit-trend-body canvas {
+    max-width: 100%;
+  }
+
+  /* Shrink the floating help button a touch so it doesn't cover content. */
+  .help-float-btn {
+    bottom: 18px;
+    right: 18px;
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+  }
 }
 
 /* ===== Intro.js Tour - Custom Tooltip ===== */

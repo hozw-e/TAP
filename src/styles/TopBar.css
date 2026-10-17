@@ -4,3 +4,41 @@
   color: #2c3e50;
   white-space: nowrap;
 }
+
+/* Hamburger menu button — hidden on desktop, shown on mobile. */
+.topbar-menu-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: #2c3e50;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 6px 10px;
+  margin-right: 4px;
+  border-radius: 8px;
+  line-height: 1;
+}
+
+.topbar-menu-btn:hover {
+  background: #ecf0f1;
+}
+
+@media (max-width: 768px) {
+  .topbar-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Shrink the clock and let it truncate rather than overflow the bar. */
+  .topbar-clock {
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .topbar {
+    padding: 0 12px;
+    gap: 8px;
+  }
+}

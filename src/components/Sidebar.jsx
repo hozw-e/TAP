@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import '../styles/Sidebar.css';
 
-function Sidebar({ onLogoutClick }) {
+function Sidebar({ onLogoutClick, isOpen, onClose }) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -12,7 +12,12 @@ function Sidebar({ onLogoutClick }) {
   const isVisitorRecordRoute = location.pathname === '/visitor-records';
 
   return (
-    <div className="sidebar">
+    <div className={`sidebar ${isOpen ? 'open' : ''}`}>
+      {/* Close button — only visible in mobile drawer mode (see Sidebar.css). */}
+      <button className="sidebar-close-btn" onClick={onClose} aria-label="Close navigation menu">
+        <i className="fas fa-times"></i>
+      </button>
+
       {/* Logo */}
       <div className="logo-circle">
         <img src="/logo.png" alt="A+ Solutions" onError={(e) => e.target.style.display = 'none'} />
