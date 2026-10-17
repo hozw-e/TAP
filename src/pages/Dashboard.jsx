@@ -151,6 +151,27 @@ function Dashboard() {
     setToastAlerts(prev => prev.filter((_, i) => i !== idx));
   }, []);
 
+  // Pull today's already-detected alerts from the DB and feed them into the
+  // At-Risk panel through addAlert (dedup/sort-safe). Shared by the on-mount
+  // hydration and the post-analysis refresh so the panel updates without a
+  // manual page reload. Returns the number of alerts received (for callers
+  // that want to know whether anything came back).
+  const hydrateAtRisk = useCallback(async () => {
+    try {
+      const response = await api.get('/anomaly/alerts-today.php');
+      const todays = response.data?.alerts;
+      if (response.data?.success && Array.isArray(todays)) {
+        todays.forEach((alert) => addAlert(alert));
+        return todays.length;
+      }
+    } catch (err) {
+      // Non-fatal: the panel still fills from live broadcasts. Log for
+      // diagnostics but don't surface a UI error for a background hydrate.
+      console.warn('At-Risk hydration failed:', err?.message || err);
+    }
+    return 0;
+  }, [addAlert]);
+
   // Trigger an on-demand batch analysis of all active students against the
   // attendance data already in the database. Results are written to each
   // student's anomaly history (viewable on their record page). In the future
@@ -183,6 +204,11 @@ function Dashboard() {
 
       const skippedSuffix = skipped > 0 ? ` (${skipped} already flagged today.)` : '';
 
+      // Auto-refresh the At-Risk panel with the alerts just written by this
+      // run, so the admin sees results immediately without a page reload.
+      // addAlert dedupes, so re-feeding any already-shown alerts is harmless.
+      await hydrateAtRisk();
+
       setBatchNotification({
         isOpen: true,
         type: 'success',
@@ -205,7 +231,7 @@ function Dashboard() {
     } finally {
       setBatchRunning(false);
     }
-  }, [batchRunning]);
+  }, [batchRunning, hydrateAtRisk]);
 
   // Live clock
   const [clock, setClock] = useState('');
@@ -236,23 +262,8 @@ function Dashboard() {
   // live broadcast — a later live alert for the same student+pattern is then
   // correctly suppressed as a duplicate.
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const response = await api.get('/anomaly/alerts-today.php');
-        if (cancelled) return;
-        const todays = response.data?.alerts;
-        if (response.data?.success && Array.isArray(todays)) {
-          todays.forEach((alert) => addAlert(alert));
-        }
-      } catch (err) {
-        // Non-fatal: the panel still fills from live broadcasts. Log for
-        // diagnostics but don't surface a UI error for a background hydrate.
-        console.warn('At-Risk hydration failed:', err?.message || err);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [addAlert]);
+    hydrateAtRisk();
+  }, [hydrateAtRisk]);
 
   // Auto-refresh at midnight so dashboard resets to the new day
   useEffect(() => {

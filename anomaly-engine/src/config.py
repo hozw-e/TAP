@@ -15,6 +15,7 @@ DEFAULTS = {
         "attendance_dropoff",
         "course_delay",
         "ml_behavioral",
+        "scheduled_absence",
     ],
 }
 
@@ -55,6 +56,9 @@ def load_config():
         # Default to enabled when the column doesn't exist yet (pre-migration).
         if row.get("ml_behavioral_enabled", True):
             enabled_patterns.append("ml_behavioral")
+        # Default to enabled when the column doesn't exist yet (pre-migration).
+        if row.get("scheduled_absence_enabled", True):
+            enabled_patterns.append("scheduled_absence")
 
         return {
             "alert_threshold": float(row["alert_threshold"]),

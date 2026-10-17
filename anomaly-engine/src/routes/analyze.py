@@ -11,6 +11,7 @@ from src.detectors.attendance_dropoff import AttendanceDropoffDetector
 from src.detectors.chronic_tardiness import ChronicTardinessDetector
 from src.detectors.course_delay import CourseDelayDetector
 from src.detectors.ml_behavior import MLBehaviorDetector
+from src.detectors.scheduled_absence import ScheduledAbsenceDetector
 from src.models.alert import Alert
 
 logger = logging.getLogger(__name__)
@@ -26,6 +27,7 @@ DETECTOR_MAP = {
     "attendance_dropoff": AttendanceDropoffDetector,
     "course_delay": CourseDelayDetector,
     "ml_behavioral": MLBehaviorDetector,
+    "scheduled_absence": ScheduledAbsenceDetector,
 }
 
 

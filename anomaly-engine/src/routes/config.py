@@ -17,6 +17,7 @@ VALID_PATTERNS = [
     "attendance_dropoff",
     "course_delay",
     "ml_behavioral",
+    "scheduled_absence",
 ]
 
 
@@ -111,6 +112,9 @@ def put_config():
 
         set_parts.append("ml_behavioral_enabled = %s")
         params.append("ml_behavioral" in enabled_patterns)
+
+        set_parts.append("scheduled_absence_enabled = %s")
+        params.append("scheduled_absence" in enabled_patterns)
 
     if not set_parts:
         return jsonify({"error": "No valid fields provided to update"}), 400
