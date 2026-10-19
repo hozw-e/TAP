@@ -690,31 +690,7 @@ function Dashboard() {
                                 getOutNotificationStatus(log) === 'FAILED' ? 'Failed' : 'N/A'}
                             </span>
                           </td>
-                          {/* Sessions Left */}
-                          <td>
-                            {log.row_type === 'visitor' ? (
-                              <span className="sessions-na">N/A</span>
-                            ) : log.remaining_sessions != null ? (
-                              <span className={`sessions-badge ${
-                                log.remaining_sessions === 0 ? 'sessions-zero' :
-                                log.remaining_sessions <= 1 ? 'sessions-low' : 'sessions-ok'
-                              }`}>
-                                {log.remaining_sessions}
-                              </span>
-                            ) : (
-                              <span className="sessions-na">—</span>
-                            )}
-                          </td>
-                          {/* Attendance Flag */}
-                          <td>
-                            {log.attendance_flag ? (
-                              <span className={`flag-badge flag-${log.attendance_flag.toLowerCase().replace(/_/g, '-')}`}>
-                                {log.attendance_flag.replace(/_/g, ' ')}
-                              </span>
-                            ) : (
-                              <span className="flag-none">—</span>
-                            )}
-                          </td>
+
                         </tr>
                       ))}
                     </tbody>
