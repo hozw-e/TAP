@@ -17,7 +17,7 @@
 //const char* WIFI_PASSWORD = "Ugg@muggasub1c!"; // Change to your WiFi password
 
 // Backend API URL
-const char* API_URL = "https://thesisi-production.up.railway.app/api/nfc/scan.php";
+const char* API_URL = "https://apsolutionstap.up.railway.app/api/nfc/scan.php";
 // Example: "http://192.168.1.100/apdc/backend/api/nfc/scan.php"
 // Find your IP: Open CMD → type "ipconfig" → look for IPv4 Address
 
