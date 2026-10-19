@@ -35,7 +35,7 @@ const COURSES = [
 function Dashboard() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [stats, setStats] = useState({ totalStudents: 0, presentToday: 0, presentStudents: 0, presentVisitors: 0, enrolledToday: 0 });
+  const [stats, setStats] = useState({ totalStudents: 0, activeStudents: 0, archivedStudents: 0, presentToday: 0, presentStudents: 0, presentVisitors: 0, enrolledToday: 0 });
   const [attendanceLogs, setAttendanceLogs] = useState([]);
   const [filteredLogs, setFilteredLogs] = useState([]);
   
@@ -518,8 +518,8 @@ function Dashboard() {
             <div className="stats-grid">
               {[
                 { label: 'Total Students', value: stats.totalStudents },
-                { label: 'Students Present', value: stats.presentStudents },
-                { label: 'Visitors Present', value: stats.presentVisitors },
+                { label: 'Active Students', value: stats.activeStudents },
+                { label: 'Archived Students', value: stats.archivedStudents },
               ].map((s) => (
                 <div className="stat-card" key={s.label}>
                   <div className="stat-card-value">{s.value}</div>
@@ -619,6 +619,16 @@ function Dashboard() {
             <div className="logs-section">
               <div className="logs-header">
                 <span>Attendance Logs</span>
+                <div className="logs-header-breakdown">
+                  <span className="logs-breakdown-item breakdown-student">
+                    <span className="breakdown-dot dot-student"></span>
+                    {filteredLogs.filter(l => l.row_type === 'student').length} Students
+                  </span>
+                  <span className="logs-breakdown-item breakdown-visitor">
+                    <span className="breakdown-dot dot-visitor"></span>
+                    {filteredLogs.filter(l => l.row_type === 'visitor').length} Visitors
+                  </span>
+                </div>
               </div>
 
               <div className="logs-body">
@@ -679,6 +689,31 @@ function Dashboard() {
                                 getOutNotificationStatus(log) === 'SMS' ? 'Sent' :
                                 getOutNotificationStatus(log) === 'FAILED' ? 'Failed' : 'N/A'}
                             </span>
+                          </td>
+                          {/* Sessions Left */}
+                          <td>
+                            {log.row_type === 'visitor' ? (
+                              <span className="sessions-na">N/A</span>
+                            ) : log.remaining_sessions != null ? (
+                              <span className={`sessions-badge ${
+                                log.remaining_sessions === 0 ? 'sessions-zero' :
+                                log.remaining_sessions <= 1 ? 'sessions-low' : 'sessions-ok'
+                              }`}>
+                                {log.remaining_sessions}
+                              </span>
+                            ) : (
+                              <span className="sessions-na">—</span>
+                            )}
+                          </td>
+                          {/* Attendance Flag */}
+                          <td>
+                            {log.attendance_flag ? (
+                              <span className={`flag-badge flag-${log.attendance_flag.toLowerCase().replace(/_/g, '-')}`}>
+                                {log.attendance_flag.replace(/_/g, ' ')}
+                              </span>
+                            ) : (
+                              <span className="flag-none">—</span>
+                            )}
                           </td>
                         </tr>
                       ))}

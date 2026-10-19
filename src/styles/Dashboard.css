@@ -968,3 +968,95 @@
   opacity: 0.65;
   cursor: not-allowed;
 }
+
+/* ── Attendance Logs header breakdown ───────────────────── */
+.logs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logs-header-breakdown {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logs-breakdown-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.breakdown-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.breakdown-dot.dot-student {
+  background: #60a5fa;
+}
+
+.breakdown-dot.dot-visitor {
+  background: #c084fc;
+}
+
+/* ── Sessions Left badge ─────────────────────────────────── */
+.sessions-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+  line-height: 1.6;
+}
+
+.sessions-ok {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.sessions-low {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.sessions-zero {
+  background: #fce4ec;
+  color: #b71c1c;
+}
+
+.sessions-na {
+  font-size: 11px;
+  color: #bdc3c7;
+}
+
+/* ── Attendance Flag badge ───────────────────────────────── */
+.flag-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  text-transform: capitalize;
+  letter-spacing: 0.2px;
+  line-height: 1.6;
+}
+
+/* Flag colour variants — extend as needed */
+.flag-badge.flag-present         { background: #e8f5e9; color: #2e7d32; }
+.flag-badge.flag-absent          { background: #fce4ec; color: #b71c1c; }
+.flag-badge.flag-late            { background: #fff3e0; color: #e65100; }
+.flag-badge.flag-early-out       { background: #e3f2fd; color: #1565c0; }
+.flag-badge.flag-auto-closed     { background: #f3e5f5; color: #6a1b9a; }
+.flag-badge.flag-overtime        { background: #e8eaf6; color: #283593; }
+
+.flag-none {
+  font-size: 11px;
+  color: #bdc3c7;
+}

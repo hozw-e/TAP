@@ -27,11 +27,23 @@ try {
 
     $today = date('Y-m-d');
 
-    // Total students
+    // Total students (all, including archived)
     $stmt = $conn->query("SELECT COUNT(*) as total FROM students");
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     $totalStudents = (int)$result['total'];
 
+    // Active students (non-archived)
+    $stmt = $conn->query("
+        SELECT COUNT(*) as total FROM students
+        WHERE is_archived = 0 OR is_archived IS NULL
+    ");
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    $activeStudents = (int)$result['total'];
+
+    // Archived students
+    $stmt = $conn->query("SELECT COUNT(*) as total FROM students WHERE is_archived = 1");
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    $archivedStudents = (int)$result['total'];
 
     // Present students today (checked in but not yet checked out)
     $stmt = $conn->prepare("
@@ -66,6 +78,8 @@ try {
 
     sendSuccessResponse('Dashboard stats retrieved successfully', [
         'totalStudents'   => $totalStudents,
+        'activeStudents'  => $activeStudents,
+        'archivedStudents' => $archivedStudents,
         'presentToday'    => $presentToday,
         'presentStudents' => $presentStudents,
         'presentVisitors' => $presentVisitors,
