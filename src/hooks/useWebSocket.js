@@ -150,8 +150,12 @@ export function useWebSocket(sessionToken) {
       };
 
       eventSource.onerror = () => {
-        // If we haven't connected yet, let the timeout handle it
-        if (connectionState === 'connected_sse' || sseRef.current?.readyState === EventSource.CLOSED) {
+        // Use readyState to determine connection status — avoids reading
+        // stale `connectionState` from the closure (connectSSE is memoized
+        // and would always see the initial 'connecting_ws' value otherwise).
+        // EventSource.CLOSED (2) means the connection was established then lost.
+        // EventSource.CONNECTING (0) means we never connected; let the timeout handle it.
+        if (sseRef.current?.readyState === EventSource.CLOSED) {
           clearTimeout(sseTimeout);
           sseRef.current = null;
           if (!unmountedRef.current) {

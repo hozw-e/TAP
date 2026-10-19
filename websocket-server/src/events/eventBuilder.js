@@ -8,7 +8,7 @@ const VALID_ACTIONS = ['check_in', 'check_out'];
 /**
  * Valid attendance flag values (null is also allowed).
  */
-const VALID_FLAGS = ['present', 'tardy'];
+const VALID_FLAGS = ['present', 'tardy', 'late'];
 
 /**
  * Maximum allowed length for student_name.
@@ -32,7 +32,7 @@ const ISO_8601_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}
  *
  * Optional fields:
  *   - course (string | null)
- *   - attendance_flag ("present" | "tardy" | null)
+ *   - attendance_flag ("present" | "tardy" | "late" | null)
  *
  * @param {object} payload - The raw request body
  * @returns {{ valid: true, event: object } | { valid: false, error: string }}

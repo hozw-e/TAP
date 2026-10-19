@@ -90,16 +90,54 @@ function Dashboard() {
     const event = lastMessage.data;
     if (!event) return;
 
-    // Prepend to attendance logs (maintain max page consistency)
+    // Update attendance logs in real time.
+    // - check_in: prepend a new row.
+    // - check_out: find and update the existing open row for this student;
+    //   only prepend a new row if no open row exists (e.g. the check-in
+    //   happened before this dashboard session started).
     setAttendanceLogs(prev => {
+      const timeStr = event.timestamp?.split('T')[1]?.substring(0, 8) || '';
+
+      if (event.action === 'check_out') {
+        // Find the most recent open row for this student (time_out empty/null)
+        const openIdx = prev.findIndex(
+          l => l.student_id === event.student_id &&
+               l.row_type === 'student' &&
+               !l.time_out
+        );
+        if (openIdx !== -1) {
+          // Update the existing row in place
+          const updated = [...prev];
+          updated[openIdx] = { ...updated[openIdx], time_out: timeStr };
+          return updated;
+        }
+        // No open row found — fall through to prepend a standalone row
+        const fallbackRow = {
+          attendance_id: `rt-${Date.now()}`,
+          row_type: 'student',
+          student_id: event.student_id,
+          student_name: event.student_name,
+          student_course: event.course || '',
+          time_in: '',
+          time_out: timeStr,
+          attendance_flag: event.attendance_flag,
+          msg_channel: null,
+          msg_success: null,
+          msg_out_channel: null,
+          msg_out_success: null,
+        };
+        return [fallbackRow, ...prev];
+      }
+
+      // check_in — prepend a new row
       const newLog = {
         attendance_id: `rt-${Date.now()}`,
         row_type: 'student',
         student_id: event.student_id,
         student_name: event.student_name,
         student_course: event.course || '',
-        time_in: event.action === 'check_in' ? event.timestamp?.split('T')[1]?.substring(0, 8) || '' : '',
-        time_out: event.action === 'check_out' ? event.timestamp?.split('T')[1]?.substring(0, 8) || '' : '',
+        time_in: timeStr,
+        time_out: '',
         attendance_flag: event.attendance_flag,
         msg_channel: null,
         msg_success: null,

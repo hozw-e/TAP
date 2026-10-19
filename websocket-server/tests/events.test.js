@@ -112,6 +112,18 @@ describe('eventBuilder', () => {
     expect(result.valid).toBe(true);
   });
 
+  it('accepts attendance_flag "tardy"', () => {
+    const result = validateEvent({ ...validPayload, attendance_flag: 'tardy' });
+    expect(result.valid).toBe(true);
+    expect(result.event.attendance_flag).toBe('tardy');
+  });
+
+  it('accepts attendance_flag "late"', () => {
+    const result = validateEvent({ ...validPayload, attendance_flag: 'late' });
+    expect(result.valid).toBe(true);
+    expect(result.event.attendance_flag).toBe('late');
+  });
+
   it('rejects invalid attendance_flag', () => {
     const result = validateEvent({ ...validPayload, attendance_flag: 'invalid' });
     expect(result.valid).toBe(false);

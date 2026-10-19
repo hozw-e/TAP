@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import api from '../services/api';
 import '../styles/AnomalyHistory.css';
 
@@ -7,7 +7,8 @@ const PATTERN_TYPES = [
   { value: 'chronic_tardiness', label: 'Chronic Tardiness' },
   { value: 'attendance_dropoff', label: 'Attendance Dropoff' },
   { value: 'course_delay', label: 'Course Delay' },
-  { value: 'ml_behavioral', label: 'ML Behavioral' },
+  { value: 'ml_behavioral', label: 'Behavioral Outlier' },
+  { value: 'scheduled_absence', label: 'Scheduled Absence' },
 ];
 
 const PER_PAGE = 20;
@@ -72,16 +73,24 @@ function getPatternIcon(patternType) {
       return 'fas fa-hourglass-half';
     case 'ml_behavioral':
       return 'fas fa-brain';
+    case 'scheduled_absence':
+      return 'fas fa-calendar-xmark';
     default:
       return 'fas fa-exclamation-triangle';
   }
 }
 
 /**
- * Format pattern_type from snake_case to Title Case.
+ * Human-readable display label for a pattern_type. Uses the same labels as the
+ * filter dropdown / trend tiles so the table badge, the filter, and the tiles
+ * never disagree (e.g. ml_behavioral shows as "Behavioral Outlier" everywhere,
+ * not "Ml Behavioral" in one place and "Behavioral Outlier" in another).
+ * Falls back to Title-casing the raw value for any unmapped pattern.
  */
 function formatPatternType(patternType) {
   if (!patternType) return '';
+  const known = PATTERN_TYPES.find((pt) => pt.value === patternType);
+  if (known) return known.label;
   return patternType
     .split('_')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -107,9 +116,6 @@ function AnomalyHistory({ studentId }) {
   const [dateStart, setDateStart] = useState('');
   const [dateEnd, setDateEnd] = useState('');
   const [dateError, setDateError] = useState('');
-
-  // All alerts for trend computation (fetched without pagination)
-  const [allAlerts, setAllAlerts] = useState([]);
 
   const validateDateRange = useCallback((start, end) => {
     if (start && end) {
@@ -167,52 +173,9 @@ function AnomalyHistory({ studentId }) {
     }
   }, [studentId, page, patternTypeFilter, dateStart, dateEnd]);
 
-  // Fetch all alerts (unpaginated) for trend computation
-  const fetchAllAlertsForTrend = useCallback(async () => {
-    if (!studentId) return;
-    try {
-      // Fetch last 4 weeks of alerts for trend computation
-      const fourWeeksAgo = new Date();
-      fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
-      const params = new URLSearchParams();
-      params.set('student_id', studentId);
-      params.set('date_start', fourWeeksAgo.toISOString().slice(0, 10));
-      params.set('date_end', new Date().toISOString().slice(0, 10));
-      params.set('page', '1');
-
-      // Fetch up to the max possible - we use a large page approach
-      // The API caps at 20 per page, so we fetch multiple pages
-      let allFetched = [];
-      let currentPage = 1;
-      let hasMore = true;
-
-      while (hasMore) {
-        params.set('page', currentPage);
-        const response = await api.get(`/anomaly/alerts.php?${params.toString()}`);
-        const data = response.data;
-        if (data.success && data.alerts?.length > 0) {
-          allFetched = [...allFetched, ...data.alerts];
-          hasMore = currentPage < (data.pagination?.total_pages || 0);
-          currentPage++;
-        } else {
-          hasMore = false;
-        }
-      }
-
-      setAllAlerts(allFetched);
-    } catch (err) {
-      console.error('Error fetching alerts for trend:', err);
-      setAllAlerts([]);
-    }
-  }, [studentId]);
-
   useEffect(() => {
     fetchAlerts();
   }, [fetchAlerts]);
-
-  useEffect(() => {
-    fetchAllAlertsForTrend();
-  }, [fetchAllAlertsForTrend]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -229,31 +192,6 @@ function AnomalyHistory({ studentId }) {
     setDateEnd(value);
     const err = validateDateRange(dateStart, value);
     setDateError(err);
-  };
-
-  // Compute trends for each pattern type
-  const trends = useMemo(() => {
-    const patternTypes = ['chronic_tardiness', 'attendance_dropoff', 'course_delay', 'ml_behavioral'];
-    const result = {};
-    for (const pt of patternTypes) {
-      result[pt] = computeTrend(allAlerts, pt);
-    }
-    return result;
-  }, [allAlerts]);
-
-  const renderTrendIndicator = (patternType) => {
-    const { trend } = trends[patternType] || { trend: 'insufficient' };
-    switch (trend) {
-      case 'improving':
-        return <span className="trend-indicator trend-improving" title="Improving">↓ Improving</span>;
-      case 'worsening':
-        return <span className="trend-indicator trend-worsening" title="Worsening">↑ Worsening</span>;
-      case 'stable':
-        return <span className="trend-indicator trend-stable" title="Stable">→ Stable</span>;
-      case 'insufficient':
-      default:
-        return <span className="trend-indicator trend-insufficient" title="Insufficient data">Insufficient data</span>;
-    }
   };
 
   const formatDate = (dateString) => {
@@ -302,19 +240,6 @@ function AnomalyHistory({ studentId }) {
           <i className="fas fa-exclamation-triangle"></i>
           <span>Anomaly Detection History</span>
         </div>
-      </div>
-
-      {/* Trend indicators */}
-      <div className="anomaly-trends">
-        {PATTERN_TYPES.filter((pt) => pt.value !== '').map((pt) => (
-          <div key={pt.value} className="anomaly-trend-item">
-            <div className="anomaly-trend-label">
-              <i className={getPatternIcon(pt.value)}></i>
-              <span>{pt.label}</span>
-            </div>
-            {renderTrendIndicator(pt.value)}
-          </div>
-        ))}
       </div>
 
       {/* Filters */}
